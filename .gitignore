@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+teste_layout.pdf
+backup_respostas/
+firebase_credentials.json

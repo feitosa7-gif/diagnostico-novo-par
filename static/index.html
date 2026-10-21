@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagnóstico do Novo PAR — SEEDF</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f5fa',
+              100: '#e1ecf5',
+              700: '#1b3b6f',
+              800: '#13294b',
+              900: '#0c1b33',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .custom-radio:checked {
+      background-color: #1b3b6f;
+      border-color: #1b3b6f;
+    }
+    .badge-comum {
+      background-color: #fdf2f8;
+      color: #9d174d;
+      border: 1px solid #fbcfe8;
+    }
+    .badge-especifica {
+      background-color: #eff6ff;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+    }
+    .card-incompleto {
+      border-color: #f87171 !important;
+      background-color: #fffaf0 !important;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- CABEÇALHO SUPERIOR -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <!-- Logo do PAR posicionada no topo superior esquerdo junto ao título -->
+        <img src="/static/logo_par.jpg" alt="Logo PAR SEEDF" class="h-12 w-auto object-contain rounded shadow-xs border border-slate-200">
+        <div>
+          <h1 class="text-base md:text-lg font-bold text-brand-900 tracking-tight leading-tight">
+            Diagnóstico do Novo PAR
+          </h1>
+          <p class="text-[11px] text-slate-500 font-medium">SEEDF • SUPLAV / DPAPP • Ciclo 2026</p>
+        </div>
+      </div>
+      
+      <!-- Informações do Usuário Conectado -->
+      <div id="user-header-info" class="hidden flex items-center gap-3">
+        <div class="text-right">
+          <p id="header-user-name" class="text-xs font-semibold text-slate-800 leading-tight"></p>
+          <div class="flex items-center justify-end gap-1.5 mt-0.5">
+            <span id="header-user-sub" class="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-bold"></span>
+            <span id="header-user-role" class="text-[10px] px-1.5 py-0.5 rounded font-bold"></span>
+          </div>
+        </div>
+        <button onclick="fazerLogout()" title="Sair do sistema" class="text-xs text-slate-400 hover:text-red-600 transition-colors p-2 rounded hover:bg-slate-100">
+          <i class="fa-solid fa-arrow-right-from-bracket text-sm"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
+    
+    <!-- ==================== TELA 1: IDENTIFICAÇÃO ==================== -->
+    <section id="tela-login" class="max-w-xl mx-auto mt-6 bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-brand-900 to-brand-700 text-white p-6 md:p-8">
+        <h2 class="text-xl md:text-2xl font-bold mb-2">Identificação Institucional</h2>
+        <p class="text-sm text-slate-200 leading-relaxed">
+          Informe seus dados para acessar o formulário do Diagnóstico do Plano de Ações Articuladas (PAR) da SEEDF.
+        </p>
+      </div>
+
+      <form id="form-login" onsubmit="realizarEntrada(event)" class="p-6 md:p-8 space-y-5">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+            Nome Completo <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <i class="fa-regular fa-user absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+            <input type="text" id="login-nome" required placeholder="Digite seu nome completo"
+                   class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-transparent text-sm">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+            E-mail Institucional <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <i class="fa-regular fa-envelope absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+            <input type="email" id="login-email" oninput="checarEmailMaster1(this.value)" required placeholder="exemplo@se.df.gov.br ou institucional"
+                   class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-transparent text-sm">
+          </div>
+        </div>
+
+        <!-- Seletor de Subsecretaria (Ocultado automaticamente quando for o e-mail Master 1) -->
+        <div id="campo-subsecretaria-container">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+            Subsecretaria de Lotação <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <i class="fa-solid fa-sitemap absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+            <select id="login-subsecretaria" required
+                    class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-transparent text-sm">
+              <option value="" disabled selected>Selecione a subsecretaria...</option>
+              <option value="SUBEB">SUBEB — Educação Básica (41 questões)</option>
+              <option value="SUPLAV">SUPLAV — Planejamento e Acompanhamento (28 questões)</option>
+              <option value="SUBTIC">SUBTIC — Tecnologia da Informação (27 questões)</option>
+              <option value="SUGEP">SUGEP — Gestão de Pessoas (26 questões)</option>
+              <option value="SUBIN">SUBIN — Educação Inclusiva (24 questões)</option>
+              <option value="SUAPE">SUAPE — Apoio às Políticas Educacionais (23 questões)</option>
+              <option value="ASGOV">ASGOV — Assessoria de Governança (17 questões)</option>
+              <option value="SUAG">SUAG — Administração Geral (16 questões)</option>
+              <option value="SIAE">SIAE — Infraestrutura e Apoio Educacional (12 questões)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Aviso especial quando for o perfil do Master 1 -->
+        <div id="aviso-master1-login" class="hidden p-3 bg-purple-50 border border-purple-200 rounded-lg text-purple-800 text-xs flex items-center gap-2">
+          <i class="fa-solid fa-crown text-purple-600"></i>
+          <span>Perfil Administrador Geral identificado. Acesso direto ao painel central de monitoramento.</span>
+        </div>
+
+        <button type="submit" id="btn-entrar"
+                class="w-full py-3 px-4 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow transition-all duration-200 flex items-center justify-center gap-2 text-sm mt-4">
+          <span>Acessar Sistema</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </button>
+
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+          <span><i class="fa-solid fa-calendar-check text-brand-700 mr-1"></i> Prazo Final: <strong>09/11/2026</strong></span>
+          <span><i class="fa-solid fa-lock text-emerald-600 mr-1"></i> Trava de Envio Único</span>
+        </div>
+      </form>
+    </section>
+
+    <!-- ==================== TELA DE BLOQUEIO DE ENVIO ÚNICO ==================== -->
+    <section id="tela-ja-enviou" class="hidden max-w-xl mx-auto mt-10 bg-white rounded-2xl shadow-md border border-amber-200 p-8 text-center">
+      <div class="w-16 h-16 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <h3 class="text-xl font-bold text-slate-800 mb-2">questionario ja enviado</h3>
+      <p class="text-sm text-slate-600 mb-6" id="ja-enviou-msg">
+        Identificamos que suas respostas já foram registradas para a subsecretaria <strong id="ja-enviou-sub"></strong>. O envio é permitido uma única vez para garantir a integridade dos dados.
+      </p>
+      
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-left space-y-2 text-xs">
+        <div><span class="text-slate-400">Protocolo:</span> <strong id="ja-enviou-proto" class="text-brand-900 font-mono text-sm"></strong></div>
+        <div><span class="text-slate-400">Data de Envio:</span> <span id="ja-enviou-data" class="text-slate-700 font-medium"></span></div>
+        <div><span class="text-slate-400">Responsável:</span> <span id="ja-enviou-nome" class="text-slate-700"></span></div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <button id="btn-ja-enviou-pdf" onclick="baixarPdfComprovante()" class="px-4 py-2.5 bg-brand-700 hover:bg-brand-800 text-white rounded-lg text-xs font-semibold shadow flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-file-pdf"></i> Baixar Comprovante em PDF
+        </button>
+        <!-- Se for Master 2, aparece o botão de monitoramento -->
+        <button id="btn-ja-enviou-monitoramento" onclick="abrirPainelMaster2()" class="hidden px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold shadow flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-chart-column"></i> Acessar Painel de Monitoramento
+        </button>
+        <button id="btn-ja-enviou-solicitar" onclick="abrirModalSolicitacaoMaster()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-key"></i> Solicitar Administrador
+        </button>
+        <button onclick="fazerLogout()" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-semibold">
+          Sair
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== TELA 2: FORMULÁRIO DE QUESTÕES ==================== -->
+    <section id="tela-questionario" class="hidden space-y-6">
+      
+      <!-- Barra superior do questionário -->
+      <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <button onclick="voltarParaDashboard()" id="btn-voltar-topo" class="hidden px-2.5 py-1 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg mr-1 flex items-center gap-1">
+              <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+            </button>
+            <span id="badge-sub-ativa" class="bg-brand-100 text-brand-900 font-bold px-2.5 py-0.5 rounded text-xs"></span>
+            <span class="text-xs text-slate-500">•</span>
+            <span id="info-total-questoes" class="text-xs text-slate-600 font-medium"></span>
+          </div>
+          <h2 class="text-lg md:text-xl font-bold text-slate-800" id="titulo-questionario">Formulário de Resposta do Diagnóstico</h2>
+          <p class="text-xs text-slate-500 mt-0.5" id="subtitulo-questionario">Todas as questões são de preenchimento obrigatório.</p>
+        </div>
+
+        <!-- Ações e Status -->
+        <div class="flex items-center gap-2">
+          <button id="btn-solicitar-master" onclick="abrirModalSolicitacaoMaster()" 
+                  class="px-3 py-2 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-lg transition-colors flex items-center gap-1.5">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Solicitar Administrador</span>
+          </button>
+          
+          <button id="btn-painel-master" onclick="alternarVisaoMaster()" class="hidden px-3.5 py-2 text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 rounded-lg shadow transition-colors flex items-center gap-1.5">
+            <i class="fa-solid fa-table-list"></i>
+            <span>Painel da Subsecretaria</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra de Progresso Fixo -->
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4">
+        <div class="flex-1">
+          <div class="flex justify-between text-[11px] font-semibold text-slate-600 mb-1">
+            <span>Progresso Obrigatório de Preenchimento</span>
+            <span id="progresso-percent">0% respondido</span>
+          </div>
+          <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+            <div id="progresso-bar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="text-right pl-3 border-l border-slate-200 text-xs">
+          <span id="progresso-contagem" class="font-bold text-slate-800 text-sm">0</span>
+          <span class="text-slate-400">/<span id="progresso-total">0</span></span>
+        </div>
+      </div>
+
+      <!-- Aviso se houver pendências -->
+      <div id="alerta-obrigatorias" class="hidden p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-medium flex items-center gap-2">
+        <i class="fa-solid fa-triangle-exclamation text-red-500 text-sm"></i>
+        <span>Atenção: Não é permitido enviar respostas em branco. Responda a todas as questões destacadas antes de enviar.</span>
+      </div>
+
+      <!-- Container Dinâmico das Questões -->
+      <form id="form-questoes" onsubmit="enviarRespostas(event)" class="space-y-6">
+        <div id="lista-questoes" class="space-y-6">
+          <!-- Injetado via Javascript -->
+        </div>
+
+        <!-- Botão de Submissão -->
+        <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="text-xs text-slate-500">
+            <i class="fa-solid fa-circle-exclamation text-brand-700 mr-1"></i>
+            <span id="texto-aviso-envio">Confira todas as suas escolhas. Este envio registra seu protocolo e é único.</span>
+          </div>
+          <button type="submit" id="btn-enviar-respostas"
+                  class="w-full sm:w-auto px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span id="label-btn-enviar">Enviar Respostas Oficiais</span>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ==================== TELA 3: CONFIRMAÇÃO E PROTOCOLO COM EXPORTAÇÃO PDF ==================== -->
+    <section id="tela-sucesso" class="hidden max-w-xl mx-auto mt-10 bg-white rounded-2xl shadow-lg border border-emerald-200 p-8 text-center">
+      <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+        <i class="fa-solid fa-check-double"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-slate-800 mb-2">Diagnóstico Enviado com Sucesso!</h2>
+      <p class="text-sm text-slate-600 mb-6">
+        Sua contribuição para o Novo PAR da SEEDF foi gravada no Cloud Firestore. Baixe seu comprovante oficial em PDF.
+      </p>
+
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-6 text-left space-y-2.5 text-xs">
+        <div><span class="text-slate-500 font-medium">Protocolo Oficial:</span> <strong id="sucesso-proto" class="text-brand-900 text-sm font-mono block mt-0.5"></strong></div>
+        <div><span class="text-slate-500 font-medium">Subsecretaria:</span> <span id="sucesso-sub" class="font-bold text-slate-800"></span></div>
+        <div><span class="text-slate-500 font-medium">Responsável:</span> <span id="sucesso-nome" class="text-slate-700 font-medium"></span> (<span id="sucesso-email" class="text-slate-500"></span>)</div>
+        <div><span class="text-slate-500 font-medium">Data do Registro:</span> <span id="sucesso-data" class="text-slate-700"></span></div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-center gap-3">
+        <button onclick="baixarPdfSucesso()" class="px-5 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow">
+          <i class="fa-solid fa-file-pdf text-sm"></i> Baixar Comprovante em PDF
+        </button>
+        <button onclick="fazerLogout()" class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">
+          Finalizar Sessão
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== TELA 4: PAINEL EXCLUSIVO MASTER 1 (SUPER ADMIN / MONITORAMENTO CENTRAL) ==================== -->
+    <section id="tela-master1-dashboard" class="hidden space-y-6">
+      
+      <!-- Topo do Painel de Monitoramento -->
+      <div class="bg-gradient-to-r from-brand-900 via-brand-800 to-slate-900 text-white p-6 rounded-2xl shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="bg-emerald-500 text-white font-bold px-2 py-0.5 rounded text-[10px] tracking-wider uppercase">ADMINISTRADOR GERAL (MASTER 1)</span>
+            <span class="text-xs text-slate-300">Monitoramento Executivo Central</span>
+          </div>
+          <h2 class="text-xl md:text-2xl font-bold">Diagnóstico do Novo PAR — SEEDF</h2>
+          <p class="text-xs text-slate-300 mt-1">Acompanhamento consolidado de todas as subsecretarias em tempo real.</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="carregarDadosMaster1()" class="px-3.5 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg flex items-center gap-1.5 transition-all">
+            <i class="fa-solid fa-rotate"></i> Atualizar Dados
+          </button>
+        </div>
+      </div>
+
+      <!-- Abas de Navegação do Master 1 (Com abas separadas para Solicitações e Controle) -->
+      <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
+        <button onclick="mudarAbaMaster1('visao_geral')" id="tab-btn-m1-visao" class="px-4 py-2 text-xs font-bold rounded-lg bg-brand-700 text-white">
+          <i class="fa-solid fa-chart-pie mr-1.5"></i> Visão Geral & Monitoramento
+        </button>
+        <button onclick="mudarAbaMaster1('submissoes')" id="tab-btn-m1-subs" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100">
+          <i class="fa-solid fa-file-signature mr-1.5"></i> Respostas Registradas
+        </button>
+        <button onclick="mudarAbaMaster1('solicitacoes')" id="tab-btn-m1-solicitacoes" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1.5">
+          <i class="fa-solid fa-envelope-open-text"></i>
+          <span>Solicitações Pendentes</span>
+          <span id="badge-pendentes-m1" class="hidden bg-amber-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-black">0</span>
+        </button>
+        <button onclick="mudarAbaMaster1('gestores')" id="tab-btn-m1-gestores" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1.5">
+          <i class="fa-solid fa-users-gear"></i>
+          <span>Administradores Homologados</span>
+        </button>
+      </div>
+
+      <!-- Aba M1 - 1: Visão Geral / Cards de Progresso por Subsecretaria -->
+      <div id="m1-conteudo-visao" class="space-y-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <span class="text-xs font-semibold text-slate-500">Subsecretarias Cobertas</span>
+            <p class="text-2xl font-bold text-slate-800 mt-1">9 Unidades</p>
+            <span class="text-[11px] text-brand-700 font-medium">SUBEB, SUPLAV, SUBTIC...</span>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <span class="text-xs font-semibold text-slate-500">Total de Submissões</span>
+            <p id="m1-stat-total-subs" class="text-2xl font-bold text-brand-900 mt-1">0</p>
+            <span class="text-[11px] text-slate-400">Registradas no Firestore</span>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <span class="text-xs font-semibold text-slate-500">Consolidações Oficiais</span>
+            <p id="m1-stat-oficiais" class="text-2xl font-bold text-emerald-600 mt-1">0</p>
+            <span class="text-[11px] text-emerald-700 font-medium">Homologadas por Administradores</span>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <span class="text-xs font-semibold text-slate-500">Prazo Final SEEDF</span>
+            <p class="text-2xl font-bold text-amber-600 mt-1">09/11/2026</p>
+            <span class="text-[11px] text-slate-400">Envio MEC: 11/11/2026</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-4 border-b border-slate-200">
+            <h3 class="text-sm font-bold text-slate-800">Painel de Acompanhamento por Subsecretaria</h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                <tr>
+                  <th class="p-3">Subsecretaria</th>
+                  <th class="p-3">Questões Atribuídas</th>
+                  <th class="p-3">Respostas de Servidores</th>
+                  <th class="p-3">Consolidação Oficial</th>
+                  <th class="p-3">Administrador Homologado</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-m1-status-subsecretarias" class="divide-y divide-slate-100">
+                <!-- Injetado dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aba M1 - 2: Tabela de Submissões com Filtro -->
+      <div id="m1-conteudo-submissoes" class="hidden space-y-4">
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-3">
+            <span class="font-bold text-slate-700">Filtrar por Subsecretaria:</span>
+            <select id="m1-select-filtro-sub" onchange="carregarSubmissoesMaster1()" class="border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-medium">
+              <option value="TODAS">Todas as 9 Subsecretarias</option>
+              <option value="SUBEB">SUBEB</option>
+              <option value="SUPLAV">SUPLAV</option>
+              <option value="SUBTIC">SUBTIC</option>
+              <option value="SUGEP">SUGEP</option>
+              <option value="SUBIN">SUBIN</option>
+              <option value="SUAPE">SUAPE</option>
+              <option value="ASGOV">ASGOV</option>
+              <option value="SUAG">SUAG</option>
+              <option value="SIAE">SIAE</option>
+            </select>
+          </div>
+          <span id="m1-contagem-submissoes" class="text-slate-500 font-medium"></span>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                <tr>
+                  <th class="p-3">Protocolo</th>
+                  <th class="p-3">Subsecretaria</th>
+                  <th class="p-3">Responsável</th>
+                  <th class="p-3">Tipo do Envio</th>
+                  <th class="p-3">Preenchimento</th>
+                  <th class="p-3">Data / Hora</th>
+                  <th class="p-3 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="m1-tabela-submissoes-corpo" class="divide-y divide-slate-100">
+                <!-- Injetado dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aba M1 - 3: Solicitações Pendentes (NOVA ABA EXCLUSIVA CONFORME SOLICITADO) -->
+      <div id="m1-conteudo-solicitacoes" class="hidden space-y-4">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-4 border-b border-slate-200">
+            <h3 class="text-sm font-bold text-slate-800">Solicitações de Acesso a Administrador</h3>
+            <p class="text-[11px] text-slate-500">Aqui são listados apenas os usuários que formalmente clicaram no botão e solicitaram perfil de Administrador da sua subsecretaria.</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                <tr>
+                  <th class="p-3">Nome</th>
+                  <th class="p-3">E-mail</th>
+                  <th class="p-3">Subsecretaria</th>
+                  <th class="p-3">Data Solicitação</th>
+                  <th class="p-3 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="m1-tabela-solicitacoes-corpo" class="divide-y divide-slate-100">
+                <!-- Injetado dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aba M1 - 4: Administradores Atuais / Gestão de Retirada & Retrocesso -->
+      <div id="m1-conteudo-gestores" class="hidden space-y-4">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-4 border-b border-slate-200">
+            <h3 class="text-sm font-bold text-slate-800">Administradores Homologados das Subsecretarias</h3>
+            <p class="text-[11px] text-slate-500">Usuários com autorização para editar e consolidar as respostas oficiais de sua subsecretaria. Você pode retroceder o acesso para usuário comum a qualquer momento.</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                <tr>
+                  <th class="p-3">Nome</th>
+                  <th class="p-3">E-mail Institucional</th>
+                  <th class="p-3">Subsecretaria</th>
+                  <th class="p-3">Perfil</th>
+                  <th class="p-3 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="m1-tabela-gestores-corpo" class="divide-y divide-slate-100">
+                <!-- Injetado dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TELA 5: PAINEL DO ADMINISTRADOR DA SUBSECRETARIA ==================== -->
+    <section id="tela-master2-dashboard" class="hidden space-y-6">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="bg-amber-600 text-white font-bold px-2 py-0.5 rounded text-[10px] tracking-wider uppercase" id="m2-badge-sub">ADMINISTRADOR</span>
+            <span class="text-xs text-slate-500 font-medium">Consolidação e Edição da Área</span>
+          </div>
+          <h2 class="text-xl font-bold text-slate-800">Espaço de Consolidação da Subsecretaria</h2>
+          <p class="text-xs text-slate-500">Veja as respostas enviadas, responda/edite o formulário e faça a homologação da versão oficial da área.</p>
+        </div>
+
+        <!-- DUAS OPÇÕES EXPLÍCITAS: EDITAR e ENVIAR -->
+        <div class="flex items-center gap-2">
+          <button onclick="irParaFormularioEdicao()" class="px-4 py-2.5 text-xs font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-xl shadow-xs flex items-center gap-1.5 transition-all">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <span>Editar Respostas</span>
+          </button>
+          <button onclick="irParaFormularioEnvioFinal()" class="px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow flex items-center gap-1.5 transition-all">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Enviar Consolidação Oficial</span>
+          </button>
+          <button onclick="carregarDadosMaster2()" class="px-3.5 py-2.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">
+            <i class="fa-solid fa-rotate"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabela com as respostas dos servidores daquela subsecretaria -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex justify-between items-center">
+          <h3 class="text-sm font-bold text-slate-800">Respostas Registradas na Subsecretaria</h3>
+          <span id="m2-contagem-respostas" class="text-xs text-slate-500 font-medium"></span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+              <tr>
+                <th class="p-3">Protocolo</th>
+                <th class="p-3">Servidor</th>
+                <th class="p-3">Tipo</th>
+                <th class="p-3">Respondidas</th>
+                <th class="p-3">Data</th>
+                <th class="p-3 text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="m2-tabela-respostas-corpo" class="divide-y divide-slate-100">
+              <!-- Injetado dinamicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: SOLICITAÇÃO DE ADMINISTRADOR (SIMPLIFICADO) -->
+  <div id="modal-solicitar-master" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4 border border-slate-200">
+      <div class="flex justify-between items-center">
+        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-shield-halved text-brand-700"></i>
+          Solicitar Perfil Administrador
+        </h3>
+        <button onclick="fecharModalSolicitacaoMaster()" class="text-slate-400 hover:text-slate-600 text-sm">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Deseja solicitar o acesso de <strong>Administrador</strong> da sua subsecretaria? O Administrador Central avaliará e homologará sua solicitação.
+      </p>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="fecharModalSolicitacaoMaster()" class="px-3.5 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg">
+          Cancelar
+        </button>
+        <button onclick="confirmarSolicitacaoMaster()" id="btn-confirmar-solic-master" class="px-4 py-2 text-xs font-bold text-white bg-brand-700 hover:bg-brand-800 rounded-lg shadow">
+          Confirmar Solicitação
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: VISUALIZAR RESPOSTAS DA SUBMISSÃO -->
+  <div id="modal-ver-submissao" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col border border-slate-200 overflow-hidden">
+      <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+        <div>
+          <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <span id="modal-sub-proto" class="text-brand-900 font-mono"></span>
+            <span id="modal-sub-tag" class="px-2 py-0.5 rounded text-[10px] font-bold"></span>
+          </h3>
+          <p id="modal-sub-info" class="text-xs text-slate-500 mt-0.5"></p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="modal-btn-pdf" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow">
+            <i class="fa-solid fa-file-pdf"></i> Baixar PDF
+          </button>
+          <button onclick="fecharModalSubmissao()" class="text-slate-400 hover:text-slate-600 text-lg p-1">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <div id="modal-sub-respostas-lista" class="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
+        <!-- Injetado dinamicamente -->
+      </div>
+
+      <div class="p-3 border-t border-slate-200 bg-slate-50 flex justify-end gap-2">
+        <button onclick="fecharModalSubmissao()" class="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-200 hover:bg-slate-300 rounded-lg">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT DA APLICAÇÃO -->
+  <script>
+    let usuarioAtual = null;
+    let questoesCarregadas = [];
+    let submissoesCarregadas = [];
+    let usuariosLista = [];
+    let protocoloSucessoAtual = "";
+    let respostasParaEditar = null;
+
+    const MASTER_1_EMAIL = "joao.carmo@nees.ufal.br";
+
+    const SUBSECRETARIAS_NOMES = [
+      { sigla: "SUBEB", nome: "Educação Básica", total: 41 },
+      { sigla: "SUPLAV", nome: "Planejamento e Acompanhamento", total: 28 },
+      { sigla: "SUBTIC", nome: "Tecnologia da Informação", total: 27 },
+      { sigla: "SUGEP", nome: "Gestão de Pessoas", total: 26 },
+      { sigla: "SUBIN", nome: "Educação Inclusiva", total: 24 },
+      { sigla: "SUAPE", nome: "Apoio às Políticas Educacionais", total: 23 },
+      { sigla: "ASGOV", nome: "Assessoria de Governança", total: 17 },
+      { sigla: "SUAG", nome: "Administração Geral", total: 16 },
+      { sigla: "SIAE", nome: "Infraestrutura e Apoio", total: 12 }
+    ];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const savedUser = localStorage.getItem("par_user");
+      if (savedUser) {
+        try {
+          usuarioAtual = JSON.parse(savedUser);
+          redirecionarPorPerfil();
+        } catch (e) {
+          localStorage.removeItem("par_user");
+        }
+      }
+    });
+
+    function checarEmailMaster1(email) {
+      const emailTrim = (email || "").trim().toLowerCase();
+      const containerSub = document.getElementById("campo-subsecretaria-container");
+      const avisoM1 = document.getElementById("aviso-master1-login");
+      const selectSub = document.getElementById("login-subsecretaria");
+
+      if (emailTrim === MASTER_1_EMAIL) {
+        containerSub.classList.add("hidden");
+        selectSub.removeAttribute("required");
+        avisoM1.classList.remove("hidden");
+      } else {
+        containerSub.classList.remove("hidden");
+        selectSub.setAttribute("required", "required");
+        avisoM1.classList.add("hidden");
+      }
+    }
+
+    async function realizarEntrada(e) {
+      e.preventDefault();
+      const nome = document.getElementById("login-nome").value.trim();
+      const email = document.getElementById("login-email").value.trim().toLowerCase();
+      let subsecretaria = document.getElementById("login-subsecretaria").value;
+
+      if (email === MASTER_1_EMAIL) {
+        subsecretaria = "SE-DF";
+      }
+
+      if (!nome || !email || (!subsecretaria && email !== MASTER_1_EMAIL)) {
+        alert("Preencha todos os campos obrigatórios.");
+        return;
+      }
+
+      const btn = document.getElementById("btn-entrar");
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Entrando...`;
+
+      try {
+        const res = await fetch("/api/auth/entrar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nome, email, subsecretaria })
+        });
+        const data = await res.json();
+
+        usuarioAtual = data.usuario;
+        localStorage.setItem("par_user", JSON.stringify(usuarioAtual));
+        
+        redirecionarPorPerfil(data.ja_enviou, data.submissao_anterior, data.ja_consolidou_subsecretaria, data.consolidacao_oficial);
+      } catch (err) {
+        alert("Erro ao conectar com o servidor: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Acessar Sistema</span> <i class="fa-solid fa-arrow-right text-xs"></i>`;
+      }
+    }
+
+    function redirecionarPorPerfil(jaEnviou = false, submissaoAnterior = null, jaConsolidou = false, consolidacaoOficial = null) {
+      atualizarCabecalho();
+
+      // REGRA: Master 1 vai DIRETO para o seu Painel de Monitoramento (não abre questionário)
+      if (usuarioAtual.perfil === "master_1") {
+        abrirPainelMaster1();
+        return;
+      }
+
+      // REGRA: Administrador (Master 2):
+      // Se a subsecretaria já tem consolidação oficial homologada:
+      if (usuarioAtual.perfil === "master_2") {
+        if (jaConsolidou && consolidacaoOficial) {
+          exibirTelaJaEnviou(consolidacaoOficial, true);
+        } else {
+          abrirPainelMaster2();
+        }
+        return;
+      }
+
+      // REGRA: Usuário comum: verifica se já enviou
+      if (jaEnviou || usuarioAtual.ja_enviou) {
+        exibirTelaJaEnviou(submissaoAnterior || { protocolo_id: usuarioAtual.submissao_protocolo, data_envio: usuarioAtual.data_envio });
+      } else {
+        carregarQuestionario();
+      }
+    }
+
+    function atualizarCabecalho() {
+      if (!usuarioAtual) return;
+      document.getElementById("user-header-info").classList.remove("hidden");
+      document.getElementById("header-user-name").textContent = usuarioAtual.nome;
+      document.getElementById("header-user-sub").textContent = usuarioAtual.subsecretaria;
+      
+      const roleElem = document.getElementById("header-user-role");
+      if (usuarioAtual.perfil === "master_1") {
+        roleElem.className = "text-[10px] px-1.5 py-0.5 rounded font-bold bg-purple-100 text-purple-800 border border-purple-200";
+        roleElem.textContent = "Administrador Geral";
+      } else if (usuarioAtual.perfil === "master_2") {
+        roleElem.className = "text-[10px] px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-200";
+        roleElem.textContent = "Administrador";
+      } else {
+        roleElem.className = "text-[10px] px-1.5 py-0.5 rounded font-bold bg-slate-100 text-slate-600";
+        roleElem.textContent = "Servidor";
+      }
+    }
+
+    function voltarParaDashboard() {
+      if (usuarioAtual.perfil === "master_2") {
+        abrirPainelMaster2();
+      } else if (usuarioAtual.perfil === "master_1") {
+        abrirPainelMaster1();
+      }
+    }
+
+    // ==================== PAINEL MASTER 1 (SUPER ADMIN) ====================
+    async function abrirPainelMaster1() {
+      esconderTodasTelas();
+      document.getElementById("tela-master1-dashboard").classList.remove("hidden");
+      await carregarDadosMaster1();
+    }
+
+    async function carregarDadosMaster1() {
+      await carregarSubmissoesMaster1();
+      await carregarUsuariosMaster1();
+      atualizarStatusSubsecretariasM1();
+    }
+
+    async function carregarSubmissoesMaster1() {
+      const filtroSub = document.getElementById("m1-select-filtro-sub")?.value || "TODAS";
+      const url = `/api/master/submissoes?solicitante_email=${encodeURIComponent(usuarioAtual.email)}&subsecretaria=${filtroSub}`;
+      
+      const res = await fetch(url);
+      const data = await res.json();
+      submissoesCarregadas = data.submissoes || [];
+
+      document.getElementById("m1-stat-total-subs").textContent = submissoesCarregadas.length;
+      const oficiais = submissoesCarregadas.filter(s => s.tipo_envio === "consolidacao_oficial").length;
+      document.getElementById("m1-stat-oficiais").textContent = oficiais;
+
+      document.getElementById("m1-contagem-submissoes").textContent = `${submissoesCarregadas.length} submissão(ões)`;
+
+      const corpo = document.getElementById("m1-tabela-submissoes-corpo");
+      corpo.innerHTML = "";
+
+      if (submissoesCarregadas.length === 0) {
+        corpo.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Nenhuma submissão encontrada.</td></tr>`;
+        return;
+      }
+
+      submissoesCarregadas.forEach(sub => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition-colors";
+        
+        const isOficial = sub.tipo_envio === "consolidacao_oficial";
+        const tag = isOficial 
+          ? `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">Oficial Homologada</span>`
+          : `<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px]">Preliminar Servidor</span>`;
+
+        tr.innerHTML = `
+          <td class="p-3 font-mono font-bold text-brand-900">${sub.protocolo_id || sub.id}</td>
+          <td class="p-3 font-bold">${sub.responsavel?.subsecretaria || "-"}</td>
+          <td class="p-3">${sub.responsavel?.nome || "-"}<br><span class="text-slate-400">${sub.responsavel?.email || ""}</span></td>
+          <td class="p-3">${tag}</td>
+          <td class="p-3 font-bold text-emerald-700">${sub.metricas?.total_respondido || 0} / ${sub.metricas?.total_atribuido || 0}</td>
+          <td class="p-3 text-slate-500">${formatarData(sub.data_envio)}</td>
+          <td class="p-3 text-center space-x-1">
+            <button onclick="verDetalhesSubmissao('${sub.protocolo_id || sub.id}')" class="px-2.5 py-1 bg-brand-50 text-brand-700 hover:bg-brand-100 rounded font-semibold text-[11px]">
+              <i class="fa-regular fa-eye mr-1"></i> Ver
+            </button>
+            <a href="/api/submissoes/pdf/${sub.protocolo_id || sub.id}" target="_blank" class="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded font-semibold text-[11px] inline-block">
+              <i class="fa-solid fa-file-pdf mr-1"></i> PDF
+            </a>
+          </td>
+        `;
+        corpo.appendChild(tr);
+      });
+    }
+
+    async function carregarUsuariosMaster1() {
+      const res = await fetch(`/api/master1/usuarios?solicitante_email=${encodeURIComponent(usuarioAtual.email)}`);
+      const data = await res.json();
+      usuariosLista = data.usuarios || [];
+
+      // Filtra apenas solicitações pendentes
+      const solicitacoesPendentes = usuariosLista.filter(u => u.solicitou_master2 && u.status_solicitacao === "pendente" && u.perfil !== "master_2");
+      const badgeP = document.getElementById("badge-pendentes-m1");
+      if (solicitacoesPendentes.length > 0) {
+        badgeP.textContent = solicitacoesPendentes.length;
+        badgeP.classList.remove("hidden");
+      } else {
+        badgeP.classList.add("hidden");
+      }
+
+      // Renderiza Tabela de Solicitações Pendentes (NOVO)
+      const corpoSolic = document.getElementById("m1-tabela-solicitacoes-corpo");
+      corpoSolic.innerHTML = "";
+      if (solicitacoesPendentes.length === 0) {
+        corpoSolic.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Nenhuma solicitação pendente no momento.</td></tr>`;
+      } else {
+        solicitacoesPendentes.forEach(u => {
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-slate-50 transition-colors";
+          tr.innerHTML = `
+            <td class="p-3 font-semibold text-slate-800">${u.nome || "-"}</td>
+            <td class="p-3 text-slate-600">${u.email}</td>
+            <td class="p-3 font-bold">${u.subsecretaria || "-"}</td>
+            <td class="p-3 text-slate-500">${formatarData(u.data_solicitacao)}</td>
+            <td class="p-3 text-center space-x-2">
+              <button onclick="alterarPerfil('${u.email}', 'master_2', 'aprovado')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-xs shadow-xs">
+                <i class="fa-solid fa-check mr-1"></i> Homologar Administrador
+              </button>
+              <button onclick="alterarPerfil('${u.email}', 'usuario_comum', 'recusado')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded font-semibold text-xs">
+                Recusar
+              </button>
+            </td>
+          `;
+          corpoSolic.appendChild(tr);
+        });
+      }
+
+      // Renderiza Tabela de Administradores Homologados (NOVO)
+      const corpoGestores = document.getElementById("m1-tabela-gestores-corpo");
+      corpoGestores.innerHTML = "";
+      const gestoresAtivos = usuariosLista.filter(u => u.perfil === "master_2" || u.email === MASTER_1_EMAIL);
+      
+      gestoresAtivos.forEach(u => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition-colors";
+
+        let acoes = "";
+        if (u.email === usuarioAtual.email) {
+          acoes = `<span class="text-slate-400 italic">Administrador Geral</span>`;
+        } else {
+          acoes = `
+            <button onclick="alterarPerfil('${u.email}', 'usuario_comum', 'revogado')" class="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded font-semibold text-xs border border-red-200">
+              <i class="fa-solid fa-arrow-down mr-1"></i> Retroceder para Usuário Comum
+            </button>
+          `;
+        }
+
+        tr.innerHTML = `
+          <td class="p-3 font-semibold text-slate-800">${u.nome || "-"}</td>
+          <td class="p-3 text-slate-600">${u.email}</td>
+          <td class="p-3 font-bold">${u.subsecretaria || "-"}</td>
+          <td class="p-3">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${u.perfil === 'master_1' ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'}">
+              ${u.perfil === 'master_1' ? 'Administrador Geral' : 'Administrador da Área'}
+            </span>
+          </td>
+          <td class="p-3 text-center">${acoes}</td>
+        `;
+        corpoGestores.appendChild(tr);
+      });
+    }
+
+    function atualizarStatusSubsecretariasM1() {
+      const corpo = document.getElementById("tabela-m1-status-subsecretarias");
+      corpo.innerHTML = "";
+
+      SUBSECRETARIAS_NOMES.forEach(subItem => {
+        const sigla = subItem.sigla;
+        const submissoesDaArea = submissoesCarregadas.filter(s => s.responsavel?.subsecretaria === sigla);
+        const temOficial = submissoesDaArea.some(s => s.tipo_envio === "consolidacao_oficial");
+        const gestoresM2 = usuariosLista.filter(u => u.subsecretaria === sigla && u.perfil === "master_2");
+
+        const statusOficial = temOficial 
+          ? `<span class="text-emerald-700 font-bold flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Homologado</span>`
+          : `<span class="text-amber-600 font-medium flex items-center gap-1"><i class="fa-regular fa-clock"></i> Pendente</span>`;
+
+        const gestorStr = gestoresM2.length > 0 
+          ? gestoresM2.map(g => `<span class="font-semibold text-slate-800">${g.nome}</span>`).join(", ")
+          : `<span class="text-slate-400 italic">Sem administrador cadastrado</span>`;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="p-3 font-bold text-slate-800">${sigla} <span class="text-slate-400 font-normal">(${subItem.nome})</span></td>
+          <td class="p-3 font-semibold">${subItem.total} questões</td>
+          <td class="p-3">${submissoesDaArea.length} envio(s)</td>
+          <td class="p-3">${statusOficial}</td>
+          <td class="p-3">${gestorStr}</td>
+        `;
+        corpo.appendChild(tr);
+      });
+    }
+
+    async function alterarPerfil(emailAlvo, novoPerfil, statusSolic) {
+      if (!confirm(`Confirma a alteração para ${emailAlvo}?`)) return;
+
+      const res = await fetch(`/api/master1/alterar_perfil?solicitante_email=${encodeURIComponent(usuarioAtual.email)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email_alvo: emailAlvo, novo_perfil: novoPerfil, status_solicitacao: statusSolic })
+      });
+      const data = await res.json();
+      if (data.sucesso) {
+        alert("Operação realizada com sucesso!");
+        await carregarUsuariosMaster1();
+        atualizarStatusSubsecretariasM1();
+      }
+    }
+
+    function mudarAbaMaster1(aba) {
+      const bVisao = document.getElementById("tab-btn-m1-visao");
+      const bSubs = document.getElementById("tab-btn-m1-subs");
+      const bSolic = document.getElementById("tab-btn-m1-solicitacoes");
+      const bGest = document.getElementById("tab-btn-m1-gestores");
+
+      const cVisao = document.getElementById("m1-conteudo-visao");
+      const cSubs = document.getElementById("m1-conteudo-submissoes");
+      const cSolic = document.getElementById("m1-conteudo-solicitacoes");
+      const cGest = document.getElementById("m1-conteudo-gestores");
+
+      [bVisao, bSubs, bSolic, bGest].forEach(b => b.className = "px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100");
+      [cVisao, cSubs, cSolic, cGest].forEach(c => c.classList.add("hidden"));
+
+      if (aba === "visao_geral") {
+        bVisao.className = "px-4 py-2 text-xs font-bold rounded-lg bg-brand-700 text-white";
+        cVisao.classList.remove("hidden");
+      } else if (aba === "submissoes") {
+        bSubs.className = "px-4 py-2 text-xs font-bold rounded-lg bg-brand-700 text-white";
+        cSubs.classList.remove("hidden");
+      } else if (aba === "solicitacoes") {
+        bSolic.className = "px-4 py-2 text-xs font-bold rounded-lg bg-brand-700 text-white flex items-center gap-1.5";
+        cSolic.classList.remove("hidden");
+      } else {
+        bGest.className = "px-4 py-2 text-xs font-bold rounded-lg bg-brand-700 text-white flex items-center gap-1.5";
+        cGest.classList.remove("hidden");
+      }
+    }
+
+    // ==================== PAINEL DO ADMINISTRADOR DA SUBSECRETARIA ====================
+    async function abrirPainelMaster2() {
+      esconderTodasTelas();
+      document.getElementById("tela-master2-dashboard").classList.remove("hidden");
+      document.getElementById("m2-badge-sub").textContent = `ADMINISTRADOR • ${usuarioAtual.subsecretaria}`;
+      await carregarDadosMaster2();
+    }
+
+    async function carregarDadosMaster2() {
+      const url = `/api/master/submissoes?solicitante_email=${encodeURIComponent(usuarioAtual.email)}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      submissoesCarregadas = data.submissoes || [];
+
+      document.getElementById("m2-contagem-respostas").textContent = `${submissoesCarregadas.length} envio(s) nesta subsecretaria`;
+
+      const corpo = document.getElementById("m2-tabela-respostas-corpo");
+      corpo.innerHTML = "";
+
+      if (submissoesCarregadas.length === 0) {
+        corpo.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Nenhum servidor submeteu respostas para ${usuarioAtual.subsecretaria} ainda.</td></tr>`;
+        return;
+      }
+
+      submissoesCarregadas.forEach(sub => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition-colors";
+        
+        const isOficial = sub.tipo_envio === "consolidacao_oficial";
+        const tag = isOficial 
+          ? `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">Sua Consolidação Oficial</span>`
+          : `<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px]">Preliminar Servidor</span>`;
+
+        tr.innerHTML = `
+          <td class="p-3 font-mono font-bold text-brand-900">${sub.protocolo_id || sub.id}</td>
+          <td class="p-3">${sub.responsavel?.nome || "-"}<br><span class="text-slate-400">${sub.responsavel?.email || ""}</span></td>
+          <td class="p-3">${tag}</td>
+          <td class="p-3 font-bold text-emerald-700">${sub.metricas?.total_respondido || 0} / ${sub.metricas?.total_atribuido || 0}</td>
+          <td class="p-3 text-slate-500">${formatarData(sub.data_envio)}</td>
+          <td class="p-3 text-center space-x-1">
+            <button onclick="carregarParaEdicao('${sub.protocolo_id || sub.id}')" class="px-2.5 py-1 bg-amber-50 text-amber-800 hover:bg-amber-100 rounded font-bold text-[11px] border border-amber-200">
+              <i class="fa-solid fa-pen mr-1"></i> Carregar p/ Editar
+            </button>
+            <button onclick="verDetalhesSubmissao('${sub.protocolo_id || sub.id}')" class="px-2.5 py-1 bg-brand-50 text-brand-700 hover:bg-brand-100 rounded font-semibold text-[11px]">
+              <i class="fa-regular fa-eye mr-1"></i> Ver
+            </button>
+            <a href="/api/submissoes/pdf/${sub.protocolo_id || sub.id}" target="_blank" class="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded font-semibold text-[11px] inline-block">
+              <i class="fa-solid fa-file-pdf mr-1"></i> PDF
+            </a>
+          </td>
+        `;
+        corpo.appendChild(tr);
+      });
+    }
+
+    async function carregarParaEdicao(protoId) {
+      const sub = submissoesCarregadas.find(s => (s.protocolo_id === protoId || s.id === protoId));
+      if (!sub) return;
+
+      respostasParaEditar = sub.respostas || [];
+      irParaFormularioEdicao();
+    }
+
+    function irParaFormularioEdicao() {
+      esconderTodasTelas();
+      document.getElementById("tela-questionario").classList.remove("hidden");
+      document.getElementById("btn-voltar-topo").classList.remove("hidden");
+      document.getElementById("btn-painel-master").classList.remove("hidden");
+      document.getElementById("btn-solicitar-master").classList.add("hidden");
+
+      document.getElementById("titulo-questionario").textContent = `Edição de Respostas — ${usuarioAtual.subsecretaria}`;
+      document.getElementById("subtitulo-questionario").textContent = "Você está editando as respostas da sua subsecretaria.";
+      document.getElementById("texto-aviso-envio").textContent = "Após ajustar as respostas, clique em salvar/consolidar.";
+      document.getElementById("label-btn-enviar").textContent = "Salvar Alterações e Consolidar";
+
+      carregarQuestionario(true);
+    }
+
+    function irParaFormularioEnvioFinal() {
+      esconderTodasTelas();
+      document.getElementById("tela-questionario").classList.remove("hidden");
+      document.getElementById("btn-voltar-topo").classList.remove("hidden");
+      document.getElementById("btn-painel-master").classList.remove("hidden");
+      document.getElementById("btn-solicitar-master").classList.add("hidden");
+
+      document.getElementById("titulo-questionario").textContent = `Consolidação Oficial Final — ${usuarioAtual.subsecretaria}`;
+      document.getElementById("subtitulo-questionario").textContent = "Envio da versão homologada da subsecretaria ao Administrador Central.";
+      document.getElementById("texto-aviso-envio").textContent = "Este envio será registrado como a versão oficial final da área.";
+      document.getElementById("label-btn-enviar").textContent = "Enviar Consolidação Oficial";
+
+      carregarQuestionario(false);
+    }
+
+    function alternarVisaoMaster() {
+      if (usuarioAtual.perfil === "master_2") {
+        abrirPainelMaster2();
+      } else if (usuarioAtual.perfil === "master_1") {
+        abrirPainelMaster1();
+      }
+    }
+
+    // ==================== FORMULÁRIO DE QUESTÕES ====================
+    async function carregarQuestionario(preencherComDados = false) {
+      esconderTodasTelas();
+      document.getElementById("tela-questionario").classList.remove("hidden");
+      document.getElementById("badge-sub-ativa").textContent = usuarioAtual.subsecretaria;
+
+      try {
+        const res = await fetch(`/api/questoes/${usuarioAtual.subsecretaria}`);
+        const data = await res.json();
+        questoesCarregadas = data.questoes || [];
+
+        document.getElementById("info-total-questoes").textContent = `${data.total || questoesCarregadas.length} questões designadas`;
+        document.getElementById("progresso-total").textContent = data.total || questoesCarregadas.length;
+
+        renderizarQuestoes();
+
+        if (preencherComDados && respostasParaEditar) {
+          preencherFormularioComRespostas(respostasParaEditar);
+        }
+
+        atualizarProgresso();
+      } catch (err) {
+        console.error("Erro ao carregar questões:", err);
+        alert("Erro ao carregar o questionário: " + err.message);
+      }
+    }
+
+    function preencherFormularioComRespostas(listaRespostas) {
+      listaRespostas.forEach(r => {
+        const cod = r.codigo_questao;
+        const opc = r.opcao_marcada;
+        const evid = r.evidencia_normativa;
+
+        if (evid) {
+          const inputEvid = document.querySelector(`input[name="evid_${cod}"]`);
+          if (inputEvid) inputEvid.value = evid;
+        }
+
+        if (Array.isArray(opc)) {
+          opc.forEach(val => {
+            const chk = document.querySelector(`input[name="resp_${cod}"][value="${val}"]`);
+            if (chk) chk.checked = true;
+          });
+        } else if (opc) {
+          const rad = document.querySelector(`input[name="resp_${cod}"][value="${opc}"]`);
+          if (rad) {
+            rad.checked = true;
+          } else {
+            const numInput = document.querySelector(`input[name="resp_${cod}"]`);
+            if (numInput) numInput.value = opc;
+          }
+        }
+      });
+    }
+
+    function renderizarQuestoes() {
+      const container = document.getElementById("lista-questoes");
+      container.innerHTML = "";
+
+      let ultimoTema = "";
+
+      questoesCarregadas.forEach((q, idx) => {
+        if (q.tema !== ultimoTema) {
+          ultimoTema = q.tema;
+          const temaDiv = document.createElement("div");
+          temaDiv.className = "pt-3 pb-1 border-b border-slate-200";
+          temaDiv.innerHTML = `
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-folder-open text-brand-700"></i> ${q.eixo} • ${q.tema}
+            </span>
+          `;
+          container.appendChild(temaDiv);
+        }
+
+        const card = document.createElement("div");
+        card.className = "bg-white p-5 md:p-6 rounded-2xl shadow-xs border border-slate-200 transition-all space-y-4";
+        card.id = `card-q-${q.codigo.replace(/\./g, '_')}`;
+
+        const badgeClass = q.is_comum ? "badge-comum" : "badge-especifica";
+
+        let htmlInputs = "";
+
+        if (q.tipo_input === "number") {
+          htmlInputs = `
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Informe o valor numérico ou percentual <span class="text-red-500">*</span>:</label>
+              <input type="number" step="any" required name="resp_${q.codigo}" oninput="limparDestaqueErro('${q.codigo}'); atualizarProgresso();"
+                     placeholder="Digite o número (ex: 15)"
+                     class="w-full sm:w-64 px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-700 focus:outline-none">
+            </div>
+          `;
+        } else if (q.tipo_input === "checkbox") {
+          htmlInputs = `
+            <div class="space-y-2">
+              <p class="text-[11px] font-bold text-slate-600"><i class="fa-solid fa-square-check mr-1"></i> Selecione pelo menos uma opção <span class="text-red-500">*</span>:</p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                ${q.opcoes.map((opt, i) => `
+                  <label class="flex items-start gap-2.5 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs transition-colors">
+                    <input type="checkbox" name="resp_${q.codigo}" value="${opt}" onchange="limparDestaqueErro('${q.codigo}'); atualizarProgresso();"
+                           class="mt-0.5 rounded text-brand-700 focus:ring-brand-700 border-slate-300">
+                    <span class="text-slate-700 leading-snug">${opt}</span>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        } else {
+          // Radio
+          htmlInputs = `
+            <div class="space-y-2">
+              <p class="text-[11px] font-bold text-slate-600"><i class="fa-solid fa-circle-dot mr-1"></i> Selecione uma alternativa <span class="text-red-500">*</span>:</p>
+              <div class="space-y-1.5">
+                ${q.opcoes.map((opt, i) => `
+                  <label class="flex items-start gap-2.5 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs transition-colors">
+                    <input type="radio" name="resp_${q.codigo}" value="${opt}" onchange="limparDestaqueErro('${q.codigo}'); atualizarProgresso();"
+                           class="mt-0.5 text-brand-700 focus:ring-brand-700 border-slate-300 custom-radio">
+                    <span class="text-slate-700 leading-snug">${opt}</span>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        // Sem campo de observação conforme solicitado
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-xs font-black text-brand-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">${q.codigo}</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${badgeClass}">${q.tipo_atribuicao}</span>
+            </div>
+          </div>
+
+          <h3 class="text-sm md:text-base font-bold text-slate-800 leading-snug">
+            ${q.enunciado}
+          </h3>
+
+          ${htmlInputs}
+
+          <div class="pt-3 border-t border-slate-100">
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">
+              <i class="fa-solid fa-file-shield text-brand-700 mr-1"></i> Evidência Normativa / Processo SEI / Portaria (se houver):
+            </label>
+            <input type="text" name="evid_${q.codigo}" placeholder="Ex.: Processo SEI 00080-00012345/2026-11; Portaria nº 123/2026"
+                   class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-700 focus:outline-none">
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function limparDestaqueErro(codigo) {
+      const card = document.getElementById(`card-q-${codigo.replace(/\./g, '_')}`);
+      if (card) {
+        card.classList.remove("card-incompleto");
+      }
+      document.getElementById("alerta-obrigatorias").classList.add("hidden");
+    }
+
+    function atualizarProgresso() {
+      let respondidas = 0;
+      questoesCarregadas.forEach(q => {
+        if (q.tipo_input === "number") {
+          const val = document.querySelector(`input[name="resp_${q.codigo}"]`)?.value;
+          if (val !== undefined && val.trim() !== "") respondidas++;
+        } else if (q.tipo_input === "checkbox") {
+          const checked = document.querySelectorAll(`input[name="resp_${q.codigo}"]:checked`);
+          if (checked.length > 0) respondidas++;
+        } else {
+          const radio = document.querySelector(`input[name="resp_${q.codigo}"]:checked`);
+          if (radio) respondidas++;
+        }
+      });
+
+      const total = questoesCarregadas.length;
+      const pct = total > 0 ? Math.round((respondidas / total) * 100) : 0;
+
+      document.getElementById("progresso-bar").style.width = `${pct}%`;
+      document.getElementById("progresso-percent").textContent = `${pct}% respondido`;
+      document.getElementById("progresso-contagem").textContent = respondidas;
+    }
+
+    async function enviarRespostas(e) {
+      e.preventDefault();
+
+      let pendentes = [];
+      questoesCarregadas.forEach(q => {
+        let respondida = false;
+        if (q.tipo_input === "number") {
+          const val = document.querySelector(`input[name="resp_${q.codigo}"]`)?.value;
+          if (val !== undefined && val.trim() !== "") respondida = true;
+        } else if (q.tipo_input === "checkbox") {
+          const checked = document.querySelectorAll(`input[name="resp_${q.codigo}"]:checked`);
+          if (checked.length > 0) respondida = true;
+        } else {
+          const radio = document.querySelector(`input[name="resp_${q.codigo}"]:checked`);
+          if (radio) respondida = true;
+        }
+
+        const card = document.getElementById(`card-q-${q.codigo.replace(/\./g, '_')}`);
+        if (!respondida) {
+          pendentes.push(q.codigo);
+          if (card) card.classList.add("card-incompleto");
+        } else {
+          if (card) card.classList.remove("card-incompleto");
+        }
+      });
+
+      if (pendentes.length > 0) {
+        document.getElementById("alerta-obrigatorias").classList.remove("hidden");
+        const primeiroCard = document.getElementById(`card-q-${pendentes[0].replace(/\./g, '_')}`);
+        if (primeiroCard) {
+          primeiroCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        alert(`Você possui ${pendentes.length} questão(ões) sem resposta. Todas as perguntas são obrigatórias.`);
+        return;
+      }
+
+      if (!confirm("Confirma o envio definitivo das suas respostas?")) return;
+
+      const btn = document.getElementById("btn-enviar-respostas");
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Registrando no Firebase...`;
+
+      const respostas = [];
+      let totalComEvidencia = 0;
+
+      questoesCarregadas.forEach(q => {
+        let valorMarcado = null;
+        if (q.tipo_input === "number") {
+          valorMarcado = document.querySelector(`input[name="resp_${q.codigo}"]`)?.value || "";
+        } else if (q.tipo_input === "checkbox") {
+          const checks = document.querySelectorAll(`input[name="resp_${q.codigo}"]:checked`);
+          valorMarcado = Array.from(checks).map(c => c.value);
+        } else {
+          const radio = document.querySelector(`input[name="resp_${q.codigo}"]:checked`);
+          valorMarcado = radio ? radio.value : "";
+        }
+
+        const evidencia = document.querySelector(`input[name="evid_${q.codigo}"]`)?.value || "";
+
+        if (evidencia.trim()) totalComEvidencia++;
+
+        respostas.push({
+          codigo_questao: q.codigo,
+          eixo: q.eixo,
+          tema: q.tema,
+          tipo_atribuicao: q.tipo_atribuicao,
+          enunciado: q.enunciado,
+          opcao_marcada: valorMarcado,
+          evidencia_normativa: evidencia
+        });
+      });
+
+      const payload = {
+        responsavel: {
+          nome: usuarioAtual.nome,
+          email: usuarioAtual.email,
+          subsecretaria: usuarioAtual.subsecretaria,
+          perfil: usuarioAtual.perfil
+        },
+        metricas: {
+          total_atribuido: questoesCarregadas.length,
+          total_respondido: respostas.length,
+          total_com_evidencia: totalComEvidencia
+        },
+        respostas: respostas
+      };
+
+      try {
+        const res = await fetch("/api/submissoes/enviar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          usuarioAtual.ja_enviou = true;
+          usuarioAtual.submissao_protocolo = data.protocolo_id;
+          localStorage.setItem("par_user", JSON.stringify(usuarioAtual));
+          exibirSucesso(data);
+        } else {
+          alert("Erro: " + (data.detail || "questionario ja enviado"));
+        }
+      } catch (err) {
+        alert("Erro na conexão: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> <span>${document.getElementById('label-btn-enviar').textContent}</span>`;
+      }
+    }
+
+    function exibirSucesso(data) {
+      esconderTodasTelas();
+      document.getElementById("tela-sucesso").classList.remove("hidden");
+
+      protocoloSucessoAtual = data.protocolo_id;
+      document.getElementById("sucesso-proto").textContent = data.protocolo_id;
+      document.getElementById("sucesso-sub").textContent = usuarioAtual.subsecretaria;
+      document.getElementById("sucesso-nome").textContent = usuarioAtual.nome;
+      document.getElementById("sucesso-email").textContent = usuarioAtual.email;
+      document.getElementById("sucesso-data").textContent = formatarData(data.data_envio);
+    }
+
+    function baixarPdfSucesso() {
+      if (!protocoloSucessoAtual) return;
+      window.open(`/api/submissoes/pdf/${protocoloSucessoAtual}`, "_blank");
+    }
+
+    function baixarPdfComprovante() {
+      const proto = usuarioAtual?.submissao_protocolo || document.getElementById("ja-enviou-proto").textContent;
+      if (!proto) return;
+      window.open(`/api/submissoes/pdf/${proto}`, "_blank");
+    }
+
+    function exibirTelaJaEnviou(submissao, ehMaster2Consolidado = false) {
+      esconderTodasTelas();
+      document.getElementById("tela-ja-enviou").classList.remove("hidden");
+      
+      const proto = submissao.protocolo_id || submissao.id || "REGISTRADO";
+      usuarioAtual.submissao_protocolo = proto;
+      
+      document.getElementById("ja-enviou-sub").textContent = submissao.responsavel?.subsecretaria || usuarioAtual.subsecretaria;
+      document.getElementById("ja-enviou-proto").textContent = proto;
+      document.getElementById("ja-enviou-data").textContent = formatarData(submissao.data_envio);
+      document.getElementById("ja-enviou-nome").textContent = submissao.responsavel?.nome || usuarioAtual.nome;
+
+      const btnMonit = document.getElementById("btn-ja-enviou-monitoramento");
+      const btnSolic = document.getElementById("btn-ja-enviou-solicitar");
+
+      if (usuarioAtual.perfil === "master_2") {
+        document.getElementById("ja-enviou-msg").textContent = `A Consolidação Oficial da subsecretaria ${usuarioAtual.subsecretaria} já foi homologada e enviada sob o protocolo abaixo. Você pode continuar monitorando a área.`;
+        btnMonit.classList.remove("hidden");
+        btnSolic.classList.add("hidden");
+      } else {
+        btnMonit.classList.add("hidden");
+        btnSolic.classList.remove("hidden");
+      }
+    }
+
+    function esconderTodasTelas() {
+      document.getElementById("tela-login").classList.add("hidden");
+      document.getElementById("tela-ja-enviou").classList.add("hidden");
+      document.getElementById("tela-questionario").classList.add("hidden");
+      document.getElementById("tela-sucesso").classList.add("hidden");
+      document.getElementById("tela-master1-dashboard").classList.add("hidden");
+      document.getElementById("tela-master2-dashboard").classList.add("hidden");
+    }
+
+    function verDetalhesSubmissao(protoId) {
+      const sub = submissoesCarregadas.find(s => (s.protocolo_id === protoId || s.id === protoId));
+      if (!sub) return;
+
+      document.getElementById("modal-sub-proto").textContent = sub.protocolo_id || sub.id;
+      document.getElementById("modal-sub-info").textContent = `${sub.responsavel?.nome} (${sub.responsavel?.subsecretaria}) • ${formatarData(sub.data_envio)}`;
+      
+      const tag = document.getElementById("modal-sub-tag");
+      tag.textContent = sub.tipo_envio === "consolidacao_oficial" ? "Consolidação Oficial" : "Resposta de Servidor";
+      tag.className = sub.tipo_envio === "consolidacao_oficial" ? "bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold" : "bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold";
+
+      document.getElementById("modal-btn-pdf").onclick = () => window.open(`/api/submissoes/pdf/${sub.protocolo_id || sub.id}`, "_blank");
+
+      const container = document.getElementById("modal-sub-respostas-lista");
+      container.innerHTML = "";
+
+      (sub.respostas || []).forEach(r => {
+        const item = document.createElement("div");
+        item.className = "p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-1.5";
+        
+        let valorFmt = "-";
+        if (Array.isArray(r.opcao_marcada)) {
+          valorFmt = r.opcao_marcada.length > 0 ? r.opcao_marcada.join("; ") : "<span class='text-slate-400'>(Não respondida)</span>";
+        } else if (r.opcao_marcada) {
+          valorFmt = r.opcao_marcada;
+        }
+
+        item.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-bold font-mono text-brand-900">${r.codigo_questao}</span>
+            <span class="text-[10px] text-slate-500">${r.tema}</span>
+          </div>
+          <p class="font-medium text-slate-800">${r.enunciado}</p>
+          <div class="bg-white p-2 rounded border border-slate-200 font-semibold text-slate-800">
+            ${valorFmt}
+          </div>
+          ${r.evidencia_normativa ? `
+            <div class="text-[11px] text-brand-900 font-medium">
+              <i class="fa-solid fa-file-shield text-slate-400 mr-1"></i> <strong>Evidência:</strong> ${r.evidencia_normativa}
+            </div>
+          ` : ''}
+        `;
+        container.appendChild(item);
+      });
+
+      document.getElementById("modal-ver-submissao").classList.remove("hidden");
+    }
+
+    function fecharModalSubmissao() {
+      document.getElementById("modal-ver-submissao").classList.add("hidden");
+    }
+
+    function abrirModalSolicitacaoMaster() {
+      document.getElementById("modal-solicitar-master").classList.remove("hidden");
+    }
+    function fecharModalSolicitacaoMaster() {
+      document.getElementById("modal-solicitar-master").classList.add("hidden");
+    }
+
+    async function confirmarSolicitacaoMaster() {
+      const btn = document.getElementById("btn-confirmar-solic-master");
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Enviando...`;
+
+      try {
+        const res = await fetch("/api/usuarios/solicitar_master2", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nome: usuarioAtual.nome,
+            email: usuarioAtual.email,
+            subsecretaria: usuarioAtual.subsecretaria
+          })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          alert("Solicitação enviada com sucesso! O Administrador Central avaliará para homologação.");
+          fecharModalSolicitacaoMaster();
+        } else {
+          alert(data.detail || "Não foi possível enviar a solicitação.");
+        }
+      } catch (e) {
+        alert("Erro na conexão: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `Confirmar Solicitação`;
+      }
+    }
+
+    function fazerLogout() {
+      localStorage.removeItem("par_user");
+      usuarioAtual = null;
+      window.location.reload();
+    }
+
+    function formatarData(isoStr) {
+      if (!isoStr) return "-";
+      try {
+        const d = new Date(isoStr);
+        return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      } catch {
+        return isoStr;
+      }
+    }
+  </script>
+</body>
+</html>
