@@ -43,6 +43,19 @@
       border-color: #f87171 !important;
       background-color: #fffaf0 !important;
     }
+    .card-devolvido {
+      border: 2px solid #dc2626 !important;
+      background-color: #fef2f2 !important;
+    }
+    /* Desativa setas de incremento/decremento e rolagem do mouse alterando números */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans antialiased">
@@ -51,7 +64,6 @@
   <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-4">
-        <!-- Logo do PAR posicionada no topo superior esquerdo junto ao título -->
         <img src="/static/logo_par.jpg" alt="Logo PAR SEEDF" class="h-12 w-auto object-contain rounded shadow-xs border border-slate-200">
         <div>
           <h1 class="text-base md:text-lg font-bold text-brand-900 tracking-tight leading-tight">
@@ -80,89 +92,148 @@
   <!-- CONTEÚDO PRINCIPAL -->
   <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
     
-    <!-- ==================== TELA 1: IDENTIFICAÇÃO ==================== -->
-    <section id="tela-login" class="max-w-xl mx-auto mt-6 bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
-      <div class="bg-gradient-to-r from-brand-900 to-brand-700 text-white p-6 md:p-8">
-        <h2 class="text-xl md:text-2xl font-bold mb-2">Identificação Institucional</h2>
-        <p class="text-sm text-slate-200 leading-relaxed">
+    <!-- ==================== TELA 1: IDENTIFICAÇÃO (DESIGN CLÁSSICO EXPANDIDO E ELEGANTE) ==================== -->
+    <section id="tela-login" class="max-w-3xl w-full mx-auto my-auto bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+      <!-- Topo / Banner Institucional -->
+      <div class="bg-gradient-to-r from-brand-900 via-brand-800 to-brand-700 text-white p-7 md:p-9">
+        <div class="flex items-center justify-between mb-3">
+          <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/20 text-xs font-semibold">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Ciclo Oficial 2026
+          </div>
+          <span class="text-xs text-slate-300 font-medium">SEEDF • SUPLAV / DPAPP</span>
+        </div>
+        <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight mb-2">
+          Identificação Institucional
+        </h2>
+        <p class="text-xs md:text-sm text-slate-200 leading-relaxed font-normal max-w-2xl">
           Informe seus dados para acessar o formulário do Diagnóstico do Plano de Ações Articuladas (PAR) da SEEDF.
         </p>
       </div>
 
-      <form id="form-login" onsubmit="realizarEntrada(event)" class="p-6 md:p-8 space-y-5">
-        <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-            Nome Completo <span class="text-red-500">*</span>
-          </label>
-          <div class="relative">
-            <i class="fa-regular fa-user absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
-            <input type="text" id="login-nome" required placeholder="Digite seu nome completo"
-                   class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-transparent text-sm">
+      <!-- Corpo do Formulário Ampliado -->
+      <form id="form-login" onsubmit="realizarEntrada(event)" class="p-7 md:p-9 space-y-6 bg-white">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <!-- Nome Completo -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+              Nome Completo <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <i class="fa-regular fa-user absolute left-4 top-3.5 text-slate-400 text-base"></i>
+              <input type="text" id="login-nome" required placeholder="Digite seu nome completo"
+                     class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-700 text-sm">
+            </div>
+          </div>
+
+          <!-- E-mail Institucional -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+              E-mail Institucional <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <i class="fa-regular fa-envelope absolute left-4 top-3.5 text-slate-400 text-base"></i>
+              <input type="email" id="login-email" oninput="autoCompletarDadosPorEmail(this.value)" onblur="autoCompletarDadosPorEmail(this.value)" required placeholder="exemplo@se.df.gov.br ou institucional"
+                     class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-700 text-sm">
+            </div>
           </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-            E-mail Institucional <span class="text-red-500">*</span>
-          </label>
-          <div class="relative">
-            <i class="fa-regular fa-envelope absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
-            <input type="email" id="login-email" oninput="checarEmailMaster1(this.value)" required placeholder="exemplo@se.df.gov.br ou institucional"
-                   class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-transparent text-sm">
+        <!-- Seletor de Subsecretaria e Setor em 2 colunas amplas -->
+        <div id="campo-subsecretaria-container" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+              Subsecretaria de Lotação <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <i class="fa-solid fa-sitemap absolute left-4 top-3.5 text-slate-400 text-base"></i>
+              <select id="login-subsecretaria" required
+                      class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-brand-700 text-sm">
+                <option value="" disabled selected>Selecione a subsecretaria...</option>
+                <option value="SUBEB">SUBEB — Educação Básica (41 questões)</option>
+                <option value="SUPLAV">SUPLAV — Planejamento e Acompanhamento (28 questões)</option>
+                <option value="SUBTIC">SUBTIC — Tecnologia da Informação (27 questões)</option>
+                <option value="SUGEP">SUGEP — Gestão de Pessoas (26 questões)</option>
+                <option value="SUBIN">SUBIN — Educação Inclusiva (24 questões)</option>
+                <option value="SUAPE">SUAPE — Apoio às Políticas Educacionais (23 questões)</option>
+                <option value="ASGOV">ASGOV — Assessoria de Governança (15 questões)</option>
+                <option value="SECEX">SECEX — Secretaria Executiva (12 questões)</option>
+                <option value="SUAG">SUAG — Administração Geral (16 questões)</option>
+                <option value="SIAE">SIAE — Infraestrutura e Apoio Educacional (12 questões)</option>
+              </select>
+            </div>
           </div>
-        </div>
 
-        <!-- Seletor de Subsecretaria (Ocultado automaticamente quando for o e-mail Master 1) -->
-        <div id="campo-subsecretaria-container">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-            Subsecretaria de Lotação <span class="text-red-500">*</span>
-          </label>
-          <div class="relative">
-            <i class="fa-solid fa-sitemap absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
-            <select id="login-subsecretaria" required
-                    class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-transparent text-sm">
-              <option value="" disabled selected>Selecione a subsecretaria...</option>
-              <option value="SUBEB">SUBEB — Educação Básica (41 questões)</option>
-              <option value="SUPLAV">SUPLAV — Planejamento e Acompanhamento (28 questões)</option>
-              <option value="SUBTIC">SUBTIC — Tecnologia da Informação (27 questões)</option>
-              <option value="SUGEP">SUGEP — Gestão de Pessoas (26 questões)</option>
-              <option value="SUBIN">SUBIN — Educação Inclusiva (24 questões)</option>
-              <option value="SUAPE">SUAPE — Apoio às Políticas Educacionais (23 questões)</option>
-              <option value="ASGOV">ASGOV — Assessoria de Governança (17 questões)</option>
-              <option value="SUAG">SUAG — Administração Geral (16 questões)</option>
-              <option value="SIAE">SIAE — Infraestrutura e Apoio Educacional (12 questões)</option>
-            </select>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+              Setor de Lotação <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <i class="fa-solid fa-building-user absolute left-4 top-3.5 text-slate-400 text-base"></i>
+              <input type="text" id="login-setor" required placeholder="informe aqui seu setor"
+                     class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-700 text-sm">
+            </div>
           </div>
         </div>
 
         <!-- Aviso especial quando for o perfil do Master 1 -->
-        <div id="aviso-master1-login" class="hidden p-3 bg-purple-50 border border-purple-200 rounded-lg text-purple-800 text-xs flex items-center gap-2">
-          <i class="fa-solid fa-crown text-purple-600"></i>
-          <span>Perfil Administrador Geral identificado. Acesso direto ao painel central de monitoramento.</span>
+        <div id="aviso-master1-login" class="hidden p-3.5 bg-purple-50 border border-purple-200 rounded-xl text-purple-800 text-xs flex items-center gap-2.5">
+          <i class="fa-solid fa-crown text-purple-600 text-sm"></i>
+          <span>Perfil Administrador Geral identificado. Acesso direto ao painel central de monitoramento executivo.</span>
         </div>
 
         <button type="submit" id="btn-entrar"
-                class="w-full py-3 px-4 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow transition-all duration-200 flex items-center justify-center gap-2 text-sm mt-4">
+                class="w-full py-4 px-6 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 text-sm mt-4">
           <span>Acessar Sistema</span>
           <i class="fa-solid fa-arrow-right text-xs"></i>
         </button>
 
-        <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-          <span><i class="fa-solid fa-calendar-check text-brand-700 mr-1"></i> Prazo Final: <strong>09/11/2026</strong></span>
-          <span><i class="fa-solid fa-lock text-emerald-600 mr-1"></i> Trava de Envio Único</span>
+        <div class="pt-5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+          <span class="flex items-center gap-1.5"><i class="fa-solid fa-calendar-check text-brand-700"></i> Prazo Final: <strong>09/11/2026</strong></span>
+          <span class="flex items-center gap-1.5"><i class="fa-solid fa-users-viewfinder text-emerald-600"></i> Questionário Integrado por Subsecretaria</span>
         </div>
       </form>
     </section>
 
-    <!-- ==================== TELA DE BLOQUEIO DE ENVIO ÚNICO ==================== -->
-    <section id="tela-ja-enviou" class="hidden max-w-xl mx-auto mt-10 bg-white rounded-2xl shadow-md border border-amber-200 p-8 text-center">
-      <div class="w-16 h-16 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+    <!-- ==================== TELA DE BLOQUEIO DE ENVIO ÚNICO + PENDÊNCIAS DE DEVOLUÇÃO ==================== -->
+    <section id="tela-ja-enviou" class="hidden max-w-2xl mx-auto mt-8 bg-white rounded-2xl shadow-md border border-amber-200 p-8 text-center">
+      <div id="icone-ja-enviou" class="w-16 h-16 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
         <i class="fa-solid fa-shield-halved"></i>
       </div>
-      <h3 class="text-xl font-bold text-slate-800 mb-2">questionario ja enviado</h3>
-      <p class="text-sm text-slate-600 mb-6" id="ja-enviou-msg">
-        Identificamos que suas respostas já foram registradas para a subsecretaria <strong id="ja-enviou-sub"></strong>. O envio é permitido uma única vez para garantir a integridade dos dados.
+      <h3 class="text-xl font-bold text-slate-800 mb-2" id="titulo-ja-enviou">questionario ja enviado</h3>
+      <p class="text-sm text-slate-600 mb-5" id="ja-enviou-msg">
+        Identificamos que suas respostas já foram registradas para a subsecretaria <strong id="ja-enviou-sub"></strong>. O envio é permitido uma única vez por setor, salvo em caso de solicitação de revisão pelo Ponto Focal.
       </p>
+
+      <!-- ALERTA DE PENDÊNCIA DE DEVOLUÇÃO PELO PONTO FOCAL (EM VERMELHO) -->
+      <div id="box-pendencia-devolucao" class="hidden mb-6 p-5 bg-red-50 border-2 border-red-500 rounded-2xl text-left space-y-3 shadow-sm">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div>
+            <span class="inline-block bg-red-600 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider mb-1">Pendência de Revisão</span>
+            <h4 class="text-sm md:text-base font-extrabold text-red-700 leading-snug">
+              o ponto focal do PAR solicitou uma nova analise
+            </h4>
+            <p class="text-xs text-red-800 mt-1">
+              O Ponto Focal (Administrador da Subsecretaria) analisou suas respostas e devolveu a(s) questão(ões) abaixo para que você revise, edite e reenvie:
+            </p>
+          </div>
+        </div>
+
+        <div id="lista-questoes-devolvidas-resumo" class="space-y-2 pt-2 border-t border-red-200">
+          <!-- Injetado via JS -->
+        </div>
+
+        <div class="pt-2">
+          <button onclick="abrirQuestionarioParaRevisao()" class="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-xs md:text-sm">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <span>Revisar e Editar Questão(ões) Devolvida(s)</span>
+          </button>
+        </div>
+      </div>
       
       <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-left space-y-2 text-xs">
         <div><span class="text-slate-400">Protocolo:</span> <strong id="ja-enviou-proto" class="text-brand-900 font-mono text-sm"></strong></div>
@@ -170,11 +241,13 @@
         <div><span class="text-slate-400">Responsável:</span> <span id="ja-enviou-nome" class="text-slate-700"></span></div>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <div class="flex flex-col sm:flex-row gap-3 justify-center flex-wrap">
+        <button id="btn-ja-enviou-editar" onclick="editarRespostasUsuarioComum()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow flex items-center justify-center gap-1.5 transition-all">
+          <i class="fa-solid fa-pen-to-square"></i> Editar Minhas Respostas
+        </button>
         <button id="btn-ja-enviou-pdf" onclick="baixarPdfComprovante()" class="px-4 py-2.5 bg-brand-700 hover:bg-brand-800 text-white rounded-lg text-xs font-semibold shadow flex items-center justify-center gap-1.5">
           <i class="fa-solid fa-file-pdf"></i> Baixar Comprovante em PDF
         </button>
-        <!-- Se for Master 2, aparece o botão de monitoramento -->
         <button id="btn-ja-enviou-monitoramento" onclick="abrirPainelMaster2()" class="hidden px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold shadow flex items-center justify-center gap-1.5">
           <i class="fa-solid fa-chart-column"></i> Acessar Painel de Monitoramento
         </button>
@@ -187,13 +260,13 @@
       </div>
     </section>
 
-    <!-- ==================== TELA 2: FORMULÁRIO DE QUESTÕES ==================== -->
+    <!-- ==================== TELA 2: FORMULÁRIO DE QUESTÕES (COLETIVO POR SUBSECRETARIA) ==================== -->
     <section id="tela-questionario" class="hidden space-y-6">
       
       <!-- Barra superior do questionário -->
       <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div class="flex items-center gap-2 mb-1">
+          <div class="flex items-center gap-2 mb-1 flex-wrap">
             <button onclick="voltarParaDashboard()" id="btn-voltar-topo" class="hidden px-2.5 py-1 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg mr-1 flex items-center gap-1">
               <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
             </button>
@@ -201,12 +274,19 @@
             <span class="text-xs text-slate-500">•</span>
             <span id="info-total-questoes" class="text-xs text-slate-600 font-medium"></span>
           </div>
-          <h2 class="text-lg md:text-xl font-bold text-slate-800" id="titulo-questionario">Formulário de Resposta do Diagnóstico</h2>
-          <p class="text-xs text-slate-500 mt-0.5" id="subtitulo-questionario">Todas as questões são de preenchimento obrigatório.</p>
+          <h2 class="text-lg md:text-xl font-bold text-slate-800" id="titulo-questionario">Questionário Único da Subsecretaria</h2>
+          <p class="text-xs text-slate-500 mt-0.5" id="subtitulo-questionario">
+            Responda apenas às questões designadas à competência do seu setor e envie para validação do Ponto Focal.
+          </p>
         </div>
 
         <!-- Ações e Status -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
+          <button id="btn-filtro-devolvidas" onclick="alternarFiltroApenasDevolvidas()" class="hidden px-3 py-2 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-300 rounded-lg transition-colors flex items-center gap-1.5">
+            <i class="fa-solid fa-filter"></i>
+            <span id="label-filtro-devolvidas">Ver Todas as Questões da Subsecretaria</span>
+          </button>
+
           <button id="btn-solicitar-master" onclick="abrirModalSolicitacaoMaster()" 
                   class="px-3 py-2 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-lg transition-colors flex items-center gap-1.5">
             <i class="fa-solid fa-shield-halved"></i>
@@ -215,17 +295,17 @@
           
           <button id="btn-painel-master" onclick="alternarVisaoMaster()" class="hidden px-3.5 py-2 text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 rounded-lg shadow transition-colors flex items-center gap-1.5">
             <i class="fa-solid fa-table-list"></i>
-            <span>Painel da Subsecretaria</span>
+            <span>Painel do Ponto Focal</span>
           </button>
         </div>
       </div>
 
-      <!-- Barra de Progresso Fixo -->
+      <!-- Barra de Progresso da Subsecretaria -->
       <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4">
         <div class="flex-1">
           <div class="flex justify-between text-[11px] font-semibold text-slate-600 mb-1">
-            <span>Progresso Obrigatório de Preenchimento</span>
-            <span id="progresso-percent">0% respondido</span>
+            <span id="label-barra-progresso">Progresso Acumulado da Subsecretaria (Respostas Preenchidas)</span>
+            <span id="progresso-percent">0% preenchido</span>
           </div>
           <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
             <div id="progresso-bar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
@@ -240,7 +320,23 @@
       <!-- Aviso se houver pendências -->
       <div id="alerta-obrigatorias" class="hidden p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-medium flex items-center gap-2">
         <i class="fa-solid fa-triangle-exclamation text-red-500 text-sm"></i>
-        <span>Atenção: Não é permitido enviar respostas em branco. Responda a todas as questões destacadas antes de enviar.</span>
+        <span id="texto-alerta-obrigatorias">Selecione e responda pelo menos uma questão da competência do seu setor antes de enviar.</span>
+      </div>
+
+      <!-- Banner Informativo de Modo de Edição -->
+      <div id="banner-modo-edicao-usuario" class="hidden p-4 bg-blue-50 border-2 border-blue-400 rounded-2xl flex items-center justify-between gap-3 text-xs shadow-xs">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-pen-to-square text-base"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-blue-900 text-sm">Modo de Edição de Respostas Ativo</h4>
+            <p class="text-blue-800 mt-0.5">Suas respostas anteriores foram carregadas abaixo. Você pode ajustar qualquer opção ou evidência. Ao concluir, clique em <strong>Atualizar e Reenviar Minhas Respostas</strong> no final da página.</p>
+          </div>
+        </div>
+        <button type="button" onclick="voltarParaDashboard()" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold rounded-xl border border-slate-300 text-xs shrink-0 shadow-2xs">
+          <i class="fa-solid fa-xmark mr-1"></i> Cancelar Edição
+        </button>
       </div>
 
       <!-- Container Dinâmico das Questões -->
@@ -253,12 +349,12 @@
         <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div class="text-xs text-slate-500">
             <i class="fa-solid fa-circle-exclamation text-brand-700 mr-1"></i>
-            <span id="texto-aviso-envio">Confira todas as suas escolhas. Este envio registra seu protocolo e é único.</span>
+            <span id="texto-aviso-envio">Responda às questões do seu setor. Suas respostas serão enviadas ao Ponto Focal da Subsecretaria para análise.</span>
           </div>
           <button type="submit" id="btn-enviar-respostas"
                   class="w-full sm:w-auto px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm">
             <i class="fa-solid fa-paper-plane"></i>
-            <span id="label-btn-enviar">Enviar Respostas Oficiais</span>
+            <span id="label-btn-enviar">Enviar Respostas para o Ponto Focal</span>
           </button>
         </div>
       </form>
@@ -269,14 +365,14 @@
       <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
         <i class="fa-solid fa-check-double"></i>
       </div>
-      <h2 class="text-2xl font-bold text-slate-800 mb-2">Diagnóstico Enviado com Sucesso!</h2>
-      <p class="text-sm text-slate-600 mb-6">
-        Sua contribuição para o Novo PAR da SEEDF foi gravada no Cloud Firestore. Baixe seu comprovante oficial em PDF.
+      <h2 class="text-2xl font-bold text-slate-800 mb-2" id="sucesso-titulo">Respostas Enviadas com Sucesso!</h2>
+      <p class="text-sm text-slate-600 mb-6" id="sucesso-subtitulo">
+        Suas respostas foram integradas ao Questionário da Subsecretaria e encaminhadas para validação do Ponto Focal.
       </p>
 
       <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-6 text-left space-y-2.5 text-xs">
         <div><span class="text-slate-500 font-medium">Protocolo Oficial:</span> <strong id="sucesso-proto" class="text-brand-900 text-sm font-mono block mt-0.5"></strong></div>
-        <div><span class="text-slate-500 font-medium">Subsecretaria:</span> <span id="sucesso-sub" class="font-bold text-slate-800"></span></div>
+        <div><span class="text-slate-500 font-medium">Subsecretaria / Setor:</span> <span id="sucesso-sub" class="font-bold text-slate-800"></span></div>
         <div><span class="text-slate-500 font-medium">Responsável:</span> <span id="sucesso-nome" class="text-slate-700 font-medium"></span> (<span id="sucesso-email" class="text-slate-500"></span>)</div>
         <div><span class="text-slate-500 font-medium">Data do Registro:</span> <span id="sucesso-data" class="text-slate-700"></span></div>
       </div>
@@ -284,6 +380,9 @@
       <div class="flex flex-col sm:flex-row justify-center gap-3">
         <button onclick="baixarPdfSucesso()" class="px-5 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow">
           <i class="fa-solid fa-file-pdf text-sm"></i> Baixar Comprovante em PDF
+        </button>
+        <button id="btn-sucesso-voltar-painel" onclick="voltarParaDashboard()" class="hidden px-5 py-3 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-xs font-bold">
+          Voltar ao Painel
         </button>
         <button onclick="fazerLogout()" class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">
           Finalizar Sessão
@@ -298,77 +397,128 @@
       <div class="bg-gradient-to-r from-brand-900 via-brand-800 to-slate-900 text-white p-6 rounded-2xl shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div class="flex items-center gap-2 mb-1.5">
-            <span class="bg-emerald-500 text-white font-bold px-2 py-0.5 rounded text-[10px] tracking-wider uppercase">ADMINISTRADOR GERAL (MASTER 1)</span>
-            <span class="text-xs text-slate-300">Monitoramento Executivo Central</span>
+            <span class="bg-emerald-500 text-white font-bold px-2 py-0.5 rounded text-[10px] tracking-wider uppercase">ADMINISTRADOR GERAL</span>
+            <span class="text-xs text-slate-300">Monitoramento Executivo Central • Fluxo Completo</span>
           </div>
           <h2 class="text-xl md:text-2xl font-bold">Diagnóstico do Novo PAR — SEEDF</h2>
-          <p class="text-xs text-slate-300 mt-1">Acompanhamento consolidado de todas as subsecretarias em tempo real.</p>
+          <p class="text-xs text-slate-300 mt-1">Clique nos cards abaixo (Drill-Down) para inspecionar detalhadamente cada etapa do fluxo das subsecretarias.</p>
         </div>
 
         <div class="flex items-center gap-3">
           <button onclick="carregarDadosMaster1()" class="px-3.5 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg flex items-center gap-1.5 transition-all">
-            <i class="fa-solid fa-rotate"></i> Atualizar Dados
+            <i class="fa-solid fa-rotate"></i> Atualizar Painel
           </button>
         </div>
       </div>
 
-      <!-- Abas de Navegação do Master 1 (Com abas separadas para Solicitações e Controle) -->
-      <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
-        <button onclick="mudarAbaMaster1('visao_geral')" id="tab-btn-m1-visao" class="px-4 py-2 text-xs font-bold rounded-lg bg-brand-700 text-white">
-          <i class="fa-solid fa-chart-pie mr-1.5"></i> Visão Geral & Monitoramento
+      <!-- CARDS EXECUTIVOS COM DRILL-DOWN INTERATIVO -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1: Subsecretarias Cobertas -->
+        <div onclick="drillDownMaster1('unidades')" id="card-m1-unidades"
+             class="cursor-pointer bg-white p-5 rounded-2xl border-2 border-brand-700 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Subsecretarias Cobertas</span>
+            <span class="w-7 h-7 flex items-center justify-center bg-brand-50 text-brand-700 rounded-full font-bold group-hover:bg-brand-700 group-hover:text-white transition-colors">
+              <i class="fa-solid fa-magnifying-glass-chart text-xs"></i>
+            </span>
+          </div>
+          <p class="text-2xl font-extrabold text-slate-800 mt-1.5">10 Unidades</p>
+          <span class="text-[11px] text-brand-700 font-medium block mt-1">SUBEB, SUPLAV, SUBTIC, SECEX...</span>
+        </div>
+
+        <!-- Card 2: Total de Submissões (Respostas de Usuários Comuns Pendentes de Consolidação) -->
+        <div onclick="drillDownMaster1('submissoes_setores')" id="card-m1-submissoes"
+             class="cursor-pointer bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:border-brand-700 hover:shadow-md transition-all group">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total de Submissões</span>
+            <span class="w-7 h-7 flex items-center justify-center bg-slate-100 text-slate-600 rounded-full font-bold group-hover:bg-brand-700 group-hover:text-white transition-colors">
+              <i class="fa-solid fa-magnifying-glass-chart text-xs"></i>
+            </span>
+          </div>
+          <p id="m1-stat-total-subs" class="text-2xl font-extrabold text-brand-900 mt-1.5">0</p>
+          <span class="text-[11px] text-slate-500 block mt-1">Enviadas pelos setores (em análise pelo Ponto Focal)</span>
+        </div>
+
+        <!-- Card 3: Consolidações Oficiais (Validadas e Enviadas pelo Ponto Focal) -->
+        <div onclick="drillDownMaster1('consolidacoes_oficiais')" id="card-m1-oficiais"
+             class="cursor-pointer bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:border-emerald-600 hover:shadow-md transition-all group">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Consolidações Oficiais</span>
+            <span class="w-7 h-7 flex items-center justify-center bg-emerald-50 text-emerald-700 rounded-full font-bold group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+              <i class="fa-solid fa-magnifying-glass-chart text-xs"></i>
+            </span>
+          </div>
+          <p id="m1-stat-oficiais" class="text-2xl font-extrabold text-emerald-600 mt-1.5">0</p>
+          <span class="text-[11px] text-emerald-700 font-medium block mt-1">Validadas e enviadas pelos Pontos Focais</span>
+        </div>
+
+        <!-- Card 4: Reportes de Competência & Prazo -->
+        <div onclick="drillDownMaster1('reportes')" id="card-m1-reportes"
+             class="cursor-pointer bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:border-red-500 hover:shadow-md transition-all group">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Reportes de Competência</span>
+            <span class="w-7 h-7 flex items-center justify-center bg-red-50 text-red-700 rounded-full font-bold group-hover:bg-red-600 group-hover:text-white transition-colors">
+              <i class="fa-solid fa-magnifying-glass-chart text-xs"></i>
+            </span>
+          </div>
+          <div class="flex items-baseline justify-between mt-1.5">
+            <p id="m1-stat-reportes" class="text-2xl font-extrabold text-red-600">0</p>
+            <span class="text-[11px] font-bold text-amber-600"><i class="fa-regular fa-calendar mr-1"></i>Prazo: 09/11/2026</span>
+          </div>
+          <span class="text-[11px] text-slate-500 block mt-1">Questões sinalizadas fora de competência</span>
+        </div>
+      </div>
+
+      <!-- Abas de Navegação do Master 1 (Alinhadas em linha única) -->
+      <div class="flex items-center gap-1.5 overflow-x-auto border-b border-slate-200 pb-2 whitespace-nowrap">
+        <button onclick="mudarAbaMaster1('visao_geral')" id="tab-btn-m1-visao" class="px-3.5 py-2 text-xs font-bold rounded-lg bg-brand-700 text-white flex items-center gap-1.5 shrink-0">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Quadro das Subsecretarias</span>
         </button>
-        <button onclick="mudarAbaMaster1('submissoes')" id="tab-btn-m1-subs" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100">
-          <i class="fa-solid fa-file-signature mr-1.5"></i> Respostas Registradas
+        <button onclick="mudarAbaMaster1('submissoes')" id="tab-btn-m1-subs" class="px-3.5 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 shrink-0">
+          <i class="fa-solid fa-file-signature"></i>
+          <span>Submissões de Setores</span>
         </button>
-        <button onclick="mudarAbaMaster1('solicitacoes')" id="tab-btn-m1-solicitacoes" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1.5">
+        <button onclick="mudarAbaMaster1('consolidacoes')" id="tab-btn-m1-consolidacoes" class="px-3.5 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 shrink-0">
+          <i class="fa-solid fa-award"></i>
+          <span>Consolidações Oficiais</span>
+        </button>
+        <button onclick="mudarAbaMaster1('reportes')" id="tab-btn-m1-reportes" class="px-3.5 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 shrink-0">
+          <i class="fa-solid fa-flag text-red-500"></i>
+          <span>Reportes de Competência</span>
+          <span id="badge-reportes-m1" class="hidden bg-red-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-black">0</span>
+        </button>
+        <button onclick="mudarAbaMaster1('solicitacoes')" id="tab-btn-m1-solicitacoes" class="px-3.5 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 shrink-0">
           <i class="fa-solid fa-envelope-open-text"></i>
-          <span>Solicitações Pendentes</span>
+          <span>Solicitações de Ponto Focal</span>
           <span id="badge-pendentes-m1" class="hidden bg-amber-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-black">0</span>
         </button>
-        <button onclick="mudarAbaMaster1('gestores')" id="tab-btn-m1-gestores" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1.5">
+        <button onclick="mudarAbaMaster1('gestores')" id="tab-btn-m1-gestores" class="px-3.5 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 shrink-0">
           <i class="fa-solid fa-users-gear"></i>
-          <span>Administradores Homologados</span>
+          <span>Pontos Focais Homologados</span>
         </button>
       </div>
 
-      <!-- Aba M1 - 1: Visão Geral / Cards de Progresso por Subsecretaria -->
+      <!-- Aba M1 - 1: Visão Geral / Quadro Coletivo por Subsecretaria -->
       <div id="m1-conteudo-visao" class="space-y-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-            <span class="text-xs font-semibold text-slate-500">Subsecretarias Cobertas</span>
-            <p class="text-2xl font-bold text-slate-800 mt-1">9 Unidades</p>
-            <span class="text-[11px] text-brand-700 font-medium">SUBEB, SUPLAV, SUBTIC...</span>
-          </div>
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-            <span class="text-xs font-semibold text-slate-500">Total de Submissões</span>
-            <p id="m1-stat-total-subs" class="text-2xl font-bold text-brand-900 mt-1">0</p>
-            <span class="text-[11px] text-slate-400">Registradas no Firestore</span>
-          </div>
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-            <span class="text-xs font-semibold text-slate-500">Consolidações Oficiais</span>
-            <p id="m1-stat-oficiais" class="text-2xl font-bold text-emerald-600 mt-1">0</p>
-            <span class="text-[11px] text-emerald-700 font-medium">Homologadas por Administradores</span>
-          </div>
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-            <span class="text-xs font-semibold text-slate-500">Prazo Final SEEDF</span>
-            <p class="text-2xl font-bold text-amber-600 mt-1">09/11/2026</p>
-            <span class="text-[11px] text-slate-400">Envio MEC: 11/11/2026</span>
-          </div>
-        </div>
-
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div class="p-4 border-b border-slate-200">
-            <h3 class="text-sm font-bold text-slate-800">Painel de Acompanhamento por Subsecretaria</h3>
+          <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 class="text-sm font-bold text-slate-800">Acompanhamento em Tempo Real por Subsecretaria (Drill-Down)</h3>
+              <p class="text-[11px] text-slate-500">Clique em "Inspecionar Quadro" para ver cada questão respondida pelos setores, devoluções e status da subsecretaria.</p>
+            </div>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
               <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                 <tr>
                   <th class="p-3">Subsecretaria</th>
-                  <th class="p-3">Questões Atribuídas</th>
-                  <th class="p-3">Respostas de Servidores</th>
+                  <th class="p-3">Progresso do Quadro</th>
+                  <th class="p-3">Submissões (Setores)</th>
+                  <th class="p-3">Devoluções Ativas</th>
                   <th class="p-3">Consolidação Oficial</th>
-                  <th class="p-3">Administrador Homologado</th>
+                  <th class="p-3">Ponto Focal (Administrador)</th>
+                  <th class="p-3 text-center">Inspeção</th>
                 </tr>
               </thead>
               <tbody id="tabela-m1-status-subsecretarias" class="divide-y divide-slate-100">
@@ -379,13 +529,17 @@
         </div>
       </div>
 
-      <!-- Aba M1 - 2: Tabela de Submissões com Filtro -->
+      <!-- Aba M1 - 2: Submissões Preliminares dos Setores -->
       <div id="m1-conteudo-submissoes" class="hidden space-y-4">
-        <div class="bg-white p-3.5 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div>
+            <h3 class="font-bold text-slate-800 text-sm">Submissões Enviadas pelos Setores (Preliminares)</h3>
+            <p class="text-slate-500 text-[11px]">Respostas enviadas pelos servidores comuns que ainda aguardam consolidação final do Ponto Focal da subsecretaria.</p>
+          </div>
           <div class="flex items-center gap-3">
-            <span class="font-bold text-slate-700">Filtrar por Subsecretaria:</span>
-            <select id="m1-select-filtro-sub" onchange="carregarSubmissoesMaster1()" class="border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-medium">
-              <option value="TODAS">Todas as 9 Subsecretarias</option>
+            <span class="font-bold text-slate-700">Subsecretaria:</span>
+            <select id="m1-select-filtro-sub" onchange="renderizarTabelasSubmissoesM1()" class="border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-medium">
+              <option value="TODAS">Todas as Subsecretarias</option>
               <option value="SUBEB">SUBEB</option>
               <option value="SUPLAV">SUPLAV</option>
               <option value="SUBTIC">SUBTIC</option>
@@ -393,11 +547,12 @@
               <option value="SUBIN">SUBIN</option>
               <option value="SUAPE">SUAPE</option>
               <option value="ASGOV">ASGOV</option>
+              <option value="SECEX">SECEX</option>
               <option value="SUAG">SUAG</option>
-              <option value="SIAE">SIAE</option>
+              <option value="SIAE">SUAG / SIAE</option>
             </select>
+            <span id="m1-contagem-submissoes" class="text-slate-500 font-bold"></span>
           </div>
-          <span id="m1-contagem-submissoes" class="text-slate-500 font-medium"></span>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -406,10 +561,10 @@
               <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                 <tr>
                   <th class="p-3">Protocolo</th>
-                  <th class="p-3">Subsecretaria</th>
-                  <th class="p-3">Responsável</th>
-                  <th class="p-3">Tipo do Envio</th>
-                  <th class="p-3">Preenchimento</th>
+                  <th class="p-3">Subsecretaria / Setor</th>
+                  <th class="p-3">Servidor Responsável</th>
+                  <th class="p-3">Status no Fluxo</th>
+                  <th class="p-3">Questões Enviadas</th>
                   <th class="p-3">Data / Hora</th>
                   <th class="p-3 text-center">Ações</th>
                 </tr>
@@ -422,12 +577,74 @@
         </div>
       </div>
 
-      <!-- Aba M1 - 3: Solicitações Pendentes (NOVA ABA EXCLUSIVA CONFORME SOLICITADO) -->
+      <!-- Aba M1 - 3: Consolidações Oficiais Homologadas pelo Master 2 -->
+      <div id="m1-conteudo-consolidacoes" class="hidden space-y-4">
+        <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl flex items-center justify-between text-xs">
+          <div>
+            <h3 class="font-bold text-emerald-900 text-sm"><i class="fa-solid fa-circle-check mr-1"></i> Consolidações Oficiais Homologadas pelos Pontos Focais</h3>
+            <p class="text-emerald-700 text-[11px]">Questionários finais validados e enviados oficialmente pelos Administradores das Subsecretarias.</p>
+          </div>
+          <span id="m1-contagem-consolidacoes" class="font-bold text-emerald-900 text-sm"></span>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                <tr>
+                  <th class="p-3">Protocolo Oficial</th>
+                  <th class="p-3">Subsecretaria</th>
+                  <th class="p-3">Ponto Focal Responsável</th>
+                  <th class="p-3">Questões Consolidadas</th>
+                  <th class="p-3">Data da Homologação</th>
+                  <th class="p-3 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="m1-tabela-consolidacoes-corpo" class="divide-y divide-slate-100">
+                <!-- Injetado dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aba M1 - 4: Reportes de Competência enviados pelos Pontos Focais -->
+      <div id="m1-conteudo-reportes" class="hidden space-y-4">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-4 border-b border-slate-200">
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-flag text-red-600"></i>
+              Reportes de Competência de Questões (Enviados pelos Pontos Focais)
+            </h3>
+            <p class="text-[11px] text-slate-500">Questões que o Ponto Focal (Administrador da Subsecretaria) sinalizou como não pertencentes à competência técnica da área.</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                <tr>
+                  <th class="p-3">Subsecretaria</th>
+                  <th class="p-3">Questão</th>
+                  <th class="p-3">Justificativa do Ponto Focal</th>
+                  <th class="p-3">Reportado Por</th>
+                  <th class="p-3">Data</th>
+                  <th class="p-3">Status</th>
+                  <th class="p-3 text-center">Ação</th>
+                </tr>
+              </thead>
+              <tbody id="m1-tabela-reportes-corpo" class="divide-y divide-slate-100">
+                <!-- Injetado dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aba M1 - 5: Solicitações Pendentes -->
       <div id="m1-conteudo-solicitacoes" class="hidden space-y-4">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="p-4 border-b border-slate-200">
-            <h3 class="text-sm font-bold text-slate-800">Solicitações de Acesso a Administrador</h3>
-            <p class="text-[11px] text-slate-500">Aqui são listados apenas os usuários que formalmente clicaram no botão e solicitaram perfil de Administrador da sua subsecretaria.</p>
+            <h3 class="text-sm font-bold text-slate-800">Solicitações de Acesso a Ponto Focal (Administrador da Subsecretaria)</h3>
+            <p class="text-[11px] text-slate-500">Usuários que solicitaram perfil de Administrador da sua subsecretaria.</p>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
@@ -435,7 +652,7 @@
                 <tr>
                   <th class="p-3">Nome</th>
                   <th class="p-3">E-mail</th>
-                  <th class="p-3">Subsecretaria</th>
+                  <th class="p-3">Subsecretaria / Setor</th>
                   <th class="p-3">Data Solicitação</th>
                   <th class="p-3 text-center">Ações</th>
                 </tr>
@@ -448,12 +665,12 @@
         </div>
       </div>
 
-      <!-- Aba M1 - 4: Administradores Atuais / Gestão de Retirada & Retrocesso -->
+      <!-- Aba M1 - 6: Administradores Homologados -->
       <div id="m1-conteudo-gestores" class="hidden space-y-4">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="p-4 border-b border-slate-200">
-            <h3 class="text-sm font-bold text-slate-800">Administradores Homologados das Subsecretarias</h3>
-            <p class="text-[11px] text-slate-500">Usuários com autorização para editar e consolidar as respostas oficiais de sua subsecretaria. Você pode retroceder o acesso para usuário comum a qualquer momento.</p>
+            <h3 class="text-sm font-bold text-slate-800">Pontos Focais (Administradores) Homologados das Subsecretarias</h3>
+            <p class="text-[11px] text-slate-500">Usuários com autorização para monitorar setores, devolver questões para análise e enviar a consolidação oficial.</p>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
@@ -461,7 +678,7 @@
                 <tr>
                   <th class="p-3">Nome</th>
                   <th class="p-3">E-mail Institucional</th>
-                  <th class="p-3">Subsecretaria</th>
+                  <th class="p-3">Subsecretaria / Setor</th>
                   <th class="p-3">Perfil</th>
                   <th class="p-3 text-center">Ações</th>
                 </tr>
@@ -475,38 +692,138 @@
       </div>
     </section>
 
-    <!-- ==================== TELA 5: PAINEL DO ADMINISTRADOR DA SUBSECRETARIA ==================== -->
+    <!-- ==================== TELA 5: PAINEL DO PONTO FOCAL / ADMINISTRADOR DA SUBSECRETARIA ==================== -->
     <section id="tela-master2-dashboard" class="hidden space-y-6">
-      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div class="flex items-center gap-2 mb-1">
-            <span class="bg-amber-600 text-white font-bold px-2 py-0.5 rounded text-[10px] tracking-wider uppercase" id="m2-badge-sub">ADMINISTRADOR</span>
-            <span class="text-xs text-slate-500 font-medium">Consolidação e Edição da Área</span>
+            <span class="bg-amber-600 text-white font-bold px-2.5 py-0.5 rounded text-[10px] tracking-wider uppercase" id="m2-badge-sub">PONTO FOCAL • ADMINISTRADOR</span>
+            <span class="text-xs text-slate-500 font-medium">Monitoramento por Setor, Validação e Consolidação Oficial</span>
           </div>
-          <h2 class="text-xl font-bold text-slate-800">Espaço de Consolidação da Subsecretaria</h2>
-          <p class="text-xs text-slate-500">Veja as respostas enviadas, responda/edite o formulário e faça a homologação da versão oficial da área.</p>
+          <h2 class="text-xl font-bold text-slate-800">Painel de Controle do Ponto Focal da Subsecretaria</h2>
+          <p class="text-xs text-slate-500">Acompanhe quem respondeu cada questão por nome e setor, solicite nova análise (devolução) se necessário, reporte questões fora de competência ou envie a Consolidação Oficial.</p>
         </div>
 
-        <!-- DUAS OPÇÕES EXPLÍCITAS: EDITAR e ENVIAR -->
-        <div class="flex items-center gap-2">
-          <button onclick="irParaFormularioEdicao()" class="px-4 py-2.5 text-xs font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-xl shadow-xs flex items-center gap-1.5 transition-all">
-            <i class="fa-solid fa-pen-to-square"></i>
-            <span>Editar Respostas</span>
+        <div class="flex items-center gap-2 flex-wrap">
+          <button onclick="abrirModalPainelEspelhamento()" id="btn-m2-abrir-espelhamento" class="px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow flex items-center gap-2 transition-all">
+            <i class="fa-solid fa-table-cells-large"></i>
+            <span>Painel do Formulário & Edição Espelhada</span>
           </button>
-          <button onclick="irParaFormularioEnvioFinal()" class="px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow flex items-center gap-1.5 transition-all">
-            <i class="fa-solid fa-paper-plane"></i>
-            <span>Enviar Consolidação Oficial</span>
-          </button>
-          <button onclick="carregarDadosMaster2()" class="px-3.5 py-2.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">
+          <button onclick="carregarDadosMaster2()" title="Atualizar painel" class="px-3.5 py-2.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">
             <i class="fa-solid fa-rotate"></i>
           </button>
         </div>
       </div>
 
-      <!-- Tabela com as respostas dos servidores daquela subsecretaria -->
+      <!-- Resumo de Progresso do Quadro da Subsecretaria (Com Drill-Down) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+        <div onclick="drillDownMaster2('TODAS')" id="card-m2-todas"
+             class="cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-brand-700 hover:shadow-md transition-all group">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-slate-500 uppercase">Total Geral</span>
+            <span class="w-6 h-6 flex items-center justify-center bg-slate-100 text-slate-600 rounded-full group-hover:bg-brand-700 group-hover:text-white transition-colors">
+              <i class="fa-solid fa-magnifying-glass-chart text-[10px]"></i>
+            </span>
+          </div>
+          <p id="m2-stat-total-q" class="text-xl font-extrabold text-slate-800 mt-1">0</p>
+          <span class="text-[10px] text-slate-400 block mt-0.5">Caderno da área</span>
+        </div>
+
+        <div onclick="drillDownMaster2('RESPONDIDAS')" id="card-m2-respondidas"
+             class="cursor-pointer bg-white p-4 rounded-2xl border-2 border-emerald-600 shadow-sm hover:shadow-md transition-all group">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-emerald-700 uppercase">Respondidas</span>
+            <span class="w-6 h-6 flex items-center justify-center bg-emerald-50 text-emerald-700 rounded-full group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+              <i class="fa-solid fa-magnifying-glass-chart text-[10px]"></i>
+            </span>
+          </div>
+          <p id="m2-stat-respondidas" class="text-xl font-extrabold text-emerald-600 mt-1">0</p>
+          <span class="text-[10px] text-emerald-700 font-medium block mt-0.5">Validadas / Aceitas</span>
+        </div>
+
+        <div onclick="drillDownMaster2('RETORNO')" id="card-m2-retorno"
+             class="cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-purple-600 hover:shadow-md transition-all group">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-purple-700 uppercase">Retorno Ajuste</span>
+            <span class="w-6 h-6 flex items-center justify-center bg-purple-50 text-purple-700 rounded-full group-hover:bg-purple-600 group-hover:text-white transition-colors">
+              <i class="fa-solid fa-magnifying-glass-chart text-[10px]"></i>
+            </span>
+          </div>
+          <p id="m2-stat-retorno" class="text-xl font-extrabold text-purple-700 mt-1">0</p>
+          <span class="text-[10px] text-purple-600 font-medium block mt-0.5">Reenviadas p/ validar</span>
+        </div>
+
+        <div onclick="drillDownMaster2('DEVOLVIDAS')" id="card-m2-devolvidas"
+             class="cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-red-600 hover:shadow-md transition-all group">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-red-600 uppercase">Devolvidas</span>
+            <span class="w-6 h-6 flex items-center justify-center bg-red-50 text-red-600 rounded-full group-hover:bg-red-600 group-hover:text-white transition-colors">
+              <i class="fa-solid fa-magnifying-glass-chart text-[10px]"></i>
+            </span>
+          </div>
+          <p id="m2-stat-devolvidas" class="text-xl font-extrabold text-red-600 mt-1">0</p>
+          <span class="text-[10px] text-slate-400 block mt-0.5">Aguardando setor</span>
+        </div>
+
+        <div onclick="drillDownMaster2('PENDENTES')" id="card-m2-pendentes"
+             class="cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-amber-500 hover:shadow-md transition-all group">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-amber-600 uppercase">Pendentes</span>
+            <span class="w-6 h-6 flex items-center justify-center bg-amber-50 text-amber-600 rounded-full group-hover:bg-amber-600 group-hover:text-white transition-colors">
+              <i class="fa-solid fa-magnifying-glass-chart text-[10px]"></i>
+            </span>
+          </div>
+          <p id="m2-stat-pendentes" class="text-xl font-extrabold text-amber-600 mt-1">0</p>
+          <span class="text-[10px] text-slate-400 block mt-0.5">Não respondidas</span>
+        </div>
+      </div>
+
+      <!-- FORMULÁRIO DE MONITORAMENTO DE QUESTÕES POR SETOR / SERVIDOR -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-list-check text-brand-700"></i>
+              Monitoramento de Questões por Nome e Setor (Questionário da Subsecretaria)
+            </h3>
+            <p class="text-[11px] text-slate-500">As questões já enviadas pelos setores aparecem primeiro. Clique nos cards acima ou use o seletor ao lado para filtrar.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="m2-filtro-status-questao" onchange="drillDownMaster2(this.value)" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-semibold">
+              <option value="RESPONDIDAS" selected>Questões Respondidas / Validadas</option>
+              <option value="RETORNO">Retorno para Ajuste (Reenviadas p/ Validar)</option>
+              <option value="TODAS">Todas as Questões (Respondidas Primeiro)</option>
+              <option value="DEVOLVIDAS">Devolvidas p/ Nova Análise</option>
+              <option value="PENDENTES">Ainda Não Respondidas</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+              <tr>
+                <th class="p-3 w-24">Questão</th>
+                <th class="p-3">Enunciado / Resposta Atual</th>
+                <th class="p-3 w-56">Respondido Por (Nome / Setor)</th>
+                <th class="p-3 w-36">Status</th>
+                <th class="p-3 w-64 text-center">Ações do Ponto Focal</th>
+              </tr>
+            </thead>
+            <tbody id="m2-tabela-monitoramento-questoes" class="divide-y divide-slate-100">
+              <!-- Injetado via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Histórico de Envios Individuais dos Setores -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="p-4 border-b border-slate-200 flex justify-between items-center">
-          <h3 class="text-sm font-bold text-slate-800">Respostas Registradas na Subsecretaria</h3>
+          <div>
+            <h3 class="text-sm font-bold text-slate-800">Histórico de Protocolos Enviados pelos Setores</h3>
+            <p class="text-[11px] text-slate-500">Registro individual de cada submissão realizada pelos servidores da subsecretaria.</p>
+          </div>
           <span id="m2-contagem-respostas" class="text-xs text-slate-500 font-medium"></span>
         </div>
         <div class="overflow-x-auto">
@@ -514,9 +831,9 @@
             <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
               <tr>
                 <th class="p-3">Protocolo</th>
-                <th class="p-3">Servidor</th>
+                <th class="p-3">Servidor / Setor</th>
                 <th class="p-3">Tipo</th>
-                <th class="p-3">Respondidas</th>
+                <th class="p-3">Questões no Envio</th>
                 <th class="p-3">Data</th>
                 <th class="p-3 text-center">Ações</th>
               </tr>
@@ -531,13 +848,135 @@
 
   </main>
 
-  <!-- MODAL: SOLICITAÇÃO DE ADMINISTRADOR (SIMPLIFICADO) -->
+  <!-- ==================== MODAL 1: RESPOSTA DE 2025 (OLHINHO 👁️) ==================== -->
+  <div id="modal-resposta-2025" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-200 overflow-hidden">
+      <div class="p-4 bg-gradient-to-r from-brand-900 to-brand-700 text-white flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <i class="fa-regular fa-eye text-emerald-300 text-base"></i>
+          <div>
+            <h3 class="text-sm font-bold" id="m2025-titulo">Histórico — Resposta de 2025</h3>
+            <p class="text-[11px] text-slate-200" id="m2025-subtitulo">Comparativo Ciclo 2025 vs Ciclo 2026</p>
+          </div>
+        </div>
+        <button onclick="fecharModal2025()" class="text-white/80 hover:text-white text-lg px-2">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="text-slate-500 font-semibold">Grau de Correspondência:</span>
+          <span id="m2025-badge-corresp" class="px-2.5 py-0.5 rounded-full font-bold text-[11px]"></span>
+        </div>
+
+        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pergunta no Questionário de 2025:</span>
+          <p id="m2025-pergunta" class="text-slate-800 font-semibold leading-relaxed text-xs md:text-sm"></p>
+        </div>
+
+        <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-200 space-y-1.5">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1">
+            <i class="fa-solid fa-check-circle"></i> Resposta Registrada em 2025:
+          </span>
+          <p id="m2025-resposta" class="text-emerald-950 font-bold leading-relaxed text-xs md:text-sm whitespace-pre-line"></p>
+        </div>
+      </div>
+
+      <div class="p-3.5 bg-slate-50 border-t border-slate-200 flex justify-end">
+        <button onclick="fecharModal2025()" class="px-5 py-2 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-lg text-xs">
+          Fechar Consulta
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: DEVOLVER QUESTÃO PARA NOVA ANÁLISE ==================== -->
+  <div id="modal-devolver-questao" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-red-200 overflow-hidden p-6 space-y-4">
+      <div class="flex justify-between items-start">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-rotate-left"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-800">Devolver Questão para Nova Análise</h3>
+            <p class="text-[11px] text-slate-500" id="modal-devolver-info"></p>
+          </div>
+        </div>
+        <button onclick="fecharModalDevolver()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800">
+        O servidor verá na questão e ao entrar no sistema o aviso em vermelho:<br>
+        <strong class="font-extrabold">"o ponto focal do PAR solicitou uma nova analise"</strong>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Orientação / Motivo da Devolução (opcional):</label>
+        <textarea id="input-obs-devolucao" rows="3" placeholder="Explique ao servidor ou setor o que precisa ser corrigido ou complementado..."
+                  class="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-red-500 focus:outline-none"></textarea>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="fecharModalDevolver()" class="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg">
+          Cancelar
+        </button>
+        <button onclick="confirmarDevolucaoQuestao()" id="btn-confirmar-devolucao" class="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow flex items-center gap-1.5">
+          <i class="fa-solid fa-rotate-left"></i> Confirmar Devolução
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: REPORTAR QUESTÃO FORA DE COMPETÊNCIA (PARA MASTER 1) ==================== -->
+  <div id="modal-reportar-competencia" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-slate-200 overflow-hidden p-6 space-y-4">
+      <div class="flex justify-between items-start">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-flag"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-800">Reportar Questão Fora de Competência</h3>
+            <p class="text-[11px] text-slate-500" id="modal-reporte-info"></p>
+          </div>
+        </div>
+        <button onclick="fecharModalReporte()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Este reporte será enviado diretamente ao painel do <strong>Administrador Geral</strong> informando que esta pergunta não pertence ao escopo de competência da sua subsecretaria.
+      </p>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Justificativa / Sugestão de Área Competente <span class="text-red-500">*</span>:</label>
+        <textarea id="input-justificativa-reporte" rows="3" required placeholder="Informe por que a questão não compete a esta subsecretaria (e indique qual subsecretaria seria responsável, se souber)..."
+                  class="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-700 focus:outline-none"></textarea>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="fecharModalReporte()" class="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg">
+          Cancelar
+        </button>
+        <button onclick="confirmarReporteCompetencia()" id="btn-confirmar-reporte" class="px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow flex items-center gap-1.5">
+          <i class="fa-solid fa-paper-plane"></i> Enviar Reporte ao Administrador Geral
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SOLICITAÇÃO DE ADMINISTRADOR -->
   <div id="modal-solicitar-master" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4 border border-slate-200">
       <div class="flex justify-between items-center">
         <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
           <i class="fa-solid fa-shield-halved text-brand-700"></i>
-          Solicitar Perfil Administrador
+          Solicitar Perfil de Ponto Focal (Administrador)
         </h3>
         <button onclick="fecharModalSolicitacaoMaster()" class="text-slate-400 hover:text-slate-600 text-sm">
           <i class="fa-solid fa-xmark"></i>
@@ -545,7 +984,7 @@
       </div>
 
       <p class="text-xs text-slate-600 leading-relaxed">
-        Deseja solicitar o acesso de <strong>Administrador</strong> da sua subsecretaria? O Administrador Central avaliará e homologará sua solicitação.
+        Deseja solicitar o acesso de <strong>Ponto Focal (Administrador)</strong> da sua subsecretaria? O Administrador Central avaliará e homologará sua solicitação.
       </p>
 
       <div class="flex justify-end gap-2 pt-2">
@@ -559,7 +998,63 @@
     </div>
   </div>
 
-  <!-- MODAL: VISUALIZAR RESPOSTAS DA SUBMISSÃO -->
+  <!-- ==================== MODAL: PAINEL DO FORMULÁRIO COM RESPOSTAS ESPELHADAS E EDIÇÃO DO PONTO FOCAL ==================== -->
+  <div id="modal-painel-espelhamento" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 md:p-6 z-50">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col border border-slate-200 overflow-hidden">
+      <!-- Topo do Modal -->
+      <div class="p-5 bg-gradient-to-r from-brand-900 via-blue-900 to-brand-800 text-white flex items-center justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="bg-blue-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded uppercase tracking-wider">Painel Exclusivo</span>
+            <span class="text-xs text-blue-200" id="espelho-sub-badge"></span>
+          </div>
+          <h3 class="text-base md:text-lg font-bold">Espelhamento e Ajuste de Respostas da Subsecretaria</h3>
+          <p class="text-[11px] text-blue-100 mt-0.5">Veja todas as respostas registradas pelos setores. Você pode ajustar e enviar para Consolidação Oficial.</p>
+        </div>
+        <button onclick="fecharModalPainelEspelhamento()" class="text-white/80 hover:text-white p-2 text-xl transition-colors">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Barra informativa dentro do formulário espelhado -->
+      <div class="bg-blue-50/70 border-b border-blue-200 p-3.5 px-6 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <span class="text-blue-900 font-semibold" id="espelho-contagem-info">Carregando espelhamento...</span>
+        <div class="flex items-center gap-2">
+          <button onclick="baixarPdfEspelhamento()" id="btn-pdf-espelho" class="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all">
+            <i class="fa-solid fa-file-pdf"></i>
+            <span>Baixar em PDF</span>
+          </button>
+          <button onclick="salvarApenasRascunhoEspelho()" class="px-3.5 py-1.5 bg-white hover:bg-slate-50 text-brand-900 border border-blue-300 rounded-lg text-xs font-bold shadow-2xs flex items-center gap-1.5">
+            <i class="fa-solid fa-floppy-disk text-blue-600"></i>
+            <span>Salvar Ajustes no Quadro</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Lista de Questões Espelhadas e Editáveis -->
+      <div id="espelho-lista-questoes" class="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+        <!-- Renderizado dinamicamente via JS -->
+      </div>
+
+      <!-- Rodapé com Ações -->
+      <div class="p-4 border-t border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-3">
+        <span class="text-[11px] text-slate-500">
+          <i class="fa-solid fa-circle-info text-blue-600 mr-1"></i> As alterações feitas aqui atualizam o quadro oficial da subsecretaria e podem ser enviadas diretamente ao Administrador Geral.
+        </span>
+        <div class="flex items-center gap-2">
+          <button onclick="fecharModalPainelEspelhamento()" class="px-4 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-300 hover:bg-slate-100 rounded-xl">
+            Fechar sem Enviar
+          </button>
+          <button onclick="salvarEspelhamentoEConsolidar()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow flex items-center gap-1.5">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Homologar e Enviar Consolidação Oficial</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: VISUALIZAR RESPOSTAS DA SUBMISSÃO OU QUADRO DA SUBSECRETARIA -->
   <div id="modal-ver-submissao" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col border border-slate-200 overflow-hidden">
       <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
@@ -596,10 +1091,19 @@
   <script>
     let usuarioAtual = null;
     let questoesCarregadas = [];
+    let quadroAtualSubsecretaria = null;
+    let pendenciasDevolucaoUsuario = [];
+    let modoApenasDevolvidas = false;
+    let acaoFormularioMaster2 = null; // "editar" | "consolidar_oficial" | null
+
     let submissoesCarregadas = [];
+    let quadrosTodasSubsecretarias = [];
+    let reportesCompetenciaLista = [];
     let usuariosLista = [];
     let protocoloSucessoAtual = "";
-    let respostasParaEditar = null;
+
+    let questaoAlvoDevolucao = null;
+    let questaoAlvoReporte = null;
 
     const MASTER_1_EMAIL = "joao.carmo@nees.ufal.br";
 
@@ -610,36 +1114,94 @@
       { sigla: "SUGEP", nome: "Gestão de Pessoas", total: 26 },
       { sigla: "SUBIN", nome: "Educação Inclusiva", total: 24 },
       { sigla: "SUAPE", nome: "Apoio às Políticas Educacionais", total: 23 },
-      { sigla: "ASGOV", nome: "Assessoria de Governança", total: 17 },
       { sigla: "SUAG", nome: "Administração Geral", total: 16 },
+      { sigla: "ASGOV", nome: "Assessoria de Governança", total: 15 },
+      { sigla: "SECEX", nome: "Secretaria Executiva", total: 12 },
       { sigla: "SIAE", nome: "Infraestrutura e Apoio", total: 12 }
     ];
 
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", async () => {
       const savedUser = localStorage.getItem("par_user");
       if (savedUser) {
         try {
-          usuarioAtual = JSON.parse(savedUser);
-          redirecionarPorPerfil();
+          const parsed = JSON.parse(savedUser);
+          // Sincroniza estado fresco com o servidor
+          const res = await fetch("/api/auth/entrar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              nome: parsed.nome,
+              email: parsed.email,
+              subsecretaria: parsed.subsecretaria || "",
+              setor: parsed.setor || ""
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            usuarioAtual = data.usuario;
+            pendenciasDevolucaoUsuario = data.pendencias_devolucao || [];
+            quadroAtualSubsecretaria = data.quadro_subsecretaria || null;
+            localStorage.setItem("par_user", JSON.stringify(usuarioAtual));
+            redirecionarPorPerfil(data.ja_enviou, data.submissao_anterior, data.ja_consolidou_subsecretaria, data.consolidacao_oficial);
+          } else {
+            localStorage.removeItem("par_user");
+          }
         } catch (e) {
           localStorage.removeItem("par_user");
         }
       }
     });
 
+    let lookupTimer = null;
+    function autoCompletarDadosPorEmail(email) {
+      checarEmailMaster1(email);
+      const emailTrim = (email || "").trim().toLowerCase();
+      if (!emailTrim || !emailTrim.includes("@")) return;
+
+      clearTimeout(lookupTimer);
+      lookupTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/auth/lookup?email=${encodeURIComponent(emailTrim)}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.encontrado) {
+              const inputNome = document.getElementById("login-nome");
+              const selectSub = document.getElementById("login-subsecretaria");
+              const inputSetor = document.getElementById("login-setor");
+
+              if (data.nome) {
+                inputNome.value = data.nome;
+              }
+              if (data.subsecretaria && (!selectSub.value || selectSub.value === "")) {
+                selectSub.value = data.subsecretaria;
+              }
+              if (data.setor && (!inputSetor.value || inputSetor.value.trim() === "")) {
+                inputSetor.value = data.setor;
+              }
+            }
+          }
+        } catch (e) {
+          // lookup silencioso
+        }
+      }, 350);
+    }
+
     function checarEmailMaster1(email) {
       const emailTrim = (email || "").trim().toLowerCase();
       const containerSub = document.getElementById("campo-subsecretaria-container");
       const avisoM1 = document.getElementById("aviso-master1-login");
       const selectSub = document.getElementById("login-subsecretaria");
+      const inputSetor = document.getElementById("login-setor");
 
       if (emailTrim === MASTER_1_EMAIL) {
         containerSub.classList.add("hidden");
         selectSub.removeAttribute("required");
+        inputSetor.removeAttribute("required");
         avisoM1.classList.remove("hidden");
       } else {
         containerSub.classList.remove("hidden");
         selectSub.setAttribute("required", "required");
+        inputSetor.setAttribute("required", "required");
         avisoM1.classList.add("hidden");
       }
     }
@@ -649,12 +1211,14 @@
       const nome = document.getElementById("login-nome").value.trim();
       const email = document.getElementById("login-email").value.trim().toLowerCase();
       let subsecretaria = document.getElementById("login-subsecretaria").value;
+      let setor = document.getElementById("login-setor").value.trim();
 
       if (email === MASTER_1_EMAIL) {
         subsecretaria = "SE-DF";
+        setor = "Coordenação Central";
       }
 
-      if (!nome || !email || (!subsecretaria && email !== MASTER_1_EMAIL)) {
+      if (!email || (!subsecretaria && email !== MASTER_1_EMAIL) || (!setor && email !== MASTER_1_EMAIL)) {
         alert("Preencha todos os campos obrigatórios.");
         return;
       }
@@ -667,11 +1231,13 @@
         const res = await fetch("/api/auth/entrar", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nome, email, subsecretaria })
+          body: JSON.stringify({ nome, email, subsecretaria, setor })
         });
         const data = await res.json();
 
         usuarioAtual = data.usuario;
+        pendenciasDevolucaoUsuario = data.pendencias_devolucao || [];
+        quadroAtualSubsecretaria = data.quadro_subsecretaria || null;
         localStorage.setItem("par_user", JSON.stringify(usuarioAtual));
         
         redirecionarPorPerfil(data.ja_enviou, data.submissao_anterior, data.ja_consolidou_subsecretaria, data.consolidacao_oficial);
@@ -686,14 +1252,11 @@
     function redirecionarPorPerfil(jaEnviou = false, submissaoAnterior = null, jaConsolidou = false, consolidacaoOficial = null) {
       atualizarCabecalho();
 
-      // REGRA: Master 1 vai DIRETO para o seu Painel de Monitoramento (não abre questionário)
       if (usuarioAtual.perfil === "master_1") {
         abrirPainelMaster1();
         return;
       }
 
-      // REGRA: Administrador (Master 2):
-      // Se a subsecretaria já tem consolidação oficial homologada:
       if (usuarioAtual.perfil === "master_2") {
         if (jaConsolidou && consolidacaoOficial) {
           exibirTelaJaEnviou(consolidacaoOficial, true);
@@ -703,10 +1266,16 @@
         return;
       }
 
-      // REGRA: Usuário comum: verifica se já enviou
+      // Usuário comum: se já enviou uma vez, vai para a tela de "resposta enviada" (onde aparece alerta vermelho se houver devolução pendente)
       if (jaEnviou || usuarioAtual.ja_enviou) {
-        exibirTelaJaEnviou(submissaoAnterior || { protocolo_id: usuarioAtual.submissao_protocolo, data_envio: usuarioAtual.data_envio });
+        exibirTelaJaEnviou(submissaoAnterior || {
+          protocolo_id: usuarioAtual.submissao_protocolo,
+          data_envio: usuarioAtual.data_envio,
+          responsavel: usuarioAtual
+        });
       } else {
+        modoApenasDevolvidas = false;
+        acaoFormularioMaster2 = null;
         carregarQuestionario();
       }
     }
@@ -715,7 +1284,8 @@
       if (!usuarioAtual) return;
       document.getElementById("user-header-info").classList.remove("hidden");
       document.getElementById("header-user-name").textContent = usuarioAtual.nome;
-      document.getElementById("header-user-sub").textContent = usuarioAtual.subsecretaria;
+      const setorTxt = usuarioAtual.setor ? ` • ${usuarioAtual.setor}` : '';
+      document.getElementById("header-user-sub").textContent = `${usuarioAtual.subsecretaria}${setorTxt}`;
       
       const roleElem = document.getElementById("header-user-role");
       if (usuarioAtual.perfil === "master_1") {
@@ -723,7 +1293,7 @@
         roleElem.textContent = "Administrador Geral";
       } else if (usuarioAtual.perfil === "master_2") {
         roleElem.className = "text-[10px] px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-200";
-        roleElem.textContent = "Administrador";
+        roleElem.textContent = "Ponto Focal (Administrador)";
       } else {
         roleElem.className = "text-[10px] px-1.5 py-0.5 rounded font-bold bg-slate-100 text-slate-600";
         roleElem.textContent = "Servidor";
@@ -735,10 +1305,16 @@
         abrirPainelMaster2();
       } else if (usuarioAtual.perfil === "master_1") {
         abrirPainelMaster1();
+      } else {
+        exibirTelaJaEnviou({
+          protocolo_id: usuarioAtual.submissao_protocolo,
+          data_envio: usuarioAtual.data_envio,
+          responsavel: usuarioAtual
+        });
       }
     }
 
-    // ==================== PAINEL MASTER 1 (SUPER ADMIN) ====================
+    // ==================== PAINEL MASTER 1 (SUPER ADMIN COM DRILL-DOWN) ====================
     async function abrirPainelMaster1() {
       esconderTodasTelas();
       document.getElementById("tela-master1-dashboard").classList.remove("hidden");
@@ -746,68 +1322,320 @@
     }
 
     async function carregarDadosMaster1() {
-      await carregarSubmissoesMaster1();
-      await carregarUsuariosMaster1();
-      atualizarStatusSubsecretariasM1();
+      try {
+        const res = await fetch(`/api/master1/overview?solicitante_email=${encodeURIComponent(usuarioAtual.email)}`);
+        const data = await res.json();
+        submissoesCarregadas = data.submissoes || [];
+        quadrosTodasSubsecretarias = data.quadros || [];
+        reportesCompetenciaLista = data.reportes || [];
+        usuariosLista = data.usuarios || [];
+
+        // Contabilização solicitada:
+        // "Consolidações Oficiais": enviadas finalmente pelo Master 2 (tipo_envio === 'consolidacao_oficial')
+        // "Total de Submissões": respostas enviadas pelo usuário comum que ainda não foram consolidadas oficialmente pelo Master 2
+        const subsecretariasConsolidadas = new Set(
+          submissoesCarregadas.filter(s => s.tipo_envio === "consolidacao_oficial").map(s => s.responsavel?.subsecretaria)
+        );
+        quadrosTodasSubsecretarias.forEach(q => {
+          if (q.status_consolidacao === "consolidado_oficial") {
+            subsecretariasConsolidadas.add(q.subsecretaria);
+          }
+        });
+
+        const submissoesPreliminaresPendentes = submissoesCarregadas.filter(
+          s => s.tipo_envio !== "consolidacao_oficial" && !subsecretariasConsolidadas.has(s.responsavel?.subsecretaria)
+        );
+
+        document.getElementById("m1-stat-total-subs").textContent = submissoesPreliminaresPendentes.length;
+        document.getElementById("m1-stat-oficiais").textContent = subsecretariasConsolidadas.size;
+        document.getElementById("m1-stat-reportes").textContent = reportesCompetenciaLista.length;
+
+        const badgeRep = document.getElementById("badge-reportes-m1");
+        const repPendentes = reportesCompetenciaLista.filter(r => r.status === "pendente_analise").length;
+        if (repPendentes > 0) {
+          badgeRep.textContent = repPendentes;
+          badgeRep.classList.remove("hidden");
+        } else {
+          badgeRep.classList.add("hidden");
+        }
+
+        atualizarStatusSubsecretariasM1();
+        renderizarTabelasSubmissoesM1();
+        renderizarTabelaReportesM1();
+        renderizarTabelasUsuariosM1();
+      } catch (e) {
+        console.error("Erro ao carregar overview Master 1:", e);
+      }
     }
 
-    async function carregarSubmissoesMaster1() {
-      const filtroSub = document.getElementById("m1-select-filtro-sub")?.value || "TODAS";
-      const url = `/api/master/submissoes?solicitante_email=${encodeURIComponent(usuarioAtual.email)}&subsecretaria=${filtroSub}`;
-      
-      const res = await fetch(url);
-      const data = await res.json();
-      submissoesCarregadas = data.submissoes || [];
+    function drillDownMaster1(cardAlvo) {
+      // Destaca visualmente o card clicado e abre a seção correspondente
+      const cards = ["card-m1-unidades", "card-m1-submissoes", "card-m1-oficiais", "card-m1-reportes"];
+      cards.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.className = "cursor-pointer bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition-all group";
+      });
 
-      document.getElementById("m1-stat-total-subs").textContent = submissoesCarregadas.length;
-      const oficiais = submissoesCarregadas.filter(s => s.tipo_envio === "consolidacao_oficial").length;
-      document.getElementById("m1-stat-oficiais").textContent = oficiais;
+      if (cardAlvo === "unidades") {
+        document.getElementById("card-m1-unidades").className = "cursor-pointer bg-white p-5 rounded-2xl border-2 border-brand-700 shadow-sm transition-all group";
+        mudarAbaMaster1("visao_geral");
+      } else if (cardAlvo === "submissoes_setores") {
+        document.getElementById("card-m1-submissoes").className = "cursor-pointer bg-white p-5 rounded-2xl border-2 border-brand-700 shadow-sm transition-all group";
+        mudarAbaMaster1("submissoes");
+      } else if (cardAlvo === "consolidacoes_oficiais") {
+        document.getElementById("card-m1-oficiais").className = "cursor-pointer bg-white p-5 rounded-2xl border-2 border-emerald-600 shadow-sm transition-all group";
+        mudarAbaMaster1("consolidacoes");
+      } else if (cardAlvo === "reportes") {
+        document.getElementById("card-m1-reportes").className = "cursor-pointer bg-white p-5 rounded-2xl border-2 border-red-600 shadow-sm transition-all group";
+        mudarAbaMaster1("reportes");
+      }
+    }
 
-      document.getElementById("m1-contagem-submissoes").textContent = `${submissoesCarregadas.length} submissão(ões)`;
-
-      const corpo = document.getElementById("m1-tabela-submissoes-corpo");
+    function atualizarStatusSubsecretariasM1() {
+      const corpo = document.getElementById("tabela-m1-status-subsecretarias");
       corpo.innerHTML = "";
 
-      if (submissoesCarregadas.length === 0) {
-        corpo.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Nenhuma submissão encontrada.</td></tr>`;
-        return;
-      }
+      SUBSECRETARIAS_NOMES.forEach(subItem => {
+        const sigla = subItem.sigla;
+        const quadro = quadrosTodasSubsecretarias.find(q => q.subsecretaria === sigla) || { questoes_respondidas: {} };
+        const qMap = quadro.questoes_respondidas || {};
+        const qtdDevolvidas = Object.values(qMap).filter(x => x.status_validacao === "devolvido").length;
+        const qtdRespondidas = Object.values(qMap).filter(x => x.status_validacao !== "devolvido").length;
 
-      submissoesCarregadas.forEach(sub => {
+        const submissoesSetores = submissoesCarregadas.filter(s => s.responsavel?.subsecretaria === sigla && s.tipo_envio !== "consolidacao_oficial");
+        const temOficial = quadro.status_consolidacao === "consolidado_oficial" || submissoesCarregadas.some(s => s.responsavel?.subsecretaria === sigla && s.tipo_envio === "consolidacao_oficial");
+        const gestoresM2 = usuariosLista.filter(u => u.subsecretaria === sigla && u.perfil === "master_2");
+
+        const pct = Math.round((qtdRespondidas / subItem.total) * 100);
+
+        const statusOficial = temOficial 
+          ? `<span class="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold text-[10px] inline-flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Consolidado Oficial</span>`
+          : `<span class="bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-full font-semibold text-[10px] inline-flex items-center gap-1"><i class="fa-regular fa-clock"></i> Em Preenchimento</span>`;
+
+        const gestorStr = gestoresM2.length > 0 
+          ? gestoresM2.map(g => `<span class="font-semibold text-slate-800 block">${g.nome} <span class="text-[10px] text-slate-400">(${g.setor || 'Ponto Focal'})</span></span>`).join("")
+          : `<span class="text-slate-400 italic">Sem ponto focal homologado</span>`;
+
+        const badgeDevolvidas = qtdDevolvidas > 0
+          ? `<span class="bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded text-[10px]"><i class="fa-solid fa-rotate-left mr-1"></i>${qtdDevolvidas} devolvida(s)</span>`
+          : `<span class="text-slate-400">0</span>`;
+
         const tr = document.createElement("tr");
         tr.className = "hover:bg-slate-50 transition-colors";
-        
-        const isOficial = sub.tipo_envio === "consolidacao_oficial";
-        const tag = isOficial 
-          ? `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">Oficial Homologada</span>`
-          : `<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px]">Preliminar Servidor</span>`;
-
         tr.innerHTML = `
-          <td class="p-3 font-mono font-bold text-brand-900">${sub.protocolo_id || sub.id}</td>
-          <td class="p-3 font-bold">${sub.responsavel?.subsecretaria || "-"}</td>
-          <td class="p-3">${sub.responsavel?.nome || "-"}<br><span class="text-slate-400">${sub.responsavel?.email || ""}</span></td>
-          <td class="p-3">${tag}</td>
-          <td class="p-3 font-bold text-emerald-700">${sub.metricas?.total_respondido || 0} / ${sub.metricas?.total_atribuido || 0}</td>
-          <td class="p-3 text-slate-500">${formatarData(sub.data_envio)}</td>
-          <td class="p-3 text-center space-x-1">
-            <button onclick="verDetalhesSubmissao('${sub.protocolo_id || sub.id}')" class="px-2.5 py-1 bg-brand-50 text-brand-700 hover:bg-brand-100 rounded font-semibold text-[11px]">
-              <i class="fa-regular fa-eye mr-1"></i> Ver
+          <td class="p-3 font-bold text-slate-800">${sigla} <span class="text-slate-400 font-normal block text-[10px]">${subItem.nome}</span></td>
+          <td class="p-3">
+            <div class="flex items-center gap-2">
+              <div class="w-24 bg-slate-100 h-2 rounded-full overflow-hidden">
+                <div class="bg-brand-700 h-2 rounded-full" style="width:${pct}%"></div>
+              </div>
+              <span class="font-bold text-slate-700">${qtdRespondidas}/${subItem.total} (${pct}%)</span>
+            </div>
+          </td>
+          <td class="p-3 font-semibold text-slate-700">${submissoesSetores.length} envio(s) de setores</td>
+          <td class="p-3">${badgeDevolvidas}</td>
+          <td class="p-3">${statusOficial}</td>
+          <td class="p-3">${gestorStr}</td>
+          <td class="p-3 text-center">
+            <button onclick="inspecionarQuadroSubsecretariaM1('${sigla}')" class="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-800 rounded-lg font-bold text-[11px] border border-brand-200">
+              <i class="fa-solid fa-magnifying-glass mr-1"></i> Inspecionar Quadro
             </button>
-            <a href="/api/submissoes/pdf/${sub.protocolo_id || sub.id}" target="_blank" class="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded font-semibold text-[11px] inline-block">
-              <i class="fa-solid fa-file-pdf mr-1"></i> PDF
-            </a>
           </td>
         `;
         corpo.appendChild(tr);
       });
     }
 
-    async function carregarUsuariosMaster1() {
-      const res = await fetch(`/api/master1/usuarios?solicitante_email=${encodeURIComponent(usuarioAtual.email)}`);
-      const data = await res.json();
-      usuariosLista = data.usuarios || [];
+    function inspecionarQuadroSubsecretariaM1(sigla) {
+      const quadro = quadrosTodasSubsecretarias.find(q => q.subsecretaria === sigla);
+      const qMap = quadro?.questoes_respondidas || {};
+      const listaRespostas = Object.values(qMap);
 
-      // Filtra apenas solicitações pendentes
+      document.getElementById("modal-sub-proto").textContent = `QUADRO COLETIVO • ${sigla}`;
+      document.getElementById("modal-sub-info").textContent = `${listaRespostas.length} questão(ões) respondida(s) pelos setores de ${sigla}`;
+      
+      const tag = document.getElementById("modal-sub-tag");
+      const isConsolidado = quadro?.status_consolidacao === "consolidado_oficial";
+      tag.textContent = isConsolidado ? "Consolidação Oficial Homologada" : "Em Construção pelos Setores";
+      tag.className = isConsolidado ? "bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold" : "bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[10px] font-bold";
+
+      const btnPdf = document.getElementById("modal-btn-pdf");
+      if (quadro?.protocolo_consolidacao) {
+        btnPdf.classList.remove("hidden");
+        btnPdf.onclick = () => window.open(`/api/submissoes/pdf/${quadro.protocolo_consolidacao}`, "_blank");
+      } else {
+        btnPdf.classList.add("hidden");
+      }
+
+      const container = document.getElementById("modal-sub-respostas-lista");
+      container.innerHTML = "";
+
+      if (listaRespostas.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-400">Nenhuma questão foi respondida pelos setores de ${sigla} até o momento.</div>`;
+      } else {
+        listaRespostas.sort((a, b) => (a.codigo_questao || "").localeCompare(b.codigo_questao || ""));
+        listaRespostas.forEach(r => {
+          const autor = r.respondido_por || {};
+          const isDevolvido = r.status_validacao === "devolvido";
+          const item = document.createElement("div");
+          item.className = `p-4 rounded-xl border ${isDevolvido ? 'border-red-400 bg-red-50/40' : 'border-slate-200 bg-slate-50'} space-y-2`;
+          
+          let valorFmt = Array.isArray(r.opcao_marcada) ? r.opcao_marcada.join("; ") : (r.opcao_marcada || "-");
+
+          item.innerHTML = `
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="font-bold font-mono text-brand-900 bg-white px-2 py-0.5 rounded border border-slate-200">${r.codigo_questao}</span>
+                <span class="text-[10px] text-slate-500 font-semibold">${r.tema || ""}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                  <i class="fa-solid fa-user-check mr-1"></i> ${autor.nome || "Servidor"} • Setor: ${autor.setor || "Não informado"}
+                </span>
+                ${isDevolvido ? `<span class="px-2 py-0.5 rounded bg-red-600 text-white font-bold text-[10px]">Devolvida p/ Análise</span>` : ''}
+              </div>
+            </div>
+            <p class="font-semibold text-slate-800">${r.enunciado || ""}</p>
+            <div class="bg-white p-2.5 rounded-lg border border-slate-200 font-bold text-slate-800">
+              ${valorFmt}
+            </div>
+            ${r.evidencia_normativa ? `<div class="text-[11px] text-brand-900"><i class="fa-solid fa-file-shield mr-1"></i><strong>Evidência:</strong> ${r.evidencia_normativa}</div>` : ''}
+            ${isDevolvido ? `<div class="p-2 bg-red-100 text-red-800 rounded-lg text-[11px] font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ${r.mensagem_devolucao} ${r.observacao_devolucao ? `— "${r.observacao_devolucao}"` : ''}</div>` : ''}
+          `;
+          container.appendChild(item);
+        });
+      }
+
+      document.getElementById("modal-ver-submissao").classList.remove("hidden");
+    }
+
+    function renderizarTabelasSubmissoesM1() {
+      const filtroSub = document.getElementById("m1-select-filtro-sub")?.value || "TODAS";
+      
+      // 1) Submissões preliminares dos setores
+      const preliminares = submissoesCarregadas.filter(s => {
+        const matchSub = (filtroSub === "TODAS" || s.responsavel?.subsecretaria === filtroSub);
+        return matchSub && s.tipo_envio !== "consolidacao_oficial";
+      });
+
+      document.getElementById("m1-contagem-submissoes").textContent = `${preliminares.length} submissão(ões) de setores`;
+      const corpoPrelim = document.getElementById("m1-tabela-submissoes-corpo");
+      corpoPrelim.innerHTML = "";
+
+      if (preliminares.length === 0) {
+        corpoPrelim.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Nenhuma submissão preliminar de setor encontrada.</td></tr>`;
+      } else {
+        preliminares.forEach(sub => {
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-slate-50 transition-colors";
+          tr.innerHTML = `
+            <td class="p-3 font-mono font-bold text-brand-900">${sub.protocolo_id || sub.id}</td>
+            <td class="p-3 font-bold">${sub.responsavel?.subsecretaria || "-"}<span class="block text-[10px] font-normal text-slate-500">Setor: ${sub.responsavel?.setor || "Não informado"}</span></td>
+            <td class="p-3">${sub.responsavel?.nome || "-"}<br><span class="text-slate-400">${sub.responsavel?.email || ""}</span></td>
+            <td class="p-3"><span class="bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-bold">Enviado ao Ponto Focal</span></td>
+            <td class="p-3 font-bold text-brand-800">${sub.metricas?.total_respondido || (sub.respostas || []).length} questão(ões)</td>
+            <td class="p-3 text-slate-500">${formatarData(sub.data_envio)}</td>
+            <td class="p-3 text-center space-x-1">
+              <button onclick="verDetalhesSubmissao('${sub.protocolo_id || sub.id}')" class="px-2.5 py-1 bg-brand-50 text-brand-700 hover:bg-brand-100 rounded font-semibold text-[11px]">
+                <i class="fa-regular fa-eye mr-1"></i> Ver
+              </button>
+              <a href="/api/submissoes/pdf/${sub.protocolo_id || sub.id}" target="_blank" class="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded font-semibold text-[11px] inline-block">
+                <i class="fa-solid fa-file-pdf mr-1"></i> PDF
+              </a>
+            </td>
+          `;
+          corpoPrelim.appendChild(tr);
+        });
+      }
+
+      // 2) Consolidações Oficiais Homologadas pelo Master 2
+      const oficiais = submissoesCarregadas.filter(s => s.tipo_envio === "consolidacao_oficial");
+      document.getElementById("m1-contagem-consolidacoes").textContent = `${oficiais.length} consolidação(ões) oficial(is)`;
+      const corpoOficiais = document.getElementById("m1-tabela-consolidacoes-corpo");
+      corpoOficiais.innerHTML = "";
+
+      if (oficiais.length === 0) {
+        corpoOficiais.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Nenhuma subsecretaria enviou a Consolidação Oficial ainda.</td></tr>`;
+      } else {
+        oficiais.forEach(sub => {
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-emerald-50/40 transition-colors";
+          tr.innerHTML = `
+            <td class="p-3 font-mono font-bold text-emerald-900">${sub.protocolo_id || sub.id}</td>
+            <td class="p-3 font-extrabold text-slate-800">${sub.responsavel?.subsecretaria || "-"}</td>
+            <td class="p-3">${sub.responsavel?.nome || "-"}<br><span class="text-slate-400">${sub.responsavel?.email || ""}</span></td>
+            <td class="p-3 font-bold text-emerald-700">${sub.metricas?.total_respondido || (sub.respostas || []).length} questões consolidadas</td>
+            <td class="p-3 text-slate-500">${formatarData(sub.data_envio)}</td>
+            <td class="p-3 text-center space-x-1">
+              <button onclick="verDetalhesSubmissao('${sub.protocolo_id || sub.id}')" class="px-3 py-1 bg-emerald-600 text-white hover:bg-emerald-700 rounded font-bold text-[11px]">
+                <i class="fa-regular fa-eye mr-1"></i> Inspecionar Consolidação
+              </button>
+              <a href="/api/submissoes/pdf/${sub.protocolo_id || sub.id}" target="_blank" class="px-3 py-1 bg-red-600 text-white hover:bg-red-700 rounded font-bold text-[11px] inline-block">
+                <i class="fa-solid fa-file-pdf mr-1"></i> PDF Oficial
+              </a>
+            </td>
+          `;
+          corpoOficiais.appendChild(tr);
+        });
+      }
+    }
+
+    function renderizarTabelaReportesM1() {
+      const corpo = document.getElementById("m1-tabela-reportes-corpo");
+      corpo.innerHTML = "";
+
+      if (reportesCompetenciaLista.length === 0) {
+        corpo.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Nenhum reporte de competência enviado pelos Pontos Focais.</td></tr>`;
+        return;
+      }
+
+      reportesCompetenciaLista.forEach(rep => {
+        const isPendente = rep.status === "pendente_analise";
+        const badgeStatus = isPendente
+          ? `<span class="bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded text-[10px]">Pendente de Análise</span>`
+          : `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">Analisado / Resolvido</span>`;
+
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition-colors";
+        tr.innerHTML = `
+          <td class="p-3 font-bold text-slate-800">${rep.subsecretaria}</td>
+          <td class="p-3">
+            <span class="font-mono font-bold text-brand-900 bg-slate-100 px-2 py-0.5 rounded">${rep.codigo_questao}</span>
+            <p class="text-[11px] text-slate-500 mt-1 line-clamp-2">${rep.enunciado || ""}</p>
+          </td>
+          <td class="p-3 font-medium text-red-900 bg-red-50/40">${rep.justificativa || "-"}</td>
+          <td class="p-3">${rep.reportado_por?.nome || "-"}<br><span class="text-slate-400 text-[10px]">${rep.reportado_por?.email || ""}</span></td>
+          <td class="p-3 text-slate-500">${formatarData(rep.data_reporte)}</td>
+          <td class="p-3">${badgeStatus}</td>
+          <td class="p-3 text-center">
+            ${isPendente ? `
+              <button onclick="marcarReporteResolvido('${rep.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[11px]">
+                <i class="fa-solid fa-check mr-1"></i> Marcar Analisado
+              </button>
+            ` : `<span class="text-slate-400 text-[11px]"><i class="fa-solid fa-check-double"></i> Concluído</span>`}
+          </td>
+        `;
+        corpo.appendChild(tr);
+      });
+    }
+
+    async function marcarReporteResolvido(reporteId) {
+      const res = await fetch("/api/master1/resolver_reporte", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reporte_id: reporteId,
+          novo_status: "analisado",
+          resposta_master1: "Analisado pelo Administrador Geral",
+          solicitante_email: usuarioAtual.email
+        })
+      });
+      if (res.ok) {
+        await carregarDadosMaster1();
+      }
+    }
+
+    function renderizarTabelasUsuariosM1() {
       const solicitacoesPendentes = usuariosLista.filter(u => u.solicitou_master2 && u.status_solicitacao === "pendente" && u.perfil !== "master_2");
       const badgeP = document.getElementById("badge-pendentes-m1");
       if (solicitacoesPendentes.length > 0) {
@@ -817,7 +1645,6 @@
         badgeP.classList.add("hidden");
       }
 
-      // Renderiza Tabela de Solicitações Pendentes (NOVO)
       const corpoSolic = document.getElementById("m1-tabela-solicitacoes-corpo");
       corpoSolic.innerHTML = "";
       if (solicitacoesPendentes.length === 0) {
@@ -829,11 +1656,11 @@
           tr.innerHTML = `
             <td class="p-3 font-semibold text-slate-800">${u.nome || "-"}</td>
             <td class="p-3 text-slate-600">${u.email}</td>
-            <td class="p-3 font-bold">${u.subsecretaria || "-"}</td>
+            <td class="p-3 font-bold">${u.subsecretaria || "-"} ${u.setor ? `<span class="block text-[10px] text-slate-400 font-normal">Setor: ${u.setor}</span>` : ''}</td>
             <td class="p-3 text-slate-500">${formatarData(u.data_solicitacao)}</td>
             <td class="p-3 text-center space-x-2">
               <button onclick="alterarPerfil('${u.email}', 'master_2', 'aprovado')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-xs shadow-xs">
-                <i class="fa-solid fa-check mr-1"></i> Homologar Administrador
+                <i class="fa-solid fa-check mr-1"></i> Homologar Ponto Focal
               </button>
               <button onclick="alterarPerfil('${u.email}', 'usuario_comum', 'recusado')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded font-semibold text-xs">
                 Recusar
@@ -844,7 +1671,6 @@
         });
       }
 
-      // Renderiza Tabela de Administradores Homologados (NOVO)
       const corpoGestores = document.getElementById("m1-tabela-gestores-corpo");
       corpoGestores.innerHTML = "";
       const gestoresAtivos = usuariosLista.filter(u => u.perfil === "master_2" || u.email === MASTER_1_EMAIL);
@@ -853,24 +1679,19 @@
         const tr = document.createElement("tr");
         tr.className = "hover:bg-slate-50 transition-colors";
 
-        let acoes = "";
-        if (u.email === usuarioAtual.email) {
-          acoes = `<span class="text-slate-400 italic">Administrador Geral</span>`;
-        } else {
-          acoes = `
-            <button onclick="alterarPerfil('${u.email}', 'usuario_comum', 'revogado')" class="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded font-semibold text-xs border border-red-200">
-              <i class="fa-solid fa-arrow-down mr-1"></i> Retroceder para Usuário Comum
-            </button>
-          `;
-        }
+        let acoes = u.email === usuarioAtual.email
+          ? `<span class="text-slate-400 italic">Administrador Geral</span>`
+          : `<button onclick="alterarPerfil('${u.email}', 'usuario_comum', 'revogado')" class="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded font-semibold text-xs border border-red-200">
+               <i class="fa-solid fa-arrow-down mr-1"></i> Retroceder para Usuário Comum
+             </button>`;
 
         tr.innerHTML = `
           <td class="p-3 font-semibold text-slate-800">${u.nome || "-"}</td>
           <td class="p-3 text-slate-600">${u.email}</td>
-          <td class="p-3 font-bold">${u.subsecretaria || "-"}</td>
+          <td class="p-3 font-bold">${u.subsecretaria || "-"} ${u.setor ? `<span class="block text-[10px] font-normal text-slate-400">Setor: ${u.setor}</span>` : ''}</td>
           <td class="p-3">
             <span class="px-2 py-0.5 rounded text-[10px] font-bold ${u.perfil === 'master_1' ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'}">
-              ${u.perfil === 'master_1' ? 'Administrador Geral' : 'Administrador da Área'}
+              ${u.perfil === 'master_1' ? 'Administrador Geral' : 'Ponto Focal da Área'}
             </span>
           </td>
           <td class="p-3 text-center">${acoes}</td>
@@ -879,38 +1700,8 @@
       });
     }
 
-    function atualizarStatusSubsecretariasM1() {
-      const corpo = document.getElementById("tabela-m1-status-subsecretarias");
-      corpo.innerHTML = "";
-
-      SUBSECRETARIAS_NOMES.forEach(subItem => {
-        const sigla = subItem.sigla;
-        const submissoesDaArea = submissoesCarregadas.filter(s => s.responsavel?.subsecretaria === sigla);
-        const temOficial = submissoesDaArea.some(s => s.tipo_envio === "consolidacao_oficial");
-        const gestoresM2 = usuariosLista.filter(u => u.subsecretaria === sigla && u.perfil === "master_2");
-
-        const statusOficial = temOficial 
-          ? `<span class="text-emerald-700 font-bold flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Homologado</span>`
-          : `<span class="text-amber-600 font-medium flex items-center gap-1"><i class="fa-regular fa-clock"></i> Pendente</span>`;
-
-        const gestorStr = gestoresM2.length > 0 
-          ? gestoresM2.map(g => `<span class="font-semibold text-slate-800">${g.nome}</span>`).join(", ")
-          : `<span class="text-slate-400 italic">Sem administrador cadastrado</span>`;
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="p-3 font-bold text-slate-800">${sigla} <span class="text-slate-400 font-normal">(${subItem.nome})</span></td>
-          <td class="p-3 font-semibold">${subItem.total} questões</td>
-          <td class="p-3">${submissoesDaArea.length} envio(s)</td>
-          <td class="p-3">${statusOficial}</td>
-          <td class="p-3">${gestorStr}</td>
-        `;
-        corpo.appendChild(tr);
-      });
-    }
-
     async function alterarPerfil(emailAlvo, novoPerfil, statusSolic) {
-      if (!confirm(`Confirma a alteração para ${emailAlvo}?`)) return;
+      if (!confirm(`Confirma a alteração de perfil para ${emailAlvo}?`)) return;
 
       const res = await fetch(`/api/master1/alterar_perfil?solicitante_email=${encodeURIComponent(usuarioAtual.email)}`, {
         method: "POST",
@@ -919,57 +1710,257 @@
       });
       const data = await res.json();
       if (data.sucesso) {
-        alert("Operação realizada com sucesso!");
-        await carregarUsuariosMaster1();
-        atualizarStatusSubsecretariasM1();
+        await carregarDadosMaster1();
       }
     }
 
     function mudarAbaMaster1(aba) {
-      const bVisao = document.getElementById("tab-btn-m1-visao");
-      const bSubs = document.getElementById("tab-btn-m1-subs");
-      const bSolic = document.getElementById("tab-btn-m1-solicitacoes");
-      const bGest = document.getElementById("tab-btn-m1-gestores");
+      const abas = [
+        { key: "visao_geral", btn: "tab-btn-m1-visao", cont: "m1-conteudo-visao" },
+        { key: "submissoes", btn: "tab-btn-m1-subs", cont: "m1-conteudo-submissoes" },
+        { key: "consolidacoes", btn: "tab-btn-m1-consolidacoes", cont: "m1-conteudo-consolidacoes" },
+        { key: "reportes", btn: "tab-btn-m1-reportes", cont: "m1-conteudo-reportes" },
+        { key: "solicitacoes", btn: "tab-btn-m1-solicitacoes", cont: "m1-conteudo-solicitacoes" },
+        { key: "gestores", btn: "tab-btn-m1-gestores", cont: "m1-conteudo-gestores" }
+      ];
 
-      const cVisao = document.getElementById("m1-conteudo-visao");
-      const cSubs = document.getElementById("m1-conteudo-submissoes");
-      const cSolic = document.getElementById("m1-conteudo-solicitacoes");
-      const cGest = document.getElementById("m1-conteudo-gestores");
-
-      [bVisao, bSubs, bSolic, bGest].forEach(b => b.className = "px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100");
-      [cVisao, cSubs, cSolic, cGest].forEach(c => c.classList.add("hidden"));
-
-      if (aba === "visao_geral") {
-        bVisao.className = "px-4 py-2 text-xs font-bold rounded-lg bg-brand-700 text-white";
-        cVisao.classList.remove("hidden");
-      } else if (aba === "submissoes") {
-        bSubs.className = "px-4 py-2 text-xs font-bold rounded-lg bg-brand-700 text-white";
-        cSubs.classList.remove("hidden");
-      } else if (aba === "solicitacoes") {
-        bSolic.className = "px-4 py-2 text-xs font-bold rounded-lg bg-brand-700 text-white flex items-center gap-1.5";
-        cSolic.classList.remove("hidden");
-      } else {
-        bGest.className = "px-4 py-2 text-xs font-bold rounded-lg bg-brand-700 text-white flex items-center gap-1.5";
-        cGest.classList.remove("hidden");
-      }
+      abas.forEach(item => {
+        const b = document.getElementById(item.btn);
+        const c = document.getElementById(item.cont);
+        if (item.key === aba) {
+          b.className = "px-3.5 py-2 text-xs font-bold rounded-lg bg-brand-700 text-white flex items-center gap-1.5 shrink-0";
+          c.classList.remove("hidden");
+        } else {
+          b.className = "px-3.5 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 shrink-0";
+          c.classList.add("hidden");
+        }
+      });
     }
 
-    // ==================== PAINEL DO ADMINISTRADOR DA SUBSECRETARIA ====================
+    // ==================== PAINEL DO PONTO FOCAL / ADMINISTRADOR DA SUBSECRETARIA (MASTER 2) ====================
     async function abrirPainelMaster2() {
       esconderTodasTelas();
       document.getElementById("tela-master2-dashboard").classList.remove("hidden");
-      document.getElementById("m2-badge-sub").textContent = `ADMINISTRADOR • ${usuarioAtual.subsecretaria}`;
+      document.getElementById("m2-badge-sub").textContent = `PONTO FOCAL • ${usuarioAtual.subsecretaria}`;
       await carregarDadosMaster2();
     }
 
     async function carregarDadosMaster2() {
-      const url = `/api/master/submissoes?solicitante_email=${encodeURIComponent(usuarioAtual.email)}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      submissoesCarregadas = data.submissoes || [];
+      try {
+        const [resSub, resQuestoes] = await Promise.all([
+          fetch(`/api/master/submissoes?solicitante_email=${encodeURIComponent(usuarioAtual.email)}`),
+          fetch(`/api/questoes/${usuarioAtual.subsecretaria}`)
+        ]);
+        const dataSub = await resSub.json();
+        const dataQ = await resQuestoes.json();
 
-      document.getElementById("m2-contagem-respostas").textContent = `${submissoesCarregadas.length} envio(s) nesta subsecretaria`;
+        submissoesCarregadas = dataSub.submissoes || [];
+        questoesCarregadas = dataQ.questoes || [];
+        quadroAtualSubsecretaria = dataQ.quadro || dataSub.quadro || { questoes_respondidas: {} };
 
+        // Atualiza métricas do topo do Ponto Focal
+        // Quando uma questão é devolvida para análise, ela abate 1 do total de "Questões Respondidas"
+        const qMap = quadroAtualSubsecretaria.questoes_respondidas || {};
+        const totalQ = questoesCarregadas.length;
+        const respondidasList = Object.values(qMap);
+        const devolvidasCount = respondidasList.filter(r => r.status_validacao === "devolvido").length;
+        const retornoCount = respondidasList.filter(r => r.status_validacao === "retorno_para_ajuste").length;
+        const respondidasValidasCount = respondidasList.filter(r => r.status_validacao === "validado" || (r.status_validacao !== "devolvido" && r.status_validacao !== "retorno_para_ajuste")).length;
+        const pendentesCount = Math.max(0, totalQ - respondidasList.length);
+
+        document.getElementById("m2-stat-total-q").textContent = totalQ;
+        document.getElementById("m2-stat-respondidas").textContent = respondidasValidasCount;
+        document.getElementById("m2-stat-retorno").textContent = retornoCount;
+        document.getElementById("m2-stat-devolvidas").textContent = devolvidasCount;
+        document.getElementById("m2-stat-pendentes").textContent = pendentesCount;
+
+        renderizarMonitoramentoQuestoesM2();
+        renderizarHistoricoSubmissoesM2();
+      } catch (e) {
+        console.error("Erro ao carregar dados do Ponto Focal:", e);
+      }
+    }
+
+    function drillDownMaster2(filtroAlvo) {
+      const sel = document.getElementById("m2-filtro-status-questao");
+      if (sel) sel.value = filtroAlvo;
+
+      const cards = [
+        { id: "card-m2-todas", key: "TODAS", border: "border-brand-700" },
+        { id: "card-m2-respondidas", key: "RESPONDIDAS", border: "border-emerald-600" },
+        { id: "card-m2-retorno", key: "RETORNO", border: "border-purple-600" },
+        { id: "card-m2-devolvidas", key: "DEVOLVIDAS", border: "border-red-600" },
+        { id: "card-m2-pendentes", key: "PENDENTES", border: "border-amber-500" }
+      ];
+
+      cards.forEach(c => {
+        const el = document.getElementById(c.id);
+        if (!el) return;
+        if (c.key === filtroAlvo) {
+          el.className = `cursor-pointer bg-white p-4 rounded-2xl border-2 ${c.border} shadow-sm transition-all group`;
+        } else {
+          el.className = `cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition-all group`;
+        }
+      });
+
+      renderizarMonitoramentoQuestoesM2();
+    }
+
+    function renderizarMonitoramentoQuestoesM2() {
+      const filtro = document.getElementById("m2-filtro-status-questao")?.value || "RESPONDIDAS";
+      const corpo = document.getElementById("m2-tabela-monitoramento-questoes");
+      corpo.innerHTML = "";
+
+      const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
+
+      // Filtra conforme o card ou dropdown selecionado
+      const filtradas = questoesCarregadas.filter(q => {
+        const resp = qMap[q.codigo];
+        if (filtro === "RESPONDIDAS") return resp && resp.status_validacao !== "devolvido" && resp.status_validacao !== "retorno_para_ajuste";
+        if (filtro === "RETORNO") return resp && resp.status_validacao === "retorno_para_ajuste";
+        if (filtro === "DEVOLVIDAS") return resp && resp.status_validacao === "devolvido";
+        if (filtro === "PENDENTES") return !resp;
+        return true;
+      });
+
+      // Ordena sempre colocando primeiro retorno para ajuste, depois devolvidas, depois respondidas e pendentes por último
+      filtradas.sort((a, b) => {
+        const respA = qMap[a.codigo];
+        const respB = qMap[b.codigo];
+        const prioridade = (resp) => {
+          if (!resp) return 4;
+          if (resp.status_validacao === "retorno_para_ajuste") return 0;
+          if (resp.status_validacao === "devolvido") return 1;
+          return 2;
+        };
+        const pA = prioridade(respA);
+        const pB = prioridade(respB);
+        if (pA !== pB) return pA - pB;
+        return 0;
+      });
+
+      if (filtradas.length === 0) {
+        const msgVazio = filtro === "RESPONDIDAS"
+          ? `Nenhuma questão foi enviada pelos setores ainda. Clique no card "Total de Questões da Área" ou "Pendentes de Resposta" acima para visualizar as questões não respondidas.`
+          : `Nenhuma questão encontrada para o filtro selecionado.`;
+        corpo.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">${msgVazio}</td></tr>`;
+        return;
+      }
+
+      filtradas.forEach(q => {
+        const resp = qMap[q.codigo];
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition-colors align-top";
+
+        let htmlResposta = `<span class="text-slate-400 italic">Ainda não respondida por nenhum setor.</span>`;
+        let htmlAutor = `<span class="text-slate-400">—</span>`;
+        let htmlStatus = `<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-semibold">Pendente</span>`;
+        let btnDevolver = "";
+
+        if (resp) {
+          const opc = Array.isArray(resp.opcao_marcada) ? resp.opcao_marcada.join("; ") : (resp.opcao_marcada || "-");
+          htmlResposta = `
+            <div class="mt-1.5 p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-800">
+              ${opc}
+              ${resp.evidencia_normativa ? `<div class="text-[10px] text-brand-700 font-normal mt-1"><i class="fa-solid fa-file-shield mr-1"></i>Evidência: ${resp.evidencia_normativa}</div>` : ''}
+            </div>
+          `;
+
+          const autor = resp.respondido_por || {};
+          htmlAutor = `
+            <div class="p-2 rounded-lg bg-blue-50/70 border border-blue-200">
+              <p class="font-bold text-slate-800 text-xs flex items-center gap-1">
+                <i class="fa-solid fa-user-tag text-brand-700"></i> ${autor.nome || "Servidor"}
+              </p>
+              <p class="text-[10px] font-semibold text-brand-800 mt-0.5">Setor: ${autor.setor || "Não informado"}</p>
+              <p class="text-[10px] text-slate-400">${autor.email || ""}</p>
+            </div>
+          `;
+
+          const totalDevolucoesNum = resp.total_devolucoes || 0;
+          const badgeDevolucoesCiclo = totalDevolucoesNum > 0
+            ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-purple-100 text-purple-800 border border-purple-300 ml-1" title="Número de devoluções realizadas para esta questão"><i class="fa-solid fa-rotate-left text-[8px]"></i> ${totalDevolucoesNum}x</span>`
+            : '';
+
+          if (resp.status_validacao === "devolvido") {
+            htmlStatus = `
+              <div class="space-y-1">
+                <span class="bg-red-100 text-red-700 border border-red-300 px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center">
+                  <i class="fa-solid fa-rotate-left mr-1"></i> Devolvida p/ Análise
+                  ${badgeDevolucoesCiclo}
+                </span>
+                ${resp.observacao_devolucao ? `<p class="text-[10px] text-red-600 italic">"${resp.observacao_devolucao}"</p>` : ''}
+              </div>
+            `;
+            btnDevolver = "";
+          } else if (resp.status_validacao === "retorno_para_ajuste") {
+            htmlStatus = `
+              <div class="space-y-1">
+                <span class="bg-purple-100 text-purple-800 border border-purple-300 px-2 py-0.5 rounded text-[10px] font-extrabold inline-flex items-center shadow-2xs">
+                  <i class="fa-solid fa-clock-rotate-left mr-1"></i> Retorno para Ajuste
+                  ${badgeDevolucoesCiclo}
+                </span>
+                <span class="block text-[9px] text-purple-600 font-semibold">Reenviada pelo setor p/ sua validação</span>
+              </div>
+            `;
+            btnDevolver = `
+              <button onclick="aprovarQuestaoPontoFocal('${q.codigo}')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] flex items-center justify-center gap-1 shadow-xs">
+                <i class="fa-solid fa-circle-check"></i> Aprovar Resposta
+              </button>
+              <button onclick="abrirModalDevolver('${q.codigo}')" class="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1">
+                <i class="fa-solid fa-rotate-left"></i> Devolver Novamente
+              </button>
+            `;
+          } else {
+            htmlStatus = `
+              <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center">
+                <i class="fa-solid fa-check mr-1"></i> Respondida
+                ${badgeDevolucoesCiclo}
+              </span>
+            `;
+            btnDevolver = `
+              <button onclick="abrirModalDevolver('${q.codigo}')" class="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1">
+                <i class="fa-solid fa-rotate-left"></i> Devolver p/ Análise
+              </button>
+            `;
+          }
+        }
+
+        const btn2025 = q.tem_2025 ? `
+          <button type="button" onclick="abrirModal2025('${q.codigo}')" class="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-md font-bold text-[10px] inline-flex items-center gap-1 ml-1">
+            <i class="fa-regular fa-eye"></i> resposta de 2025
+          </button>
+        ` : "";
+
+        tr.innerHTML = `
+          <td class="p-3">
+            <span class="font-mono font-black text-brand-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">${q.codigo}</span>
+            <span class="block text-[10px] text-slate-400 mt-1">${q.tema}</span>
+          </td>
+          <td class="p-3">
+            <div class="font-semibold text-slate-800 leading-snug">
+              ${q.enunciado}
+              ${btn2025}
+            </div>
+            ${htmlResposta}
+          </td>
+          <td class="p-3">${htmlAutor}</td>
+          <td class="p-3">${htmlStatus}</td>
+          <td class="p-3">
+            <div class="flex flex-col gap-1.5 items-stretch">
+              ${btnDevolver}
+              <button onclick="abrirModalReporte('${q.codigo}')" class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-lg font-semibold text-[11px] flex items-center gap-1">
+                <i class="fa-solid fa-flag text-amber-600"></i> Reportar Competência
+              </button>
+            </div>
+          </td>
+        `;
+        corpo.appendChild(tr);
+      });
+    }
+
+    function renderizarHistoricoSubmissoesM2() {
+      document.getElementById("m2-contagem-respostas").textContent = `${submissoesCarregadas.length} protocolo(s) registrado(s)`;
       const corpo = document.getElementById("m2-tabela-respostas-corpo");
       corpo.innerHTML = "";
 
@@ -984,19 +1975,20 @@
         
         const isOficial = sub.tipo_envio === "consolidacao_oficial";
         const tag = isOficial 
-          ? `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">Sua Consolidação Oficial</span>`
-          : `<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px]">Preliminar Servidor</span>`;
+          ? `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">Consolidação Oficial</span>`
+          : `<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px]">Envio de Setor</span>`;
 
         tr.innerHTML = `
           <td class="p-3 font-mono font-bold text-brand-900">${sub.protocolo_id || sub.id}</td>
-          <td class="p-3">${sub.responsavel?.nome || "-"}<br><span class="text-slate-400">${sub.responsavel?.email || ""}</span></td>
+          <td class="p-3">
+            <span class="font-bold text-slate-800">${sub.responsavel?.nome || "-"}</span>
+            <span class="block text-[10px] text-brand-700 font-semibold">Setor: ${sub.responsavel?.setor || "Não informado"}</span>
+            <span class="text-slate-400 text-[10px]">${sub.responsavel?.email || ""}</span>
+          </td>
           <td class="p-3">${tag}</td>
-          <td class="p-3 font-bold text-emerald-700">${sub.metricas?.total_respondido || 0} / ${sub.metricas?.total_atribuido || 0}</td>
+          <td class="p-3 font-bold text-emerald-700">${sub.metricas?.total_respondido || (sub.respostas || []).length} questão(ões)</td>
           <td class="p-3 text-slate-500">${formatarData(sub.data_envio)}</td>
           <td class="p-3 text-center space-x-1">
-            <button onclick="carregarParaEdicao('${sub.protocolo_id || sub.id}')" class="px-2.5 py-1 bg-amber-50 text-amber-800 hover:bg-amber-100 rounded font-bold text-[11px] border border-amber-200">
-              <i class="fa-solid fa-pen mr-1"></i> Carregar p/ Editar
-            </button>
             <button onclick="verDetalhesSubmissao('${sub.protocolo_id || sub.id}')" class="px-2.5 py-1 bg-brand-50 text-brand-700 hover:bg-brand-100 rounded font-semibold text-[11px]">
               <i class="fa-regular fa-eye mr-1"></i> Ver
             </button>
@@ -1009,153 +2001,253 @@
       });
     }
 
-    async function carregarParaEdicao(protoId) {
-      const sub = submissoesCarregadas.find(s => (s.protocolo_id === protoId || s.id === protoId));
-      if (!sub) return;
+    // ==================== MODAIS DE DEVOLUÇÃO, REPORTE E HISTÓRICO 2025 ====================
+    function abrirModal2025(codigoQuestao) {
+      const q = questoesCarregadas.find(item => item.codigo === codigoQuestao);
+      if (!q || !q.tem_2025) return;
 
-      respostasParaEditar = sub.respostas || [];
-      irParaFormularioEdicao();
+      document.getElementById("m2025-titulo").textContent = `Questão ${q.codigo} — Histórico de 2025`;
+      const badge = document.getElementById("m2025-badge-corresp");
+      badge.textContent = `Questão ${q.correspondencia_2025 || "Relacionada"} ao Ciclo 2025`;
+      badge.className = q.correspondencia_2025 === "Igual"
+        ? "px-2.5 py-0.5 rounded-full font-bold text-[11px] bg-emerald-100 text-emerald-800 border border-emerald-300"
+        : "px-2.5 py-0.5 rounded-full font-bold text-[11px] bg-amber-100 text-amber-800 border border-amber-300";
+
+      document.getElementById("m2025-pergunta").textContent = q.pergunta_2025 || q.enunciado;
+      document.getElementById("m2025-resposta").textContent = q.resposta_2025 || "Sem resposta registrada em 2025.";
+      document.getElementById("modal-resposta-2025").classList.remove("hidden");
     }
 
-    function irParaFormularioEdicao() {
-      esconderTodasTelas();
-      document.getElementById("tela-questionario").classList.remove("hidden");
-      document.getElementById("btn-voltar-topo").classList.remove("hidden");
-      document.getElementById("btn-painel-master").classList.remove("hidden");
-      document.getElementById("btn-solicitar-master").classList.add("hidden");
-
-      document.getElementById("titulo-questionario").textContent = `Edição de Respostas — ${usuarioAtual.subsecretaria}`;
-      document.getElementById("subtitulo-questionario").textContent = "Você está editando as respostas da sua subsecretaria.";
-      document.getElementById("texto-aviso-envio").textContent = "Após ajustar as respostas, clique em salvar/consolidar.";
-      document.getElementById("label-btn-enviar").textContent = "Salvar Alterações e Consolidar";
-
-      carregarQuestionario(true);
+    function fecharModal2025() {
+      document.getElementById("modal-resposta-2025").classList.add("hidden");
     }
 
-    function irParaFormularioEnvioFinal() {
-      esconderTodasTelas();
-      document.getElementById("tela-questionario").classList.remove("hidden");
-      document.getElementById("btn-voltar-topo").classList.remove("hidden");
-      document.getElementById("btn-painel-master").classList.remove("hidden");
-      document.getElementById("btn-solicitar-master").classList.add("hidden");
-
-      document.getElementById("titulo-questionario").textContent = `Consolidação Oficial Final — ${usuarioAtual.subsecretaria}`;
-      document.getElementById("subtitulo-questionario").textContent = "Envio da versão homologada da subsecretaria ao Administrador Central.";
-      document.getElementById("texto-aviso-envio").textContent = "Este envio será registrado como a versão oficial final da área.";
-      document.getElementById("label-btn-enviar").textContent = "Enviar Consolidação Oficial";
-
-      carregarQuestionario(false);
-    }
-
-    function alternarVisaoMaster() {
-      if (usuarioAtual.perfil === "master_2") {
-        abrirPainelMaster2();
-      } else if (usuarioAtual.perfil === "master_1") {
-        abrirPainelMaster1();
-      }
-    }
-
-    // ==================== FORMULÁRIO DE QUESTÕES ====================
-    async function carregarQuestionario(preencherComDados = false) {
-      esconderTodasTelas();
-      document.getElementById("tela-questionario").classList.remove("hidden");
-      document.getElementById("badge-sub-ativa").textContent = usuarioAtual.subsecretaria;
+    async function aprovarQuestaoPontoFocal(codigoQuestao) {
+      if (!confirm(`Deseja aprovar e validar a resposta da questão ${codigoQuestao}? Ela passará para o status "Respondida".`)) return;
 
       try {
-        const res = await fetch(`/api/questoes/${usuarioAtual.subsecretaria}`);
+        const res = await fetch("/api/master2/aprovar_questao", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subsecretaria: usuarioAtual.subsecretaria,
+            codigo_questao: codigoQuestao,
+            solicitante_email: usuarioAtual.email
+          })
+        });
         const data = await res.json();
-        questoesCarregadas = data.questoes || [];
-
-        document.getElementById("info-total-questoes").textContent = `${data.total || questoesCarregadas.length} questões designadas`;
-        document.getElementById("progresso-total").textContent = data.total || questoesCarregadas.length;
-
-        renderizarQuestoes();
-
-        if (preencherComDados && respostasParaEditar) {
-          preencherFormularioComRespostas(respostasParaEditar);
+        if (res.ok) {
+          await carregarDadosMaster2();
+        } else {
+          alert(data.detail || "Erro ao aprovar questão.");
         }
-
-        atualizarProgresso();
-      } catch (err) {
-        console.error("Erro ao carregar questões:", err);
-        alert("Erro ao carregar o questionário: " + err.message);
+      } catch (e) {
+        alert("Erro na conexão: " + e.message);
       }
     }
 
-    function preencherFormularioComRespostas(listaRespostas) {
-      listaRespostas.forEach(r => {
-        const cod = r.codigo_questao;
-        const opc = r.opcao_marcada;
-        const evid = r.evidencia_normativa;
-
-        if (evid) {
-          const inputEvid = document.querySelector(`input[name="evid_${cod}"]`);
-          if (inputEvid) inputEvid.value = evid;
-        }
-
-        if (Array.isArray(opc)) {
-          opc.forEach(val => {
-            const chk = document.querySelector(`input[name="resp_${cod}"][value="${val}"]`);
-            if (chk) chk.checked = true;
-          });
-        } else if (opc) {
-          const rad = document.querySelector(`input[name="resp_${cod}"][value="${opc}"]`);
-          if (rad) {
-            rad.checked = true;
-          } else {
-            const numInput = document.querySelector(`input[name="resp_${cod}"]`);
-            if (numInput) numInput.value = opc;
-          }
-        }
-      });
+    function abrirModalDevolver(codigoQuestao) {
+      const resp = quadroAtualSubsecretaria?.questoes_respondidas?.[codigoQuestao];
+      if (!resp) {
+        alert("Esta questão ainda não possui resposta registrada para ser devolvida.");
+        return;
+      }
+      questaoAlvoDevolucao = codigoQuestao;
+      const autor = resp.respondido_por || {};
+      document.getElementById("modal-devolver-info").textContent = `Questão ${codigoQuestao} • Respondida por: ${autor.nome || "Servidor"} (${autor.setor || "Setor"})`;
+      document.getElementById("input-obs-devolucao").value = resp.observacao_devolucao || "";
+      document.getElementById("modal-devolver-questao").classList.remove("hidden");
     }
 
-    function renderizarQuestoes() {
-      const container = document.getElementById("lista-questoes");
+    function fecharModalDevolver() {
+      questaoAlvoDevolucao = null;
+      document.getElementById("modal-devolver-questao").classList.add("hidden");
+    }
+
+    async function confirmarDevolucaoQuestao() {
+      if (!questaoAlvoDevolucao) return;
+      const obs = document.getElementById("input-obs-devolucao").value.trim();
+      const btn = document.getElementById("btn-confirmar-devolucao");
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Devolvendo...`;
+
+      try {
+        const res = await fetch("/api/master2/devolver_questao", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subsecretaria: usuarioAtual.subsecretaria,
+            codigo_questao: questaoAlvoDevolucao,
+            observacao: obs,
+            solicitante_email: usuarioAtual.email
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert(data.mensagem || "Questão devolvida para nova análise do servidor!");
+          fecharModalDevolver();
+          if (!document.getElementById("tela-master2-dashboard").classList.contains("hidden")) {
+            await carregarDadosMaster2();
+          } else {
+            await carregarQuestionario(true);
+          }
+        } else {
+          alert(data.detail || "Erro ao devolver questão.");
+        }
+      } catch (e) {
+        alert("Erro de conexão: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-rotate-left"></i> Confirmar Devolução`;
+      }
+    }
+
+    function abrirModalReporte(codigoQuestao) {
+      const q = questoesCarregadas.find(item => item.codigo === codigoQuestao);
+      if (!q) return;
+      questaoAlvoReporte = q;
+      document.getElementById("modal-reporte-info").textContent = `Questão ${q.codigo} • Subsecretaria ${usuarioAtual.subsecretaria}`;
+      document.getElementById("input-justificativa-reporte").value = "";
+      document.getElementById("modal-reportar-competencia").classList.remove("hidden");
+    }
+
+    function fecharModalReporte() {
+      questaoAlvoReporte = null;
+      document.getElementById("modal-reportar-competencia").classList.add("hidden");
+    }
+
+    async function confirmarReporteCompetencia() {
+      if (!questaoAlvoReporte) return;
+      const just = document.getElementById("input-justificativa-reporte").value.trim();
+      if (!just) {
+        alert("Por favor, descreva a justificativa para o reporte de competência.");
+        return;
+      }
+
+      const btn = document.getElementById("btn-confirmar-reporte");
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Enviando...`;
+
+      try {
+        const res = await fetch("/api/master2/reportar_competencia", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subsecretaria: usuarioAtual.subsecretaria,
+            codigo_questao: questaoAlvoReporte.codigo,
+            enunciado: questaoAlvoReporte.enunciado,
+            justificativa: just,
+            reportado_por: {
+              nome: usuarioAtual.nome,
+              email: usuarioAtual.email,
+              setor: usuarioAtual.setor || "Ponto Focal"
+            }
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert("Reporte enviado com sucesso diretamente ao Administrador Geral!");
+          fecharModalReporte();
+        } else {
+          alert(data.detail || "Erro ao enviar reporte.");
+        }
+      } catch (e) {
+        alert("Erro de conexão: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Enviar Reporte ao Administrador Geral`;
+      }
+    }
+
+    // ==================== PAINEL DE FORMULÁRIO COM ESPELHAMENTO E AJUSTES DO PONTO FOCAL ====================
+    function abrirModalPainelEspelhamento() {
+      if (!usuarioAtual || !quadroAtualSubsecretaria) return;
+      document.getElementById("espelho-sub-badge").textContent = `Subsecretaria: ${usuarioAtual.subsecretaria}`;
+      renderizarQuestoesEspelhadas();
+      document.getElementById("modal-painel-espelhamento").classList.remove("hidden");
+    }
+
+    function fecharModalPainelEspelhamento() {
+      document.getElementById("modal-painel-espelhamento").classList.add("hidden");
+    }
+
+    function renderizarQuestoesEspelhadas() {
+      const container = document.getElementById("espelho-lista-questoes");
       container.innerHTML = "";
+
+      const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
+      
+      // Filtra APENAS questões que já possuem respostas enviadas pelos usuários/setores
+      const questoesRespondidasApenas = questoesCarregadas.filter(q => !!qMap[q.codigo]);
+      
+      const totalRespondidas = questoesRespondidasApenas.length;
+      const totalQ = questoesCarregadas.length;
+      if (totalRespondidas < totalQ) {
+        document.getElementById("espelho-contagem-info").innerHTML = `<span class="text-amber-800 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ${totalRespondidas} de ${totalQ} questões respondidas</span> <span class="text-slate-500 font-medium">(A consolidação oficial exige 100% das questões enviadas)</span>`;
+      } else {
+        document.getElementById("espelho-contagem-info").innerHTML = `<span class="text-emerald-700 font-bold"><i class="fa-solid fa-circle-check mr-1"></i> 100% das questões respondidas (${totalRespondidas} de ${totalQ})</span> <span class="text-slate-500 font-medium">— Pronto para consolidação oficial</span>`;
+      }
+
+      if (totalRespondidas === 0) {
+        container.innerHTML = `
+          <div class="p-12 text-center text-slate-400 space-y-2">
+            <i class="fa-solid fa-inbox text-3xl text-slate-300"></i>
+            <p class="font-semibold text-sm text-slate-600">Nenhuma resposta foi enviada pelos setores ainda.</p>
+            <p class="text-xs text-slate-400">Assim que os servidores comuns enviarem as questões da competência de seus setores, elas aparecerão espelhadas aqui para sua revisão.</p>
+          </div>
+        `;
+        return;
+      }
 
       let ultimoTema = "";
 
-      questoesCarregadas.forEach((q, idx) => {
+      questoesRespondidasApenas.forEach(q => {
         if (q.tema !== ultimoTema) {
           ultimoTema = q.tema;
-          const temaDiv = document.createElement("div");
-          temaDiv.className = "pt-3 pb-1 border-b border-slate-200";
-          temaDiv.innerHTML = `
-            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-folder-open text-brand-700"></i> ${q.eixo} • ${q.tema}
-            </span>
-          `;
-          container.appendChild(temaDiv);
+          const divTema = document.createElement("div");
+          divTema.className = "pt-2 pb-1 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5";
+          divTema.innerHTML = `<i class="fa-solid fa-folder-open text-blue-600"></i> ${q.eixo} • ${q.tema}`;
+          container.appendChild(divTema);
         }
 
+        const resp = qMap[q.codigo];
+        const autor = resp?.respondido_por || null;
         const card = document.createElement("div");
-        card.className = "bg-white p-5 md:p-6 rounded-2xl shadow-xs border border-slate-200 transition-all space-y-4";
-        card.id = `card-q-${q.codigo.replace(/\./g, '_')}`;
+        card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3.5";
 
-        const badgeClass = q.is_comum ? "badge-comum" : "badge-especifica";
+        let htmlAutor = "";
+        if (autor) {
+          htmlAutor = `
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-900 border border-blue-200 shadow-2xs">
+              <i class="fa-solid fa-user-tag text-blue-600"></i>
+              Respondido por: ${autor.nome || "Servidor"} • Setor: ${autor.setor || "Setor"}
+            </span>
+          `;
+        }
 
         let htmlInputs = "";
+        const valAtual = resp?.opcao_marcada;
 
         if (q.tipo_input === "number") {
           htmlInputs = `
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Informe o valor numérico ou percentual <span class="text-red-500">*</span>:</label>
-              <input type="number" step="any" required name="resp_${q.codigo}" oninput="limparDestaqueErro('${q.codigo}'); atualizarProgresso();"
-                     placeholder="Digite o número (ex: 15)"
-                     class="w-full sm:w-64 px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-700 focus:outline-none">
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Valor numérico ou percentual:</label>
+              <input type="number" step="any" name="espelho_resp_${q.codigo}" value="${valAtual !== undefined && valAtual !== null ? valAtual : ''}"
+                     placeholder="Digite o número"
+                     class="w-full sm:w-64 px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white">
             </div>
           `;
         } else if (q.tipo_input === "checkbox") {
+          const marcadas = Array.isArray(valAtual) ? valAtual : [];
           htmlInputs = `
             <div class="space-y-2">
-              <p class="text-[11px] font-bold text-slate-600"><i class="fa-solid fa-square-check mr-1"></i> Selecione pelo menos uma opção <span class="text-red-500">*</span>:</p>
+              <p class="text-[11px] font-bold text-slate-600">Opções selecionadas:</p>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                ${q.opcoes.map((opt, i) => `
-                  <label class="flex items-start gap-2.5 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs transition-colors">
-                    <input type="checkbox" name="resp_${q.codigo}" value="${opt}" onchange="limparDestaqueErro('${q.codigo}'); atualizarProgresso();"
-                           class="mt-0.5 rounded text-brand-700 focus:ring-brand-700 border-slate-300">
-                    <span class="text-slate-700 leading-snug">${opt}</span>
+                ${q.opcoes.map((opt) => `
+                  <label class="flex items-start gap-2.5 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs">
+                    <input type="checkbox" name="espelho_resp_${q.codigo}" value="${opt}" ${marcadas.includes(opt) ? 'checked' : ''}
+                           class="mt-0.5 rounded text-blue-600 focus:ring-blue-600 border-slate-300">
+                    <span class="text-slate-700">${opt}</span>
                   </label>
                 `).join('')}
               </div>
@@ -1165,13 +2257,16 @@
           // Radio
           htmlInputs = `
             <div class="space-y-2">
-              <p class="text-[11px] font-bold text-slate-600"><i class="fa-solid fa-circle-dot mr-1"></i> Selecione uma alternativa <span class="text-red-500">*</span>:</p>
+              <div class="flex items-center justify-between">
+                <p class="text-[11px] font-bold text-slate-600">Alternativa selecionada:</p>
+                <button type="button" onclick="limparRadioEspelho('${q.codigo}')" class="text-[10px] text-slate-400 hover:text-red-600">Limpar</button>
+              </div>
               <div class="space-y-1.5">
-                ${q.opcoes.map((opt, i) => `
-                  <label class="flex items-start gap-2.5 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs transition-colors">
-                    <input type="radio" name="resp_${q.codigo}" value="${opt}" onchange="limparDestaqueErro('${q.codigo}'); atualizarProgresso();"
-                           class="mt-0.5 text-brand-700 focus:ring-brand-700 border-slate-300 custom-radio">
-                    <span class="text-slate-700 leading-snug">${opt}</span>
+                ${q.opcoes.map((opt) => `
+                  <label class="flex items-start gap-2.5 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs">
+                    <input type="radio" name="espelho_resp_${q.codigo}" value="${opt}" ${valAtual === opt ? 'checked' : ''}
+                           class="mt-0.5 text-blue-600 focus:ring-blue-600 border-slate-300 custom-radio">
+                    <span class="text-slate-700">${opt}</span>
                   </label>
                 `).join('')}
               </div>
@@ -1179,27 +2274,27 @@
           `;
         }
 
-        // Sem campo de observação conforme solicitado
+        const evidAtual = resp?.evidencia_normativa || "";
+
         card.innerHTML = `
-          <div class="flex items-start justify-between gap-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2">
               <span class="font-mono text-xs font-black text-brand-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">${q.codigo}</span>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${badgeClass}">${q.tipo_atribuicao}</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${q.is_comum ? 'badge-comum' : 'badge-especifica'}">${q.tipo_atribuicao}</span>
             </div>
+            ${htmlAutor}
           </div>
 
-          <h3 class="text-sm md:text-base font-bold text-slate-800 leading-snug">
-            ${q.enunciado}
-          </h3>
+          <p class="font-bold text-slate-800 text-xs md:text-sm leading-snug">${q.enunciado}</p>
 
           ${htmlInputs}
 
-          <div class="pt-3 border-t border-slate-100">
+          <div class="pt-2 border-t border-slate-100">
             <label class="block text-[11px] font-bold text-slate-600 mb-1">
-              <i class="fa-solid fa-file-shield text-brand-700 mr-1"></i> Evidência Normativa / Processo SEI / Portaria (se houver):
+              <i class="fa-solid fa-file-shield text-blue-600 mr-1"></i> Evidência Normativa / Processo SEI:
             </label>
-            <input type="text" name="evid_${q.codigo}" placeholder="Ex.: Processo SEI 00080-00012345/2026-11; Portaria nº 123/2026"
-                   class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-700 focus:outline-none">
+            <input type="text" name="espelho_evid_${q.codigo}" value="${evidAtual}" placeholder="Ex.: Processo SEI 00080-00012345/2026-11"
+                   class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white">
           </div>
         `;
 
@@ -1207,114 +2302,68 @@
       });
     }
 
-    function limparDestaqueErro(codigo) {
-      const card = document.getElementById(`card-q-${codigo.replace(/\./g, '_')}`);
-      if (card) {
-        card.classList.remove("card-incompleto");
-      }
-      document.getElementById("alerta-obrigatorias").classList.add("hidden");
+    function limparRadioEspelho(codigo) {
+      document.querySelectorAll(`input[name="espelho_resp_${codigo}"]`).forEach(el => el.checked = false);
     }
 
-    function atualizarProgresso() {
-      let respondidas = 0;
+    function coletarRespostasDoEspelhamento() {
+      const respostasColetadas = [];
+      let totalComEvid = 0;
+      const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
+
       questoesCarregadas.forEach(q => {
+        let valMarcado = null;
         if (q.tipo_input === "number") {
-          const val = document.querySelector(`input[name="resp_${q.codigo}"]`)?.value;
-          if (val !== undefined && val.trim() !== "") respondidas++;
+          const v = document.querySelector(`input[name="espelho_resp_${q.codigo}"]`)?.value;
+          if (v !== undefined && v.trim() !== "") valMarcado = v.trim();
         } else if (q.tipo_input === "checkbox") {
-          const checked = document.querySelectorAll(`input[name="resp_${q.codigo}"]:checked`);
-          if (checked.length > 0) respondidas++;
+          const checks = Array.from(document.querySelectorAll(`input[name="espelho_resp_${q.codigo}"]:checked`)).map(c => c.value);
+          if (checks.length > 0) valMarcado = checks;
         } else {
-          const radio = document.querySelector(`input[name="resp_${q.codigo}"]:checked`);
-          if (radio) respondidas++;
+          const rad = document.querySelector(`input[name="espelho_resp_${q.codigo}"]:checked`);
+          if (rad) valMarcado = rad.value;
+        }
+
+        const evid = document.querySelector(`input[name="espelho_evid_${q.codigo}"]`)?.value || "";
+        if (evid.trim()) totalComEvid++;
+
+        if (valMarcado !== null) {
+          const anterior = qMap[q.codigo];
+          respostasColetadas.push({
+            codigo_questao: q.codigo,
+            eixo: q.eixo,
+            tema: q.tema,
+            tipo_atribuicao: q.tipo_atribuicao,
+            enunciado: q.enunciado,
+            opcao_marcada: valMarcado,
+            evidencia_normativa: evid,
+            respondido_por: anterior?.respondido_por || {
+              nome: usuarioAtual.nome,
+              setor: usuarioAtual.setor || "Ponto Focal",
+              email: usuarioAtual.email,
+              subsecretaria: usuarioAtual.subsecretaria
+            }
+          });
         }
       });
 
-      const total = questoesCarregadas.length;
-      const pct = total > 0 ? Math.round((respondidas / total) * 100) : 0;
-
-      document.getElementById("progresso-bar").style.width = `${pct}%`;
-      document.getElementById("progresso-percent").textContent = `${pct}% respondido`;
-      document.getElementById("progresso-contagem").textContent = respondidas;
+      return { respostas: respostasColetadas, totalComEvidencia: totalComEvid };
     }
 
-    async function enviarRespostas(e) {
-      e.preventDefault();
-
-      let pendentes = [];
-      questoesCarregadas.forEach(q => {
-        let respondida = false;
-        if (q.tipo_input === "number") {
-          const val = document.querySelector(`input[name="resp_${q.codigo}"]`)?.value;
-          if (val !== undefined && val.trim() !== "") respondida = true;
-        } else if (q.tipo_input === "checkbox") {
-          const checked = document.querySelectorAll(`input[name="resp_${q.codigo}"]:checked`);
-          if (checked.length > 0) respondida = true;
-        } else {
-          const radio = document.querySelector(`input[name="resp_${q.codigo}"]:checked`);
-          if (radio) respondida = true;
-        }
-
-        const card = document.getElementById(`card-q-${q.codigo.replace(/\./g, '_')}`);
-        if (!respondida) {
-          pendentes.push(q.codigo);
-          if (card) card.classList.add("card-incompleto");
-        } else {
-          if (card) card.classList.remove("card-incompleto");
-        }
-      });
-
-      if (pendentes.length > 0) {
-        document.getElementById("alerta-obrigatorias").classList.remove("hidden");
-        const primeiroCard = document.getElementById(`card-q-${pendentes[0].replace(/\./g, '_')}`);
-        if (primeiroCard) {
-          primeiroCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-        alert(`Você possui ${pendentes.length} questão(ões) sem resposta. Todas as perguntas são obrigatórias.`);
+    async function salvarApenasRascunhoEspelho() {
+      const { respostas, totalComEvidencia } = coletarRespostasDoEspelhamento();
+      if (respostas.length === 0) {
+        alert("Preencha ao menos uma resposta no painel antes de salvar.");
         return;
       }
 
-      if (!confirm("Confirma o envio definitivo das suas respostas?")) return;
-
-      const btn = document.getElementById("btn-enviar-respostas");
-      btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Registrando no Firebase...`;
-
-      const respostas = [];
-      let totalComEvidencia = 0;
-
-      questoesCarregadas.forEach(q => {
-        let valorMarcado = null;
-        if (q.tipo_input === "number") {
-          valorMarcado = document.querySelector(`input[name="resp_${q.codigo}"]`)?.value || "";
-        } else if (q.tipo_input === "checkbox") {
-          const checks = document.querySelectorAll(`input[name="resp_${q.codigo}"]:checked`);
-          valorMarcado = Array.from(checks).map(c => c.value);
-        } else {
-          const radio = document.querySelector(`input[name="resp_${q.codigo}"]:checked`);
-          valorMarcado = radio ? radio.value : "";
-        }
-
-        const evidencia = document.querySelector(`input[name="evid_${q.codigo}"]`)?.value || "";
-
-        if (evidencia.trim()) totalComEvidencia++;
-
-        respostas.push({
-          codigo_questao: q.codigo,
-          eixo: q.eixo,
-          tema: q.tema,
-          tipo_atribuicao: q.tipo_atribuicao,
-          enunciado: q.enunciado,
-          opcao_marcada: valorMarcado,
-          evidencia_normativa: evidencia
-        });
-      });
-
       const payload = {
+        acao_master2: "editar_quadro",
         responsavel: {
           nome: usuarioAtual.nome,
           email: usuarioAtual.email,
           subsecretaria: usuarioAtual.subsecretaria,
+          setor: usuarioAtual.setor || "Ponto Focal",
           perfil: usuarioAtual.perfil
         },
         metricas: {
@@ -1332,6 +2381,212 @@
           body: JSON.stringify(payload)
         });
         const data = await res.json();
+        if (res.ok) {
+          alert("Ajustes salvos com sucesso no Quadro da Subsecretaria!");
+          await carregarDadosMaster2();
+          renderizarQuestoesEspelhadas();
+        } else {
+          alert(data.detail || "Erro ao salvar alterações.");
+        }
+      } catch (e) {
+        alert("Erro na conexão: " + e.message);
+      }
+    }
+
+    async function baixarPdfEspelhamento() {
+      const { respostas, totalComEvidencia } = coletarRespostasDoEspelhamento();
+      if (respostas.length === 0) {
+        alert("Não há respostas registradas para gerar o PDF.");
+        return;
+      }
+
+      const btn = document.getElementById("btn-pdf-espelho");
+      const originalText = btn ? btn.innerHTML : "";
+      if (btn) {
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Gerando PDF...</span>`;
+        btn.disabled = true;
+      }
+
+      try {
+        const payload = {
+          protocolo_id: `ESPELHO-${usuarioAtual.subsecretaria}`,
+          tipo_envio: "espelho_preliminar",
+          data_envio: new Date().toISOString(),
+          responsavel: {
+            nome: usuarioAtual.nome,
+            email: usuarioAtual.email,
+            subsecretaria: usuarioAtual.subsecretaria,
+            setor: usuarioAtual.setor || "Ponto Focal",
+            perfil: usuarioAtual.perfil
+          },
+          metricas: {
+            total_atribuido: questoesCarregadas.length,
+            total_respondido: respostas.length,
+            total_com_evidencia: totalComEvidencia
+          },
+          respostas: respostas
+        };
+
+        const res = await fetch("/api/espelho/pdf", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || "Erro ao gerar o PDF.");
+        }
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `PAR_Espelho_${usuarioAtual.subsecretaria}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+      } catch (e) {
+        alert("Erro de conexão ao gerar PDF: " + e.message);
+      } finally {
+        if (btn) {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }
+      }
+    }
+
+    async function salvarEspelhamentoEConsolidar() {
+      const { respostas, totalComEvidencia } = coletarRespostasDoEspelhamento();
+      const totalQ = questoesCarregadas.length;
+
+      if (respostas.length === 0) {
+        alert("Não é possível consolidar sem nenhuma questão respondida.");
+        return;
+      }
+
+      // REGRA: O Master 2 só pode consolidar e enviar oficialmente se TODAS as questões forem enviadas pelos usuários
+      const codigosRespondidos = new Set(respostas.map(r => r.codigo_questao));
+      const faltantes = questoesCarregadas.filter(q => !codigosRespondidos.has(q.codigo));
+
+      if (faltantes.length > 0) {
+        alert(`A Consolidação Oficial só pode ser homologada quando TODAS as questões da subsecretaria forem respondidas pelos setores.\n\nTotal exigido: ${totalQ} questões\nRespondidas no espelho: ${respostas.length} questões\nFaltam responder: ${faltantes.length} questão(ões) (${faltantes.slice(0, 5).map(f => f.codigo).join(", ")}${faltantes.length > 5 ? '...' : ''}).`);
+        return;
+      }
+
+      const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
+      const devolvidasPendentes = Object.values(qMap).filter(r => r.status_validacao === "devolvido");
+      if (devolvidasPendentes.length > 0) {
+        alert(`Não é possível homologar a Consolidação Oficial: existem ${devolvidasPendentes.length} questão(ões) devolvida(s) que ainda aguardam revisão e reenvio pelo setor.`);
+        return;
+      }
+
+      if (!confirm(`Confirma a HOMOLOGAÇÃO E ENVIO FINAL da Consolidação Oficial da subsecretaria ${usuarioAtual.subsecretaria} com ${respostas.length} de ${totalQ} questões respondidas (100% completo)?`)) {
+        return;
+      }
+
+      const payload = {
+        acao_master2: "consolidar_oficial",
+        responsavel: {
+          nome: usuarioAtual.nome,
+          email: usuarioAtual.email,
+          subsecretaria: usuarioAtual.subsecretaria,
+          setor: usuarioAtual.setor || "Ponto Focal",
+          perfil: usuarioAtual.perfil
+        },
+        metricas: {
+          total_atribuido: questoesCarregadas.length,
+          total_respondido: respostas.length,
+          total_com_evidencia: totalComEvidencia
+        },
+        respostas: respostas
+      };
+
+      try {
+        const res = await fetch("/api/submissoes/enviar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          fecharModalPainelEspelhamento();
+          usuarioAtual.ja_enviou = true;
+          usuarioAtual.submissao_protocolo = data.protocolo_id;
+          localStorage.setItem("par_user", JSON.stringify(usuarioAtual));
+          exibirSucesso(data);
+        } else {
+          alert(data.detail || "Erro ao homologar consolidação.");
+        }
+      } catch (e) {
+        alert("Erro na conexão: " + e.message);
+      }
+    }
+
+    // ==================== FLUXO DE CONSOLIDAÇÃO DO PONTO FOCAL (DIRETO) ====================
+    async function consolidaDiretoPontoFocal() {
+      const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
+      const listaRespondidas = Object.values(qMap);
+      const totalQ = questoesCarregadas.length;
+
+      if (listaRespondidas.length === 0) {
+        alert("Ainda não há nenhuma questão respondida pelos setores para consolidar.");
+        return;
+      }
+
+      // REGRA OBRIGATÓRIA: O Master 2 só pode consolidar e enviar oficialmente se todas as questões forem enviadas pelos usuários
+      const faltantes = questoesCarregadas.filter(q => !qMap[q.codigo]);
+      if (faltantes.length > 0) {
+        alert(`A Consolidação Oficial só pode ser enviada quando TODAS as questões da subsecretaria forem respondidas pelos setores.\n\nTotal do caderno: ${totalQ} questões\nRespondidas até o momento: ${listaRespondidas.length}\nFaltam responder: ${faltantes.length} questão(ões) (${faltantes.slice(0, 5).map(f => f.codigo).join(", ")}${faltantes.length > 5 ? '...' : ''}).`);
+        return;
+      }
+
+      const devolvidasAtivas = listaRespondidas.filter(r => r.status_validacao === "devolvido");
+      if (devolvidasAtivas.length > 0) {
+        alert(`Não é possível homologar a Consolidação Oficial: existem ${devolvidasAtivas.length} questão(ões) devolvida(s) que ainda aguardam revisão e reenvio pelo setor.`);
+        return;
+      }
+
+      if (!confirm(`Confirma a VALIDAÇÃO E ENVIO FINAL da Consolidação Oficial da subsecretaria ${usuarioAtual.subsecretaria} (${listaRespondidas.length} de ${totalQ} questões respondidas - 100%) para o Administrador Geral?`)) {
+        return;
+      }
+
+      const btn = document.getElementById("btn-m2-consolidar-direto");
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Consolidando e Enviando...`;
+      }
+
+      let totalComEvidencia = 0;
+      listaRespondidas.forEach(r => {
+        if ((r.evidencia_normativa || "").trim()) totalComEvidencia++;
+      });
+
+      const payload = {
+        acao_master2: "consolidar_oficial",
+        responsavel: {
+          nome: usuarioAtual.nome,
+          email: usuarioAtual.email,
+          subsecretaria: usuarioAtual.subsecretaria,
+          setor: usuarioAtual.setor || "Ponto Focal",
+          perfil: usuarioAtual.perfil
+        },
+        metricas: {
+          total_atribuido: questoesCarregadas.length,
+          total_respondido: listaRespondidas.length,
+          total_com_evidencia: totalComEvidencia
+        },
+        respostas: listaRespondidas
+      };
+
+      try {
+        const res = await fetch("/api/submissoes/enviar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
 
         if (res.ok) {
           usuarioAtual.ja_enviou = true;
@@ -1339,7 +2594,457 @@
           localStorage.setItem("par_user", JSON.stringify(usuarioAtual));
           exibirSucesso(data);
         } else {
-          alert("Erro: " + (data.detail || "questionario ja enviado"));
+          alert("Aviso: " + (data.detail || "Não foi possível consolidar."));
+        }
+      } catch (e) {
+        alert("Erro de conexão: " + e.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> <span>Validar e Enviar Consolidação Oficial</span>`;
+        }
+      }
+    }
+
+    function abrirQuestionarioParaRevisao() {
+      modoApenasDevolvidas = true;
+      acaoFormularioMaster2 = null;
+      esconderTodasTelas();
+      document.getElementById("tela-questionario").classList.remove("hidden");
+      document.getElementById("btn-filtro-devolvidas").classList.remove("hidden");
+      document.getElementById("label-filtro-devolvidas").textContent = "Mostrar Todas as Questões da Subsecretaria";
+
+      document.getElementById("titulo-questionario").textContent = `Revisão de Questões Solicitada pelo Ponto Focal — ${usuarioAtual.subsecretaria}`;
+      document.getElementById("subtitulo-questionario").textContent = "Edite abaixo a(s) questão(ões) devolvida(s) com o aviso 'o ponto focal do PAR solicitou uma nova analise' e reenvie.";
+      document.getElementById("label-btn-enviar").textContent = "Reenviar Questão(ões) Revisada(s) ao Ponto Focal";
+
+      carregarQuestionario(true);
+    }
+
+    function alternarFiltroApenasDevolvidas() {
+      modoApenasDevolvidas = !modoApenasDevolvidas;
+      document.getElementById("label-filtro-devolvidas").textContent = modoApenasDevolvidas
+        ? "Mostrar Todas as Questões da Subsecretaria"
+        : "Mostrar Apenas Minhas Questões Devolvidas";
+      renderizarQuestoes();
+      preencherFormularioDoQuadroColetivo();
+      atualizarProgresso();
+    }
+
+    function alternarVisaoMaster() {
+      if (usuarioAtual.perfil === "master_2") {
+        abrirPainelMaster2();
+      } else if (usuarioAtual.perfil === "master_1") {
+        abrirPainelMaster1();
+      }
+    }
+
+    // ==================== FORMULÁRIO DE QUESTÕES (COLETIVO + MINI-CARDS + 2025) ====================
+    async function editarRespostasUsuarioComum() {
+      modoApenasDevolvidas = false;
+      acaoFormularioMaster2 = null;
+
+      const bannerEdicao = document.getElementById("banner-modo-edicao-usuario");
+      if (bannerEdicao) bannerEdicao.classList.remove("hidden");
+
+      const labelBtn = document.getElementById("label-btn-enviar");
+      if (labelBtn) labelBtn.textContent = "Atualizar e Reenviar Minhas Respostas";
+
+      const btnVoltar = document.getElementById("btn-voltar-topo");
+      if (btnVoltar) btnVoltar.classList.remove("hidden");
+
+      await carregarQuestionario(true);
+    }
+
+    async function carregarQuestionario(preencherDoQuadro = true) {
+      esconderTodasTelas();
+      document.getElementById("tela-questionario").classList.remove("hidden");
+      document.getElementById("badge-sub-ativa").textContent = `${usuarioAtual.subsecretaria}${usuarioAtual.setor ? ' • ' + usuarioAtual.setor : ''}`;
+
+      if (usuarioAtual.perfil === "master_2") {
+        document.getElementById("btn-painel-master").classList.remove("hidden");
+        document.getElementById("btn-voltar-topo").classList.remove("hidden");
+        document.getElementById("btn-solicitar-master").classList.add("hidden");
+      } else if (usuarioAtual.ja_enviou) {
+        document.getElementById("btn-voltar-topo").classList.remove("hidden");
+        document.getElementById("btn-painel-master").classList.add("hidden");
+      } else {
+        document.getElementById("btn-voltar-topo").classList.add("hidden");
+        document.getElementById("btn-painel-master").classList.add("hidden");
+        const bannerEdicao = document.getElementById("banner-modo-edicao-usuario");
+        if (bannerEdicao) bannerEdicao.classList.add("hidden");
+        const labelBtn = document.getElementById("label-btn-enviar");
+        if (labelBtn) labelBtn.textContent = "Enviar Respostas para o Ponto Focal";
+      }
+
+      try {
+        const res = await fetch(`/api/questoes/${usuarioAtual.subsecretaria}`);
+        const data = await res.json();
+        questoesCarregadas = data.questoes || [];
+        quadroAtualSubsecretaria = data.quadro || { questoes_respondidas: {} };
+
+        document.getElementById("info-total-questoes").textContent = `${data.total || questoesCarregadas.length} questões no caderno da ${usuarioAtual.subsecretaria}`;
+        document.getElementById("progresso-total").textContent = data.total || questoesCarregadas.length;
+
+        renderizarQuestoes();
+
+        if (preencherDoQuadro) {
+          preencherFormularioDoQuadroColetivo();
+        }
+
+        atualizarProgresso();
+      } catch (err) {
+        console.error("Erro ao carregar questões:", err);
+        alert("Erro ao carregar o questionário: " + err.message);
+      }
+    }
+
+    function preencherFormularioDoQuadroColetivo() {
+      const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
+      Object.values(qMap).forEach(r => {
+        const cod = r.codigo_questao;
+        const opc = r.opcao_marcada;
+        const evid = r.evidencia_normativa;
+
+        if (evid) {
+          const inputEvid = document.querySelector(`input[name="evid_${cod}"]`);
+          if (inputEvid) inputEvid.value = evid;
+        }
+
+        if (Array.isArray(opc)) {
+          opc.forEach(val => {
+            const chk = document.querySelector(`input[name="resp_${cod}"][value="${CSS.escape(val)}"]`) ||
+                        Array.from(document.querySelectorAll(`input[name="resp_${cod}"]`)).find(el => el.value === val);
+            if (chk) chk.checked = true;
+          });
+        } else if (opc !== undefined && opc !== null && opc !== "") {
+          const rad = Array.from(document.querySelectorAll(`input[name="resp_${cod}"][type="radio"]`)).find(el => el.value === String(opc));
+          if (rad) {
+            rad.checked = true;
+          } else {
+            const numInput = document.querySelector(`input[name="resp_${cod}"][type="number"]`);
+            if (numInput) numInput.value = opc;
+          }
+        }
+      });
+    }
+
+    function renderizarQuestoes() {
+      const container = document.getElementById("lista-questoes");
+      container.innerHTML = "";
+
+      const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
+      const codigosDevolvidosUsuario = new Set(pendenciasDevolucaoUsuario.map(p => p.codigo_questao));
+
+      let ultimoTema = "";
+
+      const listaParaExibir = modoApenasDevolvidas
+        ? questoesCarregadas.filter(q => codigosDevolvidosUsuario.has(q.codigo) || qMap[q.codigo]?.status_validacao === "devolvido")
+        : questoesCarregadas;
+
+      listaParaExibir.forEach((q) => {
+        if (q.tema !== ultimoTema) {
+          ultimoTema = q.tema;
+          const temaDiv = document.createElement("div");
+          temaDiv.className = "pt-3 pb-1 border-b border-slate-200";
+          temaDiv.innerHTML = `
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-folder-open text-brand-700"></i> ${q.eixo} • ${q.tema}
+            </span>
+          `;
+          container.appendChild(temaDiv);
+        }
+
+        const estadoQ = qMap[q.codigo] || q.estado_coletivo;
+        const isDevolvida = estadoQ && estadoQ.status_validacao === "devolvido";
+
+        const card = document.createElement("div");
+        card.className = `bg-white p-5 md:p-6 rounded-2xl shadow-xs border border-slate-200 transition-all space-y-4 ${isDevolvida ? 'card-devolvido' : ''}`;
+        card.id = `card-q-${q.codigo.replace(/\./g, '_')}`;
+
+        const badgeClass = q.is_comum ? "badge-comum" : "badge-especifica";
+
+        // Botão "resposta de 2025" com olhinho se a pergunta existiu em 2025
+        const htmlBotao2025 = q.tem_2025 ? `
+          <button type="button" onclick="abrirModal2025('${q.codigo}')"
+                  class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-2xs transition-colors">
+            <i class="fa-regular fa-eye text-amber-700"></i>
+            <span>resposta de 2025</span>
+          </button>
+        ` : "";
+
+        // Ações exclusivas do Ponto Focal (Master 2) diretamente no card da questão
+        const htmlAcoesMaster2Card = (usuarioAtual && usuarioAtual.perfil === "master_2") ? `
+          <div class="flex items-center gap-1.5">
+            ${estadoQ ? `
+              <button type="button" onclick="abrirModalDevolver('${q.codigo}')"
+                      class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center gap-1">
+                <i class="fa-solid fa-rotate-left"></i> Devolver p/ Análise
+              </button>
+            ` : ''}
+            <button type="button" onclick="abrirModalReporte('${q.codigo}')"
+                    class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg font-semibold text-[11px] flex items-center gap-1">
+              <i class="fa-solid fa-flag text-amber-600"></i> Reportar Competência
+            </button>
+          </div>
+        ` : "";
+
+        // Mini-card indicando o nome e setor de quem respondeu aquela determinada pergunta
+        let htmlMiniCardAutor = "";
+        if (estadoQ && estadoQ.respondido_por) {
+          const autor = estadoQ.respondido_por;
+          htmlMiniCardAutor = `
+            <div class="p-3 rounded-xl bg-blue-50/80 border border-blue-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-full bg-brand-700 text-white flex items-center justify-center text-xs font-bold">
+                  <i class="fa-solid fa-user-check"></i>
+                </div>
+                <div>
+                  <span class="text-[10px] uppercase font-bold text-brand-700 tracking-wider block">Questão Respondida Por:</span>
+                  <span class="font-bold text-slate-800">${autor.nome || "Servidor"}</span>
+                  <span class="text-slate-600 font-semibold"> • Setor: ${autor.setor || "Não informado"}</span>
+                </div>
+              </div>
+              <span class="text-[10px] text-slate-500 font-medium">${formatarData(estadoQ.data_resposta)}</span>
+            </div>
+          `;
+        }
+
+        // Mini-card em VERMELHO indicando devolução pelo Ponto Focal: "o ponto focal do PAR solicitou uma nova analise"
+        let htmlMiniCardDevolucao = "";
+        if (isDevolvida) {
+          htmlMiniCardDevolucao = `
+            <div class="p-3.5 rounded-xl bg-red-600 text-white shadow-sm flex items-start gap-3">
+              <i class="fa-solid fa-triangle-exclamation text-lg mt-0.5"></i>
+              <div class="space-y-1">
+                <p class="text-xs md:text-sm font-extrabold uppercase tracking-wide">
+                  o ponto focal do PAR solicitou uma nova analise
+                </p>
+                ${estadoQ.observacao_devolucao ? `<p class="text-xs text-red-100 font-medium">Orientação do Ponto Focal: "${estadoQ.observacao_devolucao}"</p>` : '<p class="text-[11px] text-red-100">Revise a resposta desta questão e envie novamente.</p>'}
+              </div>
+            </div>
+          `;
+        }
+
+        let htmlInputs = "";
+
+        if (q.tipo_input === "number") {
+          htmlInputs = `
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Informe o valor numérico ou percentual:</label>
+              <input type="number" step="any" name="resp_${q.codigo}" oninput="limparDestaqueErro('${q.codigo}'); atualizarProgresso();"
+                     placeholder="Digite o número (ex: 15)"
+                     class="w-full sm:w-64 px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-700 focus:outline-none bg-white">
+            </div>
+          `;
+        } else if (q.tipo_input === "checkbox") {
+          htmlInputs = `
+            <div class="space-y-2">
+              <p class="text-[11px] font-bold text-slate-600"><i class="fa-solid fa-square-check mr-1"></i> Selecione as opções aplicáveis:</p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                ${q.opcoes.map((opt) => `
+                  <label class="flex items-start gap-2.5 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs transition-colors bg-white">
+                    <input type="checkbox" name="resp_${q.codigo}" value="${opt}" onchange="limparDestaqueErro('${q.codigo}'); atualizarProgresso();"
+                           class="mt-0.5 rounded text-brand-700 focus:ring-brand-700 border-slate-300">
+                    <span class="text-slate-700 leading-snug">${opt}</span>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        } else {
+          htmlInputs = `
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <p class="text-[11px] font-bold text-slate-600"><i class="fa-solid fa-circle-dot mr-1"></i> Selecione uma alternativa:</p>
+                <button type="button" onclick="limparRespostaQuestao('${q.codigo}')" class="text-[10px] text-slate-400 hover:text-red-600">Limpar seleção</button>
+              </div>
+              <div class="space-y-1.5">
+                ${q.opcoes.map((opt) => `
+                  <label class="flex items-start gap-2.5 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs transition-colors bg-white">
+                    <input type="radio" name="resp_${q.codigo}" value="${opt}" onchange="limparDestaqueErro('${q.codigo}'); atualizarProgresso();"
+                           class="mt-0.5 text-brand-700 focus:ring-brand-700 border-slate-300 custom-radio">
+                    <span class="text-slate-700 leading-snug">${opt}</span>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-mono text-xs font-black text-brand-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">${q.codigo}</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${badgeClass}">${q.tipo_atribuicao}</span>
+              ${htmlBotao2025}
+            </div>
+            ${htmlAcoesMaster2Card}
+          </div>
+
+          ${htmlMiniCardDevolucao}
+          ${htmlMiniCardAutor}
+
+          <h3 class="text-sm md:text-base font-bold text-slate-800 leading-snug">
+            ${q.enunciado}
+          </h3>
+
+          ${htmlInputs}
+
+          <div class="pt-3 border-t border-slate-100">
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">
+              <i class="fa-solid fa-file-shield text-brand-700 mr-1"></i> Evidência Normativa / Processo SEI / Portaria (se houver):
+            </label>
+            <input type="text" name="evid_${q.codigo}" placeholder="Ex.: Processo SEI 00080-00012345/2026-11; Portaria nº 123/2026"
+                   class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-700 focus:outline-none bg-white">
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function limparRespostaQuestao(codigo) {
+      document.querySelectorAll(`input[name="resp_${codigo}"]`).forEach(el => {
+        if (el.type === "radio" || el.type === "checkbox") el.checked = false;
+        else el.value = "";
+      });
+      atualizarProgresso();
+    }
+
+    function limparDestaqueErro(codigo) {
+      const card = document.getElementById(`card-q-${codigo.replace(/\./g, '_')}`);
+      if (card) {
+        card.classList.remove("card-incompleto");
+      }
+      document.getElementById("alerta-obrigatorias").classList.add("hidden");
+    }
+
+    function obterValorMarcadoQuestao(q) {
+      if (q.tipo_input === "number") {
+        const val = document.querySelector(`input[name="resp_${q.codigo}"]`)?.value;
+        return (val !== undefined && val.trim() !== "") ? val.trim() : null;
+      } else if (q.tipo_input === "checkbox") {
+        const checked = Array.from(document.querySelectorAll(`input[name="resp_${q.codigo}"]:checked`)).map(c => c.value);
+        return checked.length > 0 ? checked : null;
+      } else {
+        const radio = document.querySelector(`input[name="resp_${q.codigo}"]:checked`);
+        return radio ? radio.value : null;
+      }
+    }
+
+    function atualizarProgresso() {
+      let respondidas = 0;
+      questoesCarregadas.forEach(q => {
+        const val = obterValorMarcadoQuestao(q);
+        if (val !== null) respondidas++;
+      });
+
+      const total = questoesCarregadas.length;
+      const pct = total > 0 ? Math.round((respondidas / total) * 100) : 0;
+
+      document.getElementById("progresso-bar").style.width = `${pct}%`;
+      document.getElementById("progresso-percent").textContent = `${pct}% preenchido (${respondidas} de ${total})`;
+      document.getElementById("progresso-contagem").textContent = respondidas;
+    }
+
+    async function enviarRespostas(e) {
+      e.preventDefault();
+
+      const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
+      const respostasParaEnviar = [];
+      let totalComEvidencia = 0;
+
+      questoesCarregadas.forEach(q => {
+        const valorMarcado = obterValorMarcadoQuestao(q);
+        if (valorMarcado === null) return; // Ignora questões em branco (abertas para outros setores)
+
+        const evidencia = document.querySelector(`input[name="evid_${q.codigo}"]`)?.value || "";
+
+        // Para usuário comum, envia apenas questões novas OU questões que ele alterou / revisou
+        const anterior = qMap[q.codigo];
+        if (usuarioAtual.perfil === "usuario_comum" && anterior) {
+          const souAutor = (anterior.respondido_por?.email || "").toLowerCase() === usuarioAtual.email.toLowerCase();
+          const valAntStr = JSON.stringify(anterior.opcao_marcada || "");
+          const valNovoStr = JSON.stringify(valorMarcado || "");
+          const evidAnt = (anterior.evidencia_normativa || "").trim();
+          const evidNova = evidencia.trim();
+
+          // Se já estava respondida por outro setor e o usuário atual não mexeu nela, não sobrescreve a autoria do outro setor
+          if (!souAutor && valAntStr === valNovoStr && evidAnt === evidNova) {
+            return;
+          }
+        }
+
+        if (evidencia.trim()) totalComEvidencia++;
+
+        respostasParaEnviar.push({
+          codigo_questao: q.codigo,
+          eixo: q.eixo,
+          tema: q.tema,
+          tipo_atribuicao: q.tipo_atribuicao,
+          enunciado: q.enunciado,
+          opcao_marcada: valorMarcado,
+          evidencia_normativa: evidencia,
+          respondido_por: anterior?.respondido_por || {
+            nome: usuarioAtual.nome,
+            setor: usuarioAtual.setor || "Não informado",
+            email: usuarioAtual.email,
+            subsecretaria: usuarioAtual.subsecretaria
+          }
+        });
+      });
+
+      if (respostasParaEnviar.length === 0) {
+        document.getElementById("alerta-obrigatorias").classList.remove("hidden");
+        alert("Responda ou edite pelo menos uma questão da competência do seu setor antes de enviar.");
+        return;
+      }
+
+      const msgConfirm = (usuarioAtual.perfil === "master_2" && acaoFormularioMaster2 === "consolidar_oficial")
+        ? `Confirma a HOMOLOGAÇÃO E ENVIO FINAL da Consolidação Oficial da subsecretaria ${usuarioAtual.subsecretaria} para o Administrador Geral?`
+        : `Confirma o envio de ${respostasParaEnviar.length} questão(ões) respondida(s)?`;
+
+      if (!confirm(msgConfirm)) return;
+
+      const btn = document.getElementById("btn-enviar-respostas");
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Registrando no Firebase...`;
+
+      const payload = {
+        protocolo_id: usuarioAtual.submissao_protocolo || null,
+        acao_master2: acaoFormularioMaster2,
+        responsavel: {
+          nome: usuarioAtual.nome,
+          email: usuarioAtual.email,
+          subsecretaria: usuarioAtual.subsecretaria,
+          setor: usuarioAtual.setor || "",
+          perfil: usuarioAtual.perfil
+        },
+        metricas: {
+          total_atribuido: questoesCarregadas.length,
+          total_respondido: respostasParaEnviar.length,
+          total_com_evidencia: totalComEvidencia
+        },
+        respostas: respostasParaEnviar
+      };
+
+      try {
+        const res = await fetch("/api/submissoes/enviar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          usuarioAtual.ja_enviou = true;
+          usuarioAtual.submissao_protocolo = data.protocolo_id;
+          pendenciasDevolucaoUsuario = [];
+          localStorage.setItem("par_user", JSON.stringify(usuarioAtual));
+          exibirSucesso(data);
+        } else {
+          alert("Aviso: " + (data.detail || "Não foi possível registrar o envio."));
         }
       } catch (err) {
         alert("Erro na conexão: " + err.message);
@@ -1355,10 +3060,18 @@
 
       protocoloSucessoAtual = data.protocolo_id;
       document.getElementById("sucesso-proto").textContent = data.protocolo_id;
-      document.getElementById("sucesso-sub").textContent = usuarioAtual.subsecretaria;
+      document.getElementById("sucesso-sub").textContent = `${usuarioAtual.subsecretaria}${usuarioAtual.setor ? ' • Setor: ' + usuarioAtual.setor : ''}`;
       document.getElementById("sucesso-nome").textContent = usuarioAtual.nome;
       document.getElementById("sucesso-email").textContent = usuarioAtual.email;
       document.getElementById("sucesso-data").textContent = formatarData(data.data_envio);
+
+      const btnVoltar = document.getElementById("btn-sucesso-voltar-painel");
+      btnVoltar.classList.remove("hidden");
+      if (usuarioAtual.perfil === "master_2" || usuarioAtual.perfil === "master_1") {
+        btnVoltar.textContent = "Voltar ao Painel";
+      } else {
+        btnVoltar.textContent = "Voltar ao Resumo";
+      }
     }
 
     function baixarPdfSucesso() {
@@ -1376,24 +3089,54 @@
       esconderTodasTelas();
       document.getElementById("tela-ja-enviou").classList.remove("hidden");
       
-      const proto = submissao.protocolo_id || submissao.id || "REGISTRADO";
+      const proto = submissao?.protocolo_id || submissao?.id || usuarioAtual.submissao_protocolo || "REGISTRADO";
       usuarioAtual.submissao_protocolo = proto;
       
-      document.getElementById("ja-enviou-sub").textContent = submissao.responsavel?.subsecretaria || usuarioAtual.subsecretaria;
+      document.getElementById("ja-enviou-sub").textContent = submissao?.responsavel?.subsecretaria || usuarioAtual.subsecretaria;
       document.getElementById("ja-enviou-proto").textContent = proto;
-      document.getElementById("ja-enviou-data").textContent = formatarData(submissao.data_envio);
-      document.getElementById("ja-enviou-nome").textContent = submissao.responsavel?.nome || usuarioAtual.nome;
+      document.getElementById("ja-enviou-data").textContent = formatarData(submissao?.data_envio || usuarioAtual.data_envio);
+      document.getElementById("ja-enviou-nome").textContent = `${submissao?.responsavel?.nome || usuarioAtual.nome} (${usuarioAtual.setor || 'Setor'})`;
+
+      const boxPendencia = document.getElementById("box-pendencia-devolucao");
+      const listaResumo = document.getElementById("lista-questoes-devolvidas-resumo");
+
+      if (pendenciasDevolucaoUsuario && pendenciasDevolucaoUsuario.length > 0 && usuarioAtual.perfil === "usuario_comum") {
+        boxPendencia.classList.remove("hidden");
+        listaResumo.innerHTML = pendenciasDevolucaoUsuario.map(item => `
+          <div class="p-3 bg-white rounded-xl border border-red-300 flex items-start justify-between gap-2">
+            <div>
+              <span class="font-mono font-black text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 text-xs">${item.codigo_questao}</span>
+              <span class="text-xs font-bold text-red-700 ml-1.5">o ponto focal do PAR solicitou uma nova analise</span>
+              <p class="text-xs text-slate-700 mt-1 font-medium">${item.enunciado || ""}</p>
+              ${item.observacao_devolucao ? `<p class="text-[11px] text-red-600 mt-1 font-semibold">Observação do Ponto Focal: "${item.observacao_devolucao}"</p>` : ''}
+            </div>
+          </div>
+        `).join("");
+      } else {
+        boxPendencia.classList.add("hidden");
+      }
 
       const btnMonit = document.getElementById("btn-ja-enviou-monitoramento");
       const btnSolic = document.getElementById("btn-ja-enviou-solicitar");
+      const btnEditar = document.getElementById("btn-ja-enviou-editar");
 
       if (usuarioAtual.perfil === "master_2") {
-        document.getElementById("ja-enviou-msg").textContent = `A Consolidação Oficial da subsecretaria ${usuarioAtual.subsecretaria} já foi homologada e enviada sob o protocolo abaixo. Você pode continuar monitorando a área.`;
+        document.getElementById("ja-enviou-msg").textContent = `A Consolidação Oficial da subsecretaria ${usuarioAtual.subsecretaria} já foi homologada e enviada sob o protocolo abaixo. Você pode continuar acessando o painel de monitoramento da área.`;
         btnMonit.classList.remove("hidden");
         btnSolic.classList.add("hidden");
+        if (btnEditar) btnEditar.classList.add("hidden");
       } else {
         btnMonit.classList.add("hidden");
         btnSolic.classList.remove("hidden");
+        if (btnEditar) {
+          if (ehMaster2Consolidado || submissao?.tipo_envio === "consolidacao_oficial") {
+            btnEditar.classList.add("hidden");
+            document.getElementById("ja-enviou-msg").innerHTML = `A consolidação oficial da subsecretaria <strong>${usuarioAtual.subsecretaria}</strong> já foi homologada pelo Ponto Focal. O questionário deste ciclo está encerrado.`;
+          } else {
+            btnEditar.classList.remove("hidden");
+            document.getElementById("ja-enviou-msg").innerHTML = `Identificamos que suas respostas já foram registradas para a subsecretaria <strong>${submissao?.responsavel?.subsecretaria || usuarioAtual.subsecretaria}</strong>. Caso deseje revisar ou alterar alguma resposta do seu setor, clique no botão <strong>Editar Minhas Respostas</strong> abaixo.`;
+          }
+        }
       }
     }
 
@@ -1411,20 +3154,23 @@
       if (!sub) return;
 
       document.getElementById("modal-sub-proto").textContent = sub.protocolo_id || sub.id;
-      document.getElementById("modal-sub-info").textContent = `${sub.responsavel?.nome} (${sub.responsavel?.subsecretaria}) • ${formatarData(sub.data_envio)}`;
+      const setorStr = sub.responsavel?.setor ? ` • Setor: ${sub.responsavel.setor}` : "";
+      document.getElementById("modal-sub-info").textContent = `${sub.responsavel?.nome} (${sub.responsavel?.subsecretaria}${setorStr}) • ${formatarData(sub.data_envio)}`;
       
       const tag = document.getElementById("modal-sub-tag");
-      tag.textContent = sub.tipo_envio === "consolidacao_oficial" ? "Consolidação Oficial" : "Resposta de Servidor";
+      tag.textContent = sub.tipo_envio === "consolidacao_oficial" ? "Consolidação Oficial Homologada" : "Submissão de Setor";
       tag.className = sub.tipo_envio === "consolidacao_oficial" ? "bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold" : "bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold";
 
-      document.getElementById("modal-btn-pdf").onclick = () => window.open(`/api/submissoes/pdf/${sub.protocolo_id || sub.id}`, "_blank");
+      const btnPdf = document.getElementById("modal-btn-pdf");
+      btnPdf.classList.remove("hidden");
+      btnPdf.onclick = () => window.open(`/api/submissoes/pdf/${sub.protocolo_id || sub.id}`, "_blank");
 
       const container = document.getElementById("modal-sub-respostas-lista");
       container.innerHTML = "";
 
       (sub.respostas || []).forEach(r => {
         const item = document.createElement("div");
-        item.className = "p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-1.5";
+        item.className = "p-3.5 rounded-xl border border-slate-200 bg-slate-50 space-y-1.5";
         
         let valorFmt = "-";
         if (Array.isArray(r.opcao_marcada)) {
@@ -1433,13 +3179,17 @@
           valorFmt = r.opcao_marcada;
         }
 
+        const autor = r.respondido_por || sub.responsavel || {};
+
         item.innerHTML = `
-          <div class="flex items-center justify-between">
-            <span class="font-bold font-mono text-brand-900">${r.codigo_questao}</span>
-            <span class="text-[10px] text-slate-500">${r.tema}</span>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="font-bold font-mono text-brand-900 bg-white px-2 py-0.5 rounded border border-slate-200">${r.codigo_questao}</span>
+            <span class="text-[10px] bg-blue-50 text-blue-800 px-2 py-0.5 rounded-full font-bold border border-blue-200">
+              <i class="fa-solid fa-user mr-1"></i> ${autor.nome || "-"} • Setor: ${autor.setor || "Não informado"}
+            </span>
           </div>
           <p class="font-medium text-slate-800">${r.enunciado}</p>
-          <div class="bg-white p-2 rounded border border-slate-200 font-semibold text-slate-800">
+          <div class="bg-white p-2.5 rounded border border-slate-200 font-semibold text-slate-800">
             ${valorFmt}
           </div>
           ${r.evidencia_normativa ? `
@@ -1477,7 +3227,8 @@
           body: JSON.stringify({
             nome: usuarioAtual.nome,
             email: usuarioAtual.email,
-            subsecretaria: usuarioAtual.subsecretaria
+            subsecretaria: usuarioAtual.subsecretaria,
+            setor: usuarioAtual.setor || ""
           })
         });
         const data = await res.json();
