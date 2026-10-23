@@ -830,15 +830,21 @@
 
       <!-- VISÃO COMPLEMENTAR POR QUESTÃO DO CADERNO (FILTRO PELOS CARDS ACIMA) -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="px-5 py-3.5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="px-5 py-3.5 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
             <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
               <i class="fa-solid fa-list-check text-brand-700"></i>
               Visão Geral do Caderno de Questões da Subsecretaria
             </h3>
-            <p class="text-[11px] text-slate-500">Acompanhe o status de cada questão e clique em <strong>Avaliar / Decidir</strong> para abrir o formulário rápido de aprovação, devolução ou descarte.</p>
+            <p class="text-[11px] text-slate-500">Acompanhe o status e aprove, descarte ou devolva com apenas 1 clique.</p>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+              <input type="text" id="m2-busca-questoes-caderno" oninput="renderizarMonitoramentoQuestoesM2()"
+                     placeholder="Buscar questão por código ou palavra..."
+                     class="pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-700 w-52 sm:w-64">
+            </div>
             <select id="m2-filtro-status-questao" onchange="drillDownMaster2(this.value)" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-semibold text-slate-700">
               <option value="RESPONDIDAS" selected>Aprovadas no Formulário</option>
               <option value="RETORNO">Aguardando Aprovação / Retorno Ajuste</option>
@@ -926,102 +932,17 @@
             </button>
           </div>
         </div>
-        <div id="m2-modal-user-lista" class="p-4 overflow-y-auto flex-1 space-y-2.5 bg-slate-50">
-          <!-- Injetado via JS -->
+        <div class="px-4 py-2 bg-slate-100 border-b border-slate-200 flex items-center gap-3">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+            <input type="text" id="m2-busca-modal-usuario" oninput="filtrarQuestoesModalUsuario(this.value)"
+                   placeholder="Pesquisar questão por código (ex: I.1.1), tema ou palavra-chave..."
+                   class="w-full pl-8 pr-7 py-1.5 border border-slate-300 rounded-lg text-xs bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-700">
+          </div>
+          <span id="m2-modal-user-contador-busca" class="text-[11px] text-slate-500 font-semibold shrink-0"></span>
         </div>
-      </div>
-    </div>
-
-    <!-- ==================== PEQUENO FORMULÁRIO FLUTUANTE 3: AVALIAÇÃO / DECISÃO DA QUESTÃO ==================== -->
-    <div id="modal-avaliar-questao-m2" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden">
-        <div class="px-5 py-3.5 bg-slate-900 text-white flex justify-between items-center">
-          <div class="flex items-center gap-2">
-            <span id="m2-aval-codigo" class="font-mono font-black text-xs bg-brand-700 px-2.5 py-0.5 rounded border border-brand-500">Q01</span>
-            <h3 class="text-sm font-bold">Avaliar Questão</h3>
-          </div>
-          <button onclick="fecharModalAvaliarQuestaoM2()" class="text-slate-300 hover:text-white text-base px-1">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-
-        <div class="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
-          <!-- Enunciado resumido e botão 2025 -->
-          <div>
-            <div class="flex items-center justify-between gap-2 mb-1">
-              <span id="m2-aval-tema" class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tema</span>
-              <div id="m2-aval-btn-2025"></div>
-            </div>
-            <p id="m2-aval-enunciado" class="text-xs font-bold text-slate-800 leading-snug"></p>
-          </div>
-
-          <!-- Seletor de respondente (caso mais de 1 pessoa tenha respondido) -->
-          <div id="m2-aval-seletor-container" class="hidden">
-            <label class="block text-[11px] font-bold text-slate-600 mb-1">Servidor Respondente:</label>
-            <select id="m2-aval-select-usuario" onchange="trocarUsuarioModalAvaliarM2(this.value)" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold bg-slate-50"></select>
-          </div>
-
-          <!-- Alerta de duplicidade se houver mais de um respondente -->
-          <div id="m2-aval-alerta-conflito" class="hidden p-2.5 bg-amber-50 border border-amber-300 rounded-xl text-[11px] text-amber-900"></div>
-
-          <!-- Caixa com a resposta enviada pelo servidor -->
-          <div id="m2-aval-box-resposta" class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-            <div class="flex items-center justify-between">
-              <span id="m2-aval-autor" class="text-[11px] font-bold text-brand-800">Servidor • Setor</span>
-              <span id="m2-aval-status-atual" class="text-[10px] font-bold px-2 py-0.5 rounded-full">Status</span>
-            </div>
-            <p id="m2-aval-resposta-texto" class="text-xs font-bold text-slate-900 pt-1"></p>
-            <p id="m2-aval-evidencia" class="hidden text-[11px] text-brand-700 pt-1"></p>
-          </div>
-
-          <!-- Pequeno Formulário de Decisão -->
-          <div id="m2-aval-form-decisao" class="space-y-2.5 pt-1">
-            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">Escolha a Ação para esta Resposta:</label>
-
-            <label class="flex items-start gap-2.5 p-2.5 rounded-xl border border-slate-200 hover:bg-emerald-50/50 cursor-pointer transition-colors has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50/70">
-              <input type="radio" name="m2-aval-acao" value="aprovar" checked onchange="atualizarVisibilidadeMotivoAvalM2()" class="mt-0.5 accent-emerald-600">
-              <div>
-                <span class="text-xs font-bold text-emerald-900 block">Aprovar Resposta (Enviar p/ Formulário)</span>
-                <span class="text-[11px] text-slate-500">Valida esta resposta e a insere no formulário oficial da subsecretaria.</span>
-              </div>
-            </label>
-
-            <label class="flex items-start gap-2.5 p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors has-[:checked]:border-slate-600 has-[:checked]:bg-slate-100">
-              <input type="radio" name="m2-aval-acao" value="nao_utilizar" onchange="atualizarVisibilidadeMotivoAvalM2()" class="mt-0.5 accent-slate-700">
-              <div>
-                <span class="text-xs font-bold text-slate-800 block">Não Utilizar Resposta</span>
-                <span class="text-[11px] text-slate-500">Descarta esta resposta sem pedir retrabalho (ideal quando outra pessoa já respondeu).</span>
-              </div>
-            </label>
-
-            <label class="flex items-start gap-2.5 p-2.5 rounded-xl border border-slate-200 hover:bg-red-50/40 cursor-pointer transition-colors has-[:checked]:border-red-600 has-[:checked]:bg-red-50/60">
-              <input type="radio" name="m2-aval-acao" value="devolver" onchange="atualizarVisibilidadeMotivoAvalM2()" class="mt-0.5 accent-red-600">
-              <div>
-                <span class="text-xs font-bold text-red-800 block">Devolver p/ Usuário Responder Novamente</span>
-                <span class="text-[11px] text-slate-500">Solicita correção ou complemento e libera a edição para o servidor.</span>
-              </div>
-            </label>
-
-            <div id="m2-aval-campo-devolucao" class="hidden pt-1">
-              <label class="block text-[11px] font-bold text-red-700 mb-1">Motivo da Devolução / Orientação para o Servidor *</label>
-              <textarea id="m2-aval-motivo-devolucao" rows="2" placeholder="Descreva o que o servidor precisa ajustar..." class="w-full border border-red-300 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-red-500 focus:outline-none"></textarea>
-            </div>
-          </div>
-
-          <!-- Rodapé do Pequeno Formulário -->
-          <div class="pt-3 border-t border-slate-200 flex items-center justify-between gap-2">
-            <button type="button" id="m2-aval-btn-reportar" class="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl font-bold text-[11px] flex items-center gap-1.5">
-              <i class="fa-solid fa-flag text-amber-600"></i> Reportar Competência
-            </button>
-            <div class="flex items-center gap-2">
-              <button type="button" onclick="fecharModalAvaliarQuestaoM2()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-xs">
-                Cancelar
-              </button>
-              <button type="button" id="m2-aval-btn-confirmar" onclick="confirmarAvaliacaoQuestaoM2()" class="px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white rounded-xl font-bold text-xs shadow-sm flex items-center gap-1.5">
-                <i class="fa-solid fa-check"></i> Confirmar Decisão
-              </button>
-            </div>
-          </div>
+        <div id="m2-modal-user-lista" class="p-4 overflow-y-auto flex-1 space-y-3 bg-slate-50">
+          <!-- Injetado via JS com botões diretos de Aprovar, Não Utilizar e Devolver -->
         </div>
       </div>
     </div>
@@ -1029,7 +950,7 @@
   </main>
 
   <!-- ==================== MODAL 1: RESPOSTA DE 2025 (OLHINHO 👁️) ==================== -->
-  <div id="modal-resposta-2025" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+  <div id="modal-resposta-2025" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-[60]">
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-200 overflow-hidden">
       <div class="p-4 bg-gradient-to-r from-brand-900 to-brand-700 text-white flex justify-between items-center">
         <div class="flex items-center gap-2">
@@ -1072,7 +993,7 @@
   </div>
 
   <!-- ==================== MODAL 2: DEVOLVER QUESTÃO PARA NOVA ANÁLISE ==================== -->
-  <div id="modal-devolver-questao" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+  <div id="modal-devolver-questao" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-[60]">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-red-200 overflow-hidden p-6 space-y-4">
       <div class="flex justify-between items-start">
         <div class="flex items-center gap-2.5">
@@ -1112,7 +1033,7 @@
   </div>
 
   <!-- ==================== MODAL 3: REPORTAR QUESTÃO FORA DE COMPETÊNCIA (PARA MASTER 1) ==================== -->
-  <div id="modal-reportar-competencia" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+  <div id="modal-reportar-competencia" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-[60]">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-slate-200 overflow-hidden p-6 space-y-4">
       <div class="flex justify-between items-start">
         <div class="flex items-center gap-2.5">
@@ -1209,6 +1130,20 @@
             <span>Salvar Ajustes no Quadro</span>
           </button>
         </div>
+      </div>
+
+      <!-- Barra de pesquisa no formulário espelhado -->
+      <div class="bg-slate-50 border-b border-slate-200 px-6 py-2.5 flex items-center gap-3">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+          <input type="text" id="espelho-input-busca" oninput="filtrarQuestoesEspelhadas(this.value)"
+                 placeholder="Pesquisar questão por código (ex: I.1.1), tema ou enunciado..."
+                 class="w-full pl-8 pr-8 py-1.5 border border-slate-300 rounded-xl text-xs bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600">
+          <button type="button" id="btn-limpar-busca-espelho" onclick="limparBuscaEspelho()" class="hidden absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 text-xs">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </button>
+        </div>
+        <span id="espelho-contador-busca" class="text-[11px] text-slate-500 font-semibold shrink-0"></span>
       </div>
 
       <!-- Lista de Questões Espelhadas e Editáveis -->
@@ -2146,7 +2081,7 @@
         // Se o modal de questões do servidor (Olhinho) estiver aberto, atualiza seu conteúdo sem fechar
         const modalUser = document.getElementById("modal-questoes-usuario-m2");
         if (usuarioAtivoModalM2 && modalUser && !modalUser.classList.contains("hidden")) {
-          abrirModalQuestoesUsuarioM2(usuarioAtivoModalM2);
+          renderizarConteudoModalQuestoesUsuarioM2();
         }
       } catch (e) {
         console.error("Erro ao carregar dados do Ponto Focal:", e);
@@ -2247,14 +2182,25 @@
       });
     }
 
+    let termoBuscaModalUsuario = "";
+
+    function filtrarQuestoesModalUsuario(termo) {
+      termoBuscaModalUsuario = (termo || "").trim().toLowerCase();
+      renderizarConteudoModalQuestoesUsuarioM2();
+    }
+
     function abrirModalQuestoesUsuarioM2(emailUsuario) {
       const emailClean = (emailUsuario || "").trim().toLowerCase();
       const uObj = quadroAtualSubsecretaria?.respostas_usuarios?.[emailClean];
       if (!uObj) return;
 
       usuarioAtivoModalM2 = emailClean;
+      termoBuscaModalUsuario = "";
+      const inpBusca = document.getElementById("m2-busca-modal-usuario");
+      if (inpBusca) inpBusca.value = "";
+
       const uInfo = uObj.usuario || {};
-      const listaQ = Object.values(uObj.questoes || {}).sort((a, b) => (a.codigo_questao || "").localeCompare(b.codigo_questao || ""));
+      const listaQ = Object.values(uObj.questoes || {});
       const qtdPendentes = listaQ.filter(q => q.status_validacao === "enviado" || q.status_validacao === "retorno_para_ajuste").length;
 
       document.getElementById("m2-modal-user-titulo").textContent = `${uInfo.nome || "Servidor"} — ${listaQ.length} questão(ões) enviada(s)`;
@@ -2264,7 +2210,7 @@
       if (qtdPendentes > 0) {
         btnAprovarTodasDiv.innerHTML = `
           <button type="button" onclick="aprovarTodasDoUsuario('${emailClean}', '${(uInfo.nome || 'Servidor').replace(/'/g, "\\'")}')"
-                  class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-bold text-xs shadow-xs flex items-center gap-1.5">
+                  class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-bold text-xs shadow-xs flex items-center gap-1.5 transition-all">
             <i class="fa-solid fa-check-double"></i> Aprovar Todas (${qtdPendentes})
           </button>
         `;
@@ -2272,9 +2218,40 @@
         btnAprovarTodasDiv.innerHTML = "";
       }
 
+      renderizarConteudoModalQuestoesUsuarioM2();
+      document.getElementById("modal-questoes-usuario-m2").classList.remove("hidden");
+    }
+
+    function renderizarConteudoModalQuestoesUsuarioM2() {
+      const emailClean = usuarioAtivoModalM2;
+      const uObj = quadroAtualSubsecretaria?.respostas_usuarios?.[emailClean];
+      if (!uObj) return;
+
+      const uInfo = uObj.usuario || {};
+      let listaQ = Object.values(uObj.questoes || {}).sort((a, b) => (a.codigo_questao || "").localeCompare(b.codigo_questao || ""));
+
+      if (termoBuscaModalUsuario) {
+        listaQ = listaQ.filter(q => {
+          const cod = (q.codigo_questao || "").toLowerCase();
+          const tema = (q.tema || "").toLowerCase();
+          const enunc = (q.enunciado || "").toLowerCase();
+          return cod.includes(termoBuscaModalUsuario) || tema.includes(termoBuscaModalUsuario) || enunc.includes(termoBuscaModalUsuario);
+        });
+      }
+
+      const contadorEl = document.getElementById("m2-modal-user-contador-busca");
+      if (contadorEl) {
+        contadorEl.textContent = termoBuscaModalUsuario ? `${listaQ.length} questão(ões) encontrada(s)` : "";
+      }
+
       const respondentesPorQuestao = obterRespondentesPorQuestaoM2();
       const listaEl = document.getElementById("m2-modal-user-lista");
       listaEl.innerHTML = "";
+
+      if (listaQ.length === 0) {
+        listaEl.innerHTML = `<div class="p-8 text-center text-slate-400">Nenhuma questão encontrada para a pesquisa informada.</div>`;
+        return;
+      }
 
       listaQ.forEach(qUser => {
         const cod = qUser.codigo_questao;
@@ -2282,221 +2259,111 @@
         const st = qUser.status_validacao || "enviado";
         const opcFmt = Array.isArray(qUser.opcao_marcada) ? qUser.opcao_marcada.join("; ") : (qUser.opcao_marcada || "-");
 
+        // Alerta quando 2 ou mais pessoas responderam esta mesma pergunta
         const outros = (respondentesPorQuestao[cod] || []).filter(x => x.email !== emailClean);
-        const tagConflito = outros.length > 0
-          ? `<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold"><i class="fa-solid fa-users mr-1"></i>+${outros.length} respondeu</span>`
-          : "";
+        let htmlAlertaDuplicidade = "";
+        if (outros.length > 0) {
+          const totalRespostas = outros.length + 1;
+          htmlAlertaDuplicidade = `
+            <div class="p-3 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-950 space-y-1.5 shadow-2xs">
+              <div class="font-bold flex items-center gap-1.5 text-amber-900">
+                <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+                <span>Atenção: Esta mesma pergunta tem ${totalRespostas} respostas enviadas por servidores diferentes:</span>
+              </div>
+              <div class="text-[11px] space-y-1 pl-4">
+                <div class="font-bold text-slate-800">
+                  • <strong>${uInfo.nome} (${uInfo.setor})</strong> [Esta resposta]: <em>"${opcFmt}"</em>
+                </div>
+                ${outros.map(o => {
+                  const oResp = Array.isArray(o.opcao_marcada) ? o.opcao_marcada.join("; ") : (o.opcao_marcada || "-");
+                  const oTag = o.status === 'validado' ? '<strong class="text-emerald-700 ml-1">[JÁ APROVADA NO FORMULÁRIO]</strong>' : (o.status === 'nao_utilizada' ? '<span class="text-slate-500 ml-1">[Não Utilizada]</span>' : '');
+                  return `<div>• <strong>${o.nome} (${o.setor})</strong>${oTag}: <em>"${oResp}"</em></div>`;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        }
 
         let badgeSt = "";
         if (st === "validado") {
-          badgeSt = `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">Aprovada</span>`;
+          badgeSt = `<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-check"></i> Aprovada no Formulário</span>`;
         } else if (st === "devolvido") {
-          badgeSt = `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold">Devolvida</span>`;
+          badgeSt = `<span class="bg-red-100 text-red-700 border border-red-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-rotate-left"></i> Devolvida</span>`;
         } else if (st === "nao_utilizada") {
-          badgeSt = `<span class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">Não Utilizada</span>`;
+          badgeSt = `<span class="bg-slate-200 text-slate-700 border border-slate-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-ban"></i> Não Utilizada</span>`;
         } else {
-          badgeSt = `<span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-[10px] font-bold">Aguardando Aprovação</span>`;
+          badgeSt = `<span class="bg-purple-100 text-purple-800 border border-purple-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-clock"></i> Aguardando Aprovação</span>`;
         }
 
+        const btn2025 = qCatalogo.tem_2025 ? `
+          <button type="button" onclick="abrirModal2025('${cod}')" class="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-md font-bold text-[10px] inline-flex items-center gap-1">
+            <i class="fa-regular fa-eye"></i> Resposta 2025
+          </button>
+        ` : "";
+
         const item = document.createElement("div");
-        item.className = "p-3.5 bg-white rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-300 transition-colors";
+        item.className = "p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-3 hover:border-slate-300 transition-colors";
         item.innerHTML = `
-          <div class="space-y-1 flex-1">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
             <div class="flex items-center gap-2 flex-wrap">
-              <span class="font-mono font-black text-brand-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-xs">${cod}</span>
+              <span class="font-mono font-black text-brand-900 bg-slate-100 px-2.5 py-0.5 rounded border border-slate-200 text-xs">${cod}</span>
               ${badgeSt}
-              ${tagConflito}
+              ${btn2025}
               <span class="text-[11px] text-slate-400">${qUser.tema || qCatalogo.tema || ""}</span>
             </div>
-            <p class="text-xs font-semibold text-slate-800 leading-snug">${qUser.enunciado || qCatalogo.enunciado || ""}</p>
-            <p class="text-xs text-slate-600"><strong class="text-slate-900">Resposta:</strong> ${opcFmt}</p>
           </div>
-          <div class="shrink-0">
-            <button type="button" onclick="abrirModalAvaliarQuestaoM2('${cod}', '${emailClean}')"
-                    class="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-800 border border-brand-200 rounded-lg font-bold text-xs inline-flex items-center gap-1.5 transition-colors">
-              <i class="fa-solid fa-sliders"></i> Avaliar / Decidir
+
+          <p class="text-xs font-bold text-slate-800 leading-snug">${qUser.enunciado || qCatalogo.enunciado || ""}</p>
+
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+            <span class="text-[10px] uppercase font-bold text-slate-500 block mb-0.5">Resposta enviada por ${uInfo.nome} (${uInfo.setor}):</span>
+            <p class="font-bold text-slate-900">${opcFmt}</p>
+            ${qUser.evidencia_normativa ? `<p class="text-[11px] text-brand-800 font-medium mt-1"><i class="fa-solid fa-file-shield mr-1"></i>Evidência: ${qUser.evidencia_normativa}</p>` : ''}
+          </div>
+
+          ${htmlAlertaDuplicidade}
+
+          <!-- BOTÕES DIRETOS E SIMPLES: APROVAR, NÃO UTILIZAR OU DEVOLVER (SEM 3 PAINÉIS) -->
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2 flex-wrap">
+            ${st !== 'validado' ? `
+              <button type="button" onclick="aprovarQuestaoPontoFocal('${cod}', '${emailClean}')"
+                      class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-xs flex items-center gap-1.5 transition-all">
+                <i class="fa-solid fa-circle-check"></i> Aprovar Resposta
+              </button>
+            ` : `
+              <span class="text-xs font-bold text-emerald-700 mr-auto flex items-center gap-1">
+                <i class="fa-solid fa-circle-check"></i> Resposta já aprovada no formulário
+              </span>
+            `}
+
+            ${st !== 'nao_utilizada' ? `
+              <button type="button" onclick="naoUtilizarRespostaUsuario('${cod}', '${emailClean}')"
+                      class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all"
+                      title="Descarta esta resposta sem exigir retrabalho do servidor">
+                <i class="fa-solid fa-ban text-slate-500"></i> Não Utilizar
+              </button>
+            ` : ''}
+
+            ${st !== 'devolvido' ? `
+              <button type="button" onclick="abrirModalDevolver('${cod}', '${emailClean}')"
+                      class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all">
+                <i class="fa-solid fa-rotate-left"></i> Devolver
+              </button>
+            ` : ''}
+
+            <button type="button" onclick="abrirModalReporte('${cod}')"
+                    class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl font-semibold text-xs flex items-center gap-1 transition-all">
+              <i class="fa-solid fa-flag text-amber-600"></i> Reportar
             </button>
           </div>
         `;
         listaEl.appendChild(item);
       });
-
-      document.getElementById("modal-questoes-usuario-m2").classList.remove("hidden");
     }
 
     function fecharModalQuestoesUsuarioM2() {
       usuarioAtivoModalM2 = "";
       document.getElementById("modal-questoes-usuario-m2").classList.add("hidden");
-    }
-
-    // ==================== PEQUENO FORMULÁRIO FLUTUANTE DE AVALIAÇÃO (APROVAR / NÃO USAR / DEVOLVER) ====================
-    function abrirModalAvaliarQuestaoM2(codigoQuestao, emailPreferencial = "") {
-      questaoAtivaAvalM2 = codigoQuestao;
-      const qCatalogo = questoesCarregadas.find(item => item.codigo === codigoQuestao) || { codigo: codigoQuestao };
-      const respondentesMap = obterRespondentesPorQuestaoM2();
-      const listaResp = respondentesMap[codigoQuestao] || [];
-      const aprovadaQuadro = quadroAtualSubsecretaria?.questoes_respondidas?.[codigoQuestao];
-
-      document.getElementById("m2-aval-codigo").textContent = codigoQuestao;
-      document.getElementById("m2-aval-tema").textContent = qCatalogo.tema || "Questão do Caderno";
-      document.getElementById("m2-aval-enunciado").textContent = qCatalogo.enunciado || "";
-
-      const btn2025Div = document.getElementById("m2-aval-btn-2025");
-      btn2025Div.innerHTML = qCatalogo.tem_2025 ? `
-        <button type="button" onclick="abrirModal2025('${codigoQuestao}')" class="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-md font-bold text-[10px] inline-flex items-center gap-1">
-          <i class="fa-regular fa-eye"></i> Resposta 2025
-        </button>
-      ` : "";
-
-      const btnReportar = document.getElementById("m2-aval-btn-reportar");
-      btnReportar.onclick = () => {
-        fecharModalAvaliarQuestaoM2();
-        abrirModalReporte(codigoQuestao);
-      };
-
-      const seletorContainer = document.getElementById("m2-aval-seletor-container");
-      const selectEl = document.getElementById("m2-aval-select-usuario");
-      const alertaConflito = document.getElementById("m2-aval-alerta-conflito");
-
-      if (listaResp.length > 1) {
-        seletorContainer.classList.remove("hidden");
-        selectEl.innerHTML = listaResp.map(r => `<option value="${r.email}">${r.nome} (${r.setor})</option>`).join("");
-        alertaConflito.classList.remove("hidden");
-        alertaConflito.innerHTML = `<i class="fa-solid fa-users mr-1"></i> <strong>${listaResp.length} servidores</strong> enviaram resposta para esta questão. Selecione acima qual resposta deseja avaliar.`;
-      } else {
-        seletorContainer.classList.add("hidden");
-        alertaConflito.classList.add("hidden");
-      }
-
-      let emailInicial = (emailPreferencial || "").trim().toLowerCase();
-      if (!emailInicial && listaResp.length > 0) {
-        emailInicial = listaResp[0].email;
-      } else if (!emailInicial && aprovadaQuadro?.respondido_por?.email) {
-        emailInicial = aprovadaQuadro.respondido_por.email.toLowerCase();
-      }
-
-      if (listaResp.length > 1 && emailInicial) {
-        selectEl.value = emailInicial;
-      }
-
-      trocarUsuarioModalAvaliarM2(emailInicial);
-      document.getElementById("modal-avaliar-questao-m2").classList.remove("hidden");
-    }
-
-    function trocarUsuarioModalAvaliarM2(emailUsuario) {
-      emailAtivoAvalM2 = (emailUsuario || "").trim().toLowerCase();
-      const cod = questaoAtivaAvalM2;
-      const respondentesMap = obterRespondentesPorQuestaoM2();
-      const listaResp = respondentesMap[cod] || [];
-      let itemResp = listaResp.find(r => r.email === emailAtivoAvalM2) || listaResp[0];
-
-      const aprovadaQuadro = quadroAtualSubsecretaria?.questoes_respondidas?.[cod];
-      if (!itemResp && aprovadaQuadro) {
-        itemResp = {
-          email: (aprovadaQuadro.respondido_por?.email || "").toLowerCase(),
-          nome: aprovadaQuadro.respondido_por?.nome || "Servidor",
-          setor: aprovadaQuadro.respondido_por?.setor || "Setor",
-          status: aprovadaQuadro.status_validacao || "validado",
-          opcao_marcada: aprovadaQuadro.opcao_marcada,
-          evidencia_normativa: aprovadaQuadro.evidencia_normativa,
-          observacao_devolucao: aprovadaQuadro.observacao_devolucao
-        };
-      }
-
-      const boxResp = document.getElementById("m2-aval-box-resposta");
-      const formDecisao = document.getElementById("m2-aval-form-decisao");
-      const btnConfirmar = document.getElementById("m2-aval-btn-confirmar");
-
-      if (!itemResp) {
-        boxResp.innerHTML = `<p class="text-xs text-slate-400 italic">Nenhum servidor enviou resposta para esta questão ainda.</p>`;
-        formDecisao.classList.add("hidden");
-        btnConfirmar.classList.add("hidden");
-        return;
-      }
-
-      formDecisao.classList.remove("hidden");
-      btnConfirmar.classList.remove("hidden");
-
-      const opcFmt = Array.isArray(itemResp.opcao_marcada) ? itemResp.opcao_marcada.join("; ") : (itemResp.opcao_marcada || "-");
-      let stBadge = `<span class="bg-purple-100 text-purple-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Aguardando Aprovação</span>`;
-      if (itemResp.status === "validado") {
-        stBadge = `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Aprovada no Formulário</span>`;
-      } else if (itemResp.status === "devolvido") {
-        stBadge = `<span class="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Devolvida</span>`;
-      } else if (itemResp.status === "nao_utilizada") {
-        stBadge = `<span class="bg-slate-200 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Não Utilizada</span>`;
-      }
-
-      boxResp.innerHTML = `
-        <div class="flex items-center justify-between gap-2">
-          <span class="text-[11px] font-bold text-brand-800">${itemResp.nome} • Setor: ${itemResp.setor}</span>
-          ${stBadge}
-        </div>
-        <p class="text-xs font-bold text-slate-900 pt-1">${opcFmt}</p>
-        ${itemResp.evidencia_normativa ? `<p class="text-[11px] text-brand-700 pt-1"><i class="fa-solid fa-file-shield mr-1"></i>Evidência: ${itemResp.evidencia_normativa}</p>` : ''}
-      `;
-
-      // Pré-seleciona ação padrão
-      const radios = document.querySelectorAll('input[name="m2-aval-acao"]');
-      radios.forEach(r => { r.checked = (r.value === "aprovar"); });
-      document.getElementById("m2-aval-motivo-devolucao").value = itemResp.observacao_devolucao || "";
-      atualizarVisibilidadeMotivoAvalM2();
-    }
-
-    function atualizarVisibilidadeMotivoAvalM2() {
-      const acao = document.querySelector('input[name="m2-aval-acao"]:checked')?.value || "aprovar";
-      const campoDev = document.getElementById("m2-aval-campo-devolucao");
-      if (acao === "devolver") {
-        campoDev.classList.remove("hidden");
-      } else {
-        campoDev.classList.add("hidden");
-      }
-    }
-
-    function fecharModalAvaliarQuestaoM2() {
-      document.getElementById("modal-avaliar-questao-m2").classList.add("hidden");
-    }
-
-    async function confirmarAvaliacaoQuestaoM2() {
-      const acao = document.querySelector('input[name="m2-aval-acao"]:checked')?.value || "aprovar";
-      const cod = questaoAtivaAvalM2;
-      const email = emailAtivoAvalM2;
-
-      if (acao === "aprovar") {
-        await aprovarQuestaoPontoFocal(cod, email);
-        fecharModalAvaliarQuestaoM2();
-      } else if (acao === "nao_utilizar") {
-        await naoUtilizarRespostaUsuario(cod, email, true);
-        fecharModalAvaliarQuestaoM2();
-      } else if (acao === "devolver") {
-        const obs = document.getElementById("m2-aval-motivo-devolucao").value.trim();
-        if (!obs) {
-          alert("Informe o motivo da devolução para orientar o servidor.");
-          return;
-        }
-        try {
-          const res = await fetch("/api/master2/devolver_questao", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              subsecretaria: usuarioAtual.subsecretaria,
-              codigo_questao: cod,
-              observacao: obs,
-              solicitante_email: usuarioAtual.email,
-              email_usuario: email
-            })
-          });
-          const data = await res.json();
-          if (res.ok) {
-            fecharModalAvaliarQuestaoM2();
-            await carregarDadosMaster2();
-          } else {
-            alert(data.detail || "Erro ao devolver questão.");
-          }
-        } catch (e) {
-          alert("Erro na conexão: " + e.message);
-        }
-      }
     }
 
     async function aprovarTodasDoUsuario(emailUsuario, nomeUsuario) {
@@ -2523,8 +2390,8 @@
       }
     }
 
-    async function naoUtilizarRespostaUsuario(codigoQuestao, emailUsuario, pularConfirmacao = false) {
-      if (!pularConfirmacao && !confirm(`Deseja marcar esta resposta da questão ${codigoQuestao} como "Não Utilizar Resposta"?`)) return;
+    async function naoUtilizarRespostaUsuario(codigoQuestao, emailUsuario) {
+      if (!confirm(`Deseja marcar esta resposta da questão ${codigoQuestao} como "Não Utilizar Resposta"?\n\nEla ficará registrada como descartada (sem exigir retrabalho do servidor) e não irá para o formulário final.`)) return;
 
       try {
         const res = await fetch("/api/master2/nao_utilizar_questao", {
@@ -2575,6 +2442,7 @@
 
     function renderizarMonitoramentoQuestoesM2() {
       const filtro = document.getElementById("m2-filtro-status-questao")?.value || "RESPONDIDAS";
+      const buscaTermo = (document.getElementById("m2-busca-questoes-caderno")?.value || "").trim().toLowerCase();
       const corpo = document.getElementById("m2-tabela-monitoramento-questoes");
       corpo.innerHTML = "";
 
@@ -2600,17 +2468,29 @@
         const temAguardando = envios.some(e => e.status_validacao === "enviado" || e.status_validacao === "retorno_para_ajuste");
         const temDevolvida = envios.some(e => e.status_validacao === "devolvido") || (aprovada && aprovada.status_validacao === "devolvido");
 
-        if (filtro === "RESPONDIDAS") return aprovada && aprovada.status_validacao !== "devolvido";
-        if (filtro === "RETORNO") return temAguardando;
-        if (filtro === "DEVOLVIDAS") return temDevolvida;
-        if (filtro === "PENDENTES") return !aprovada;
+        let passaFiltro = true;
+        if (filtro === "RESPONDIDAS") passaFiltro = aprovada && aprovada.status_validacao !== "devolvido";
+        else if (filtro === "RETORNO") passaFiltro = temAguardando;
+        else if (filtro === "DEVOLVIDAS") passaFiltro = temDevolvida;
+        else if (filtro === "PENDENTES") passaFiltro = !aprovada;
+
+        if (!passaFiltro) return false;
+
+        if (buscaTermo) {
+          const cod = (q.codigo || "").toLowerCase();
+          const tema = (q.tema || "").toLowerCase();
+          const enunc = (q.enunciado || "").toLowerCase();
+          return cod.includes(buscaTermo) || tema.includes(buscaTermo) || enunc.includes(buscaTermo);
+        }
         return true;
       });
 
       if (filtradas.length === 0) {
-        const msgVazio = filtro === "RESPONDIDAS"
-          ? `Nenhuma questão aprovada no formulário ainda.`
-          : `Nenhuma questão encontrada para este filtro.`;
+        const msgVazio = buscaTermo
+          ? `Nenhuma questão encontrada para a pesquisa "${buscaTermo}".`
+          : (filtro === "RESPONDIDAS"
+            ? `Nenhuma questão aprovada no formulário ainda.`
+            : `Nenhuma questão encontrada para este filtro.`);
         corpo.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">${msgVazio}</td></tr>`;
         return;
       }
@@ -2624,13 +2504,18 @@
         let htmlResposta = `<span class="text-slate-400 italic text-[11px]">Aguardando envio dos setores</span>`;
         let htmlAutor = `<span class="text-slate-400">—</span>`;
         let htmlStatus = `<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-semibold">Pendente</span>`;
-        let emailPreferencial = "";
+        let htmlAcoes = "";
+
+        const temDuplicidade = envios.length > 1;
+        const tagDuplicidade = temDuplicidade
+          ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold"><i class="fa-solid fa-triangle-exclamation"></i> ${envios.length} respostas enviadas</span>`
+          : "";
 
         if (resp && resp.status_validacao !== "devolvido") {
           const opc = Array.isArray(resp.opcao_marcada) ? resp.opcao_marcada.join("; ") : (resp.opcao_marcada || "-");
           htmlResposta = `<p class="text-slate-700 font-medium text-xs mt-1"><span class="text-emerald-700 font-bold">Resp:</span> ${opc}</p>`;
           const autor = resp.respondido_por || {};
-          emailPreferencial = autor.email || "";
+          const emailAutor = autor.email || "";
           htmlAutor = `
             <div class="text-xs">
               <span class="font-bold text-slate-800 block">${autor.nome || "Servidor"}</span>
@@ -2638,11 +2523,20 @@
             </div>
           `;
           htmlStatus = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded text-[10px] font-bold">Aprovada</span>`;
+          htmlAcoes = `
+            <button onclick="abrirModalDevolver('${q.codigo}', '${emailAutor}')" class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1">
+              <i class="fa-solid fa-rotate-left"></i> Devolver
+            </button>
+          `;
         } else if (envios.length > 0) {
           const primeiro = envios[0];
-          emailPreferencial = primeiro.usuario_info?.email || "";
+          const emailPrimeiro = primeiro.usuario_info?.email || "";
           const opc = Array.isArray(primeiro.opcao_marcada) ? primeiro.opcao_marcada.join("; ") : (primeiro.opcao_marcada || "-");
-          htmlResposta = `<p class="text-slate-700 font-medium text-xs mt-1"><span class="text-brand-700 font-bold">Resp:</span> ${opc} ${envios.length > 1 ? `<span class="text-[10px] text-amber-700 font-bold">(+${envios.length - 1} envio)</span>` : ''}</p>`;
+          htmlResposta = `
+            <p class="text-slate-700 font-medium text-xs mt-1">
+              <span class="text-brand-700 font-bold">Resp:</span> ${opc}
+            </p>
+          `;
           htmlAutor = envios.map(e => `
             <div class="text-xs leading-tight mb-0.5">
               <span class="font-bold text-slate-800">${e.usuario_info?.nome || 'Servidor'}</span>
@@ -2654,8 +2548,27 @@
             htmlStatus = `<span class="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded text-[10px] font-bold">Devolvida</span>`;
           } else {
             htmlStatus = `<span class="bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded text-[10px] font-bold">Para Aprovar</span>`;
+            htmlAcoes = `
+              <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                <button onclick="aprovarQuestaoPontoFocal('${q.codigo}', '${emailPrimeiro}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1">
+                  <i class="fa-solid fa-check"></i> Aprovar
+                </button>
+                <button onclick="naoUtilizarRespostaUsuario('${q.codigo}', '${emailPrimeiro}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg font-bold text-[11px] flex items-center gap-1">
+                  <i class="fa-solid fa-ban text-slate-500"></i> Não Usar
+                </button>
+                <button onclick="abrirModalDevolver('${q.codigo}', '${emailPrimeiro}')" class="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center gap-1">
+                  <i class="fa-solid fa-rotate-left"></i> Devolver
+                </button>
+              </div>
+            `;
           }
         }
+
+        const btn2025 = q.tem_2025 ? `
+          <button type="button" onclick="abrirModal2025('${q.codigo}')" class="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-md font-bold text-[10px] inline-flex items-center gap-1 ml-1">
+            <i class="fa-regular fa-eye"></i> 2025
+          </button>
+        ` : "";
 
         tr.innerHTML = `
           <td class="py-3 px-4">
@@ -2663,16 +2576,22 @@
             <span class="block text-[10px] text-slate-400 mt-0.5 truncate max-w-[90px]" title="${q.tema}">${q.tema}</span>
           </td>
           <td class="py-3 px-4">
-            <p class="font-semibold text-slate-800 leading-snug text-xs">${q.enunciado}</p>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-semibold text-slate-800 leading-snug text-xs">${q.enunciado}</span>
+              ${btn2025}
+              ${tagDuplicidade}
+            </div>
             ${htmlResposta}
           </td>
           <td class="py-3 px-4">${htmlAutor}</td>
           <td class="py-3 px-4">${htmlStatus}</td>
           <td class="py-3 px-4 text-center">
-            <button type="button" onclick="abrirModalAvaliarQuestaoM2('${q.codigo}', '${emailPreferencial}')"
-                    class="px-3 py-1.5 bg-slate-100 hover:bg-brand-50 text-slate-700 hover:text-brand-800 border border-slate-200 hover:border-brand-200 rounded-lg font-bold text-[11px] inline-flex items-center gap-1.5 transition-colors">
-              <i class="fa-solid fa-sliders text-brand-700"></i> Avaliar / Opções
-            </button>
+            <div class="flex items-center justify-center gap-1.5 flex-wrap">
+              ${htmlAcoes}
+              <button onclick="abrirModalReporte('${q.codigo}')" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-lg font-semibold text-[11px] flex items-center gap-1">
+                <i class="fa-solid fa-flag text-amber-600"></i> Reportar
+              </button>
+            </div>
           </td>
         `;
         corpo.appendChild(tr);
@@ -2925,9 +2844,33 @@
     }
 
     // ==================== PAINEL DE FORMULÁRIO COM ESPELHAMENTO E AJUSTES DO PONTO FOCAL ====================
+    let termoBuscaEspelho = "";
+
+    function filtrarQuestoesEspelhadas(termo) {
+      termoBuscaEspelho = (termo || "").trim().toLowerCase();
+      const btnLimpar = document.getElementById("btn-limpar-busca-espelho");
+      if (btnLimpar) {
+        if (termoBuscaEspelho) btnLimpar.classList.remove("hidden");
+        else btnLimpar.classList.add("hidden");
+      }
+      renderizarQuestoesEspelhadas();
+    }
+
+    function limparBuscaEspelho() {
+      const inp = document.getElementById("espelho-input-busca");
+      if (inp) inp.value = "";
+      filtrarQuestoesEspelhadas("");
+    }
+
     function abrirModalPainelEspelhamento() {
       if (!usuarioAtual || !quadroAtualSubsecretaria) return;
       document.getElementById("espelho-sub-badge").textContent = `Subsecretaria: ${usuarioAtual.subsecretaria}`;
+      termoBuscaEspelho = "";
+      const inp = document.getElementById("espelho-input-busca");
+      if (inp) inp.value = "";
+      const btnLimpar = document.getElementById("btn-limpar-busca-espelho");
+      if (btnLimpar) btnLimpar.classList.add("hidden");
+
       renderizarQuestoesEspelhadas();
       document.getElementById("modal-painel-espelhamento").classList.remove("hidden");
     }
@@ -2943,7 +2886,7 @@
       const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
       
       // Filtra questões que já estão aprovadas no formulário (questoes_respondidas)
-      const questoesRespondidasApenas = questoesCarregadas.filter(q => !!qMap[q.codigo]);
+      let questoesRespondidasApenas = questoesCarregadas.filter(q => !!qMap[q.codigo]);
       
       const totalRespondidas = questoesRespondidasApenas.length;
       const totalQ = questoesCarregadas.length;
@@ -2964,6 +2907,32 @@
         return;
       }
 
+      // Aplica busca por código, tema ou enunciado
+      if (termoBuscaEspelho) {
+        questoesRespondidasApenas = questoesRespondidasApenas.filter(q => {
+          const cod = (q.codigo || "").toLowerCase();
+          const tema = (q.tema || "").toLowerCase();
+          const enunc = (q.enunciado || "").toLowerCase();
+          return cod.includes(termoBuscaEspelho) || tema.includes(termoBuscaEspelho) || enunc.includes(termoBuscaEspelho);
+        });
+      }
+
+      const contadorBusca = document.getElementById("espelho-contador-busca");
+      if (contadorBusca) {
+        contadorBusca.textContent = termoBuscaEspelho ? `${questoesRespondidasApenas.length} encontrada(s)` : "";
+      }
+
+      if (questoesRespondidasApenas.length === 0) {
+        container.innerHTML = `
+          <div class="p-12 text-center text-slate-400 space-y-2">
+            <i class="fa-solid fa-magnifying-glass text-2xl text-slate-300"></i>
+            <p class="font-semibold text-sm text-slate-600">Nenhuma questão encontrada para a pesquisa "${termoBuscaEspelho}".</p>
+          </div>
+        `;
+        return;
+      }
+
+      const respondentesMap = obterRespondentesPorQuestaoM2();
       let ultimoTema = "";
 
       questoesRespondidasApenas.forEach(q => {
@@ -2977,6 +2946,7 @@
 
         const resp = qMap[q.codigo];
         const autor = resp?.respondido_por || null;
+        const respostasDesta = respondentesMap[q.codigo] || [];
         const card = document.createElement("div");
         card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3.5";
 
@@ -2987,6 +2957,20 @@
               <i class="fa-solid fa-user-tag text-blue-600"></i>
               Respondido por: ${autor.nome || "Servidor"} • Setor: ${autor.setor || "Setor"}
             </span>
+          `;
+        }
+
+        // Alerta de duplicidade de respostas na mesma questão
+        let htmlAlertaMultiResp = "";
+        if (respostasDesta.length > 1) {
+          htmlAlertaMultiResp = `
+            <div class="p-2.5 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-950 flex items-start gap-2 shadow-2xs">
+              <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5"></i>
+              <div>
+                <strong class="text-amber-900">Atenção: Esta questão teve ${respostasDesta.length} respostas enviadas por servidores diferentes.</strong>
+                <p class="text-[11px] text-amber-800 mt-0.5">Atualmente aprovada no formulário: <strong>${autor?.nome || 'Servidor'} (${autor?.setor || 'Setor'})</strong></p>
+              </div>
+            </div>
           `;
         }
 
@@ -3088,6 +3072,8 @@
           </div>
 
           <p class="font-bold text-slate-800 text-xs md:text-sm leading-snug">${q.enunciado}</p>
+
+          ${htmlAlertaMultiResp}
 
           ${htmlInputs}
 
