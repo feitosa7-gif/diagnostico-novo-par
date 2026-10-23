@@ -748,7 +748,7 @@
       </div>
 
       <!-- Resumo de Progresso do Quadro da Subsecretaria (Com Drill-Down) -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
         <div onclick="drillDownMaster2('TODAS')" id="card-m2-todas"
              class="cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-brand-700 hover:shadow-md transition-all group">
           <div class="flex items-center justify-between">
@@ -764,9 +764,9 @@
         <div onclick="drillDownMaster2('RESPONDIDAS')" id="card-m2-respondidas"
              class="cursor-pointer bg-white p-4 rounded-2xl border-2 border-emerald-600 shadow-sm hover:shadow-md transition-all group">
           <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold text-emerald-700 uppercase">Aprovadas (Formulário)</span>
+            <span class="text-[11px] font-bold text-emerald-700 uppercase">Aprovadas</span>
             <span class="w-6 h-6 flex items-center justify-center bg-emerald-50 text-emerald-700 rounded-full group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-              <i class="fa-solid fa-magnifying-glass-chart text-[10px]"></i>
+              <i class="fa-solid fa-check text-[10px]"></i>
             </span>
           </div>
           <p id="m2-stat-respondidas" class="text-xl font-extrabold text-emerald-600 mt-1">0</p>
@@ -776,13 +776,25 @@
         <div onclick="drillDownMaster2('RETORNO')" id="card-m2-retorno"
              class="cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-purple-600 hover:shadow-md transition-all group">
           <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold text-purple-700 uppercase">Aguardando Aprovação</span>
+            <span class="text-[11px] font-bold text-purple-700 uppercase">P/ Aprovação</span>
             <span class="w-6 h-6 flex items-center justify-center bg-purple-50 text-purple-700 rounded-full group-hover:bg-purple-600 group-hover:text-white transition-colors">
-              <i class="fa-solid fa-magnifying-glass-chart text-[10px]"></i>
+              <i class="fa-solid fa-hourglass-half text-[10px]"></i>
             </span>
           </div>
           <p id="m2-stat-retorno" class="text-xl font-extrabold text-purple-700 mt-1">0</p>
-          <span class="text-[10px] text-purple-600 font-medium block mt-0.5">Enviadas / Retorno ajuste</span>
+          <span class="text-[10px] text-purple-600 font-medium block mt-0.5">Aguardando decisão</span>
+        </div>
+
+        <div onclick="drillDownMaster2('DUPLICATAS')" id="card-m2-duplicatas"
+             class="cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-amber-500 hover:shadow-md transition-all group">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-amber-700 uppercase">Duplicatas</span>
+            <span class="w-6 h-6 flex items-center justify-center bg-amber-50 text-amber-700 rounded-full group-hover:bg-amber-600 group-hover:text-white transition-colors">
+              <i class="fa-solid fa-clone text-[10px]"></i>
+            </span>
+          </div>
+          <p id="m2-stat-duplicatas" class="text-xl font-extrabold text-amber-600 mt-1">0</p>
+          <span class="text-[10px] text-amber-700 font-medium block mt-0.5">2+ respostas enviadas</span>
         </div>
 
         <div onclick="drillDownMaster2('DEVOLVIDAS')" id="card-m2-devolvidas"
@@ -790,7 +802,7 @@
           <div class="flex items-center justify-between">
             <span class="text-[11px] font-bold text-red-600 uppercase">Devolvidas</span>
             <span class="w-6 h-6 flex items-center justify-center bg-red-50 text-red-600 rounded-full group-hover:bg-red-600 group-hover:text-white transition-colors">
-              <i class="fa-solid fa-magnifying-glass-chart text-[10px]"></i>
+              <i class="fa-solid fa-rotate-left text-[10px]"></i>
             </span>
           </div>
           <p id="m2-stat-devolvidas" class="text-xl font-extrabold text-red-600 mt-1">0</p>
@@ -800,13 +812,13 @@
         <div onclick="drillDownMaster2('PENDENTES')" id="card-m2-pendentes"
              class="cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-amber-500 hover:shadow-md transition-all group">
           <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold text-amber-600 uppercase">Pendentes</span>
-            <span class="w-6 h-6 flex items-center justify-center bg-amber-50 text-amber-600 rounded-full group-hover:bg-amber-600 group-hover:text-white transition-colors">
-              <i class="fa-solid fa-magnifying-glass-chart text-[10px]"></i>
+            <span class="text-[11px] font-bold text-slate-500 uppercase">Pendentes</span>
+            <span class="w-6 h-6 flex items-center justify-center bg-slate-100 text-slate-500 rounded-full group-hover:bg-slate-700 group-hover:text-white transition-colors">
+              <i class="fa-solid fa-clock text-[10px]"></i>
             </span>
           </div>
-          <p id="m2-stat-pendentes" class="text-xl font-extrabold text-amber-600 mt-1">0</p>
-          <span class="text-[10px] text-slate-400 block mt-0.5">Sem resposta no formulário</span>
+          <p id="m2-stat-pendentes" class="text-xl font-extrabold text-slate-700 mt-1">0</p>
+          <span class="text-[10px] text-slate-400 block mt-0.5">Sem resposta ainda</span>
         </div>
       </div>
 
@@ -848,6 +860,7 @@
             <select id="m2-filtro-status-questao" onchange="drillDownMaster2(this.value)" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-semibold text-slate-700">
               <option value="RESPONDIDAS" selected>Aprovadas no Formulário</option>
               <option value="RETORNO">Aguardando Aprovação / Retorno Ajuste</option>
+              <option value="DUPLICATAS">⚠️ Duplicatas (2+ Respostas)</option>
               <option value="TODAS">Todas as Questões do Caderno</option>
               <option value="DEVOLVIDAS">Devolvidas p/ Nova Análise</option>
               <option value="PENDENTES">Ainda Pendentes no Formulário</option>
@@ -2066,11 +2079,24 @@
           });
         });
 
+        // Contagem de duplicatas ativas (questões com 2+ respostas válidas)
+        const respondentesMap = obterRespondentesPorQuestaoM2();
+        let duplicatasCount = 0;
+        Object.keys(respondentesMap).forEach(cod => {
+          if (codigosCaderno.has(cod)) {
+            const enviosValidos = (respondentesMap[cod] || []).filter(e => e.status !== "nao_utilizada");
+            if (enviosValidos.length > 1) {
+              duplicatasCount++;
+            }
+          }
+        });
+
         const pendentesCount = Math.max(0, totalQ - aprovadasCount);
 
         document.getElementById("m2-stat-total-q").textContent = totalQ;
         document.getElementById("m2-stat-respondidas").textContent = aprovadasCount;
         document.getElementById("m2-stat-retorno").textContent = aguardandoAprovacaoCount;
+        document.getElementById("m2-stat-duplicatas").textContent = duplicatasCount;
         document.getElementById("m2-stat-devolvidas").textContent = devolvidasCount;
         document.getElementById("m2-stat-pendentes").textContent = pendentesCount;
 
@@ -2230,6 +2256,9 @@
       const uInfo = uObj.usuario || {};
       let listaQ = Object.values(uObj.questoes || {}).sort((a, b) => (a.codigo_questao || "").localeCompare(b.codigo_questao || ""));
 
+      // Respostas não utilizadas (descartadas) não são exibidas na lista ativa
+      listaQ = listaQ.filter(q => q.status_validacao !== "nao_utilizada");
+
       if (termoBuscaModalUsuario) {
         listaQ = listaQ.filter(q => {
           const cod = (q.codigo_questao || "").toLowerCase();
@@ -2249,7 +2278,7 @@
       listaEl.innerHTML = "";
 
       if (listaQ.length === 0) {
-        listaEl.innerHTML = `<div class="p-8 text-center text-slate-400">Nenhuma questão encontrada para a pesquisa informada.</div>`;
+        listaEl.innerHTML = `<div class="p-8 text-center text-slate-400">Nenhuma questão pendente ou aprovada para este servidor.</div>`;
         return;
       }
 
@@ -2259,27 +2288,20 @@
         const st = qUser.status_validacao || "enviado";
         const opcFmt = Array.isArray(qUser.opcao_marcada) ? qUser.opcao_marcada.join("; ") : (qUser.opcao_marcada || "-");
 
-        // Alerta quando 2 ou mais pessoas responderam esta mesma pergunta
-        const outros = (respondentesPorQuestao[cod] || []).filter(x => x.email !== emailClean);
+        // Alerta de duplicidade limpo e direcionando para o painel Duplicatas
+        const outrosAtivos = (respondentesPorQuestao[cod] || []).filter(x => x.email !== emailClean && x.status !== "nao_utilizada");
         let htmlAlertaDuplicidade = "";
-        if (outros.length > 0) {
-          const totalRespostas = outros.length + 1;
+        if (outrosAtivos.length > 0) {
           htmlAlertaDuplicidade = `
-            <div class="p-3 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-950 space-y-1.5 shadow-2xs">
-              <div class="font-bold flex items-center gap-1.5 text-amber-900">
-                <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
-                <span>Atenção: Esta mesma pergunta tem ${totalRespostas} respostas enviadas por servidores diferentes:</span>
-              </div>
-              <div class="text-[11px] space-y-1 pl-4">
-                <div class="font-bold text-slate-800">
-                  • <strong>${uInfo.nome} (${uInfo.setor})</strong> [Esta resposta]: <em>"${opcFmt}"</em>
-                </div>
-                ${outros.map(o => {
-                  const oResp = Array.isArray(o.opcao_marcada) ? o.opcao_marcada.join("; ") : (o.opcao_marcada || "-");
-                  const oTag = o.status === 'validado' ? '<strong class="text-emerald-700 ml-1">[JÁ APROVADA NO FORMULÁRIO]</strong>' : (o.status === 'nao_utilizada' ? '<span class="text-slate-500 ml-1">[Não Utilizada]</span>' : '');
-                  return `<div>• <strong>${o.nome} (${o.setor})</strong>${oTag}: <em>"${oResp}"</em></div>`;
-                }).join('')}
-              </div>
+            <div class="px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-center justify-between gap-2 shadow-2xs">
+              <span class="font-bold flex items-center gap-1.5 text-amber-800">
+                <i class="fa-solid fa-clone text-amber-600"></i>
+                Esta pergunta também foi respondida por +${outrosAtivos.length} servidor(es).
+              </span>
+              <button type="button" onclick="fecharModalQuestoesUsuarioM2(); drillDownMaster2('DUPLICATAS');"
+                      class="px-2.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg font-bold text-[11px] transition-colors shrink-0">
+                Resolver no painel Duplicatas →
+              </button>
             </div>
           `;
         }
@@ -2423,8 +2445,9 @@
         { id: "card-m2-todas", key: "TODAS", border: "border-brand-700" },
         { id: "card-m2-respondidas", key: "RESPONDIDAS", border: "border-emerald-600" },
         { id: "card-m2-retorno", key: "RETORNO", border: "border-purple-600" },
+        { id: "card-m2-duplicatas", key: "DUPLICATAS", border: "border-amber-500" },
         { id: "card-m2-devolvidas", key: "DEVOLVIDAS", border: "border-red-600" },
-        { id: "card-m2-pendentes", key: "PENDENTES", border: "border-amber-500" }
+        { id: "card-m2-pendentes", key: "PENDENTES", border: "border-slate-500" }
       ];
 
       cards.forEach(c => {
@@ -2465,12 +2488,14 @@
       const filtradas = questoesCarregadas.filter(q => {
         const aprovada = qMap[q.codigo];
         const envios = enviosPorCodigo[q.codigo] || [];
-        const temAguardando = envios.some(e => e.status_validacao === "enviado" || e.status_validacao === "retorno_para_ajuste");
-        const temDevolvida = envios.some(e => e.status_validacao === "devolvido") || (aprovada && aprovada.status_validacao === "devolvido");
+        const enviosAtivos = envios.filter(e => e.status_validacao !== "nao_utilizada");
+        const temAguardando = enviosAtivos.some(e => e.status_validacao === "enviado" || e.status_validacao === "retorno_para_ajuste");
+        const temDevolvida = enviosAtivos.some(e => e.status_validacao === "devolvido") || (aprovada && aprovada.status_validacao === "devolvido");
 
         let passaFiltro = true;
         if (filtro === "RESPONDIDAS") passaFiltro = aprovada && aprovada.status_validacao !== "devolvido";
         else if (filtro === "RETORNO") passaFiltro = temAguardando;
+        else if (filtro === "DUPLICATAS") passaFiltro = enviosAtivos.length > 1;
         else if (filtro === "DEVOLVIDAS") passaFiltro = temDevolvida;
         else if (filtro === "PENDENTES") passaFiltro = !aprovada;
 
@@ -2486,11 +2511,14 @@
       });
 
       if (filtradas.length === 0) {
-        const msgVazio = buscaTermo
-          ? `Nenhuma questão encontrada para a pesquisa "${buscaTermo}".`
-          : (filtro === "RESPONDIDAS"
-            ? `Nenhuma questão aprovada no formulário ainda.`
-            : `Nenhuma questão encontrada para este filtro.`);
+        let msgVazio = `Nenhuma questão encontrada para este filtro.`;
+        if (buscaTermo) {
+          msgVazio = `Nenhuma questão encontrada para a pesquisa "${buscaTermo}".`;
+        } else if (filtro === "DUPLICATAS") {
+          msgVazio = `<div class="p-8 text-center"><span class="text-emerald-700 font-bold text-sm"><i class="fa-solid fa-circle-check text-base mr-1"></i> Excelente! Não há respostas duplicadas ou conflitantes pendentes de decisão.</span></div>`;
+        } else if (filtro === "RESPONDIDAS") {
+          msgVazio = `Nenhuma questão aprovada no formulário ainda.`;
+        }
         corpo.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">${msgVazio}</td></tr>`;
         return;
       }
@@ -2498,6 +2526,87 @@
       filtradas.forEach(q => {
         const resp = qMap[q.codigo];
         const envios = enviosPorCodigo[q.codigo] || [];
+        const enviosAtivos = envios.filter(e => e.status_validacao !== "nao_utilizada");
+
+        const btn2025 = q.tem_2025 ? `
+          <button type="button" onclick="abrirModal2025('${q.codigo}')" class="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-md font-bold text-[10px] inline-flex items-center gap-1 ml-1">
+            <i class="fa-regular fa-eye"></i> 2025
+          </button>
+        ` : "";
+
+        // ==================== VISÃO EXCLUSIVA DO DRILL-DOWN "DUPLICATAS" (PAINEL ORGANIZADO) ====================
+        if (filtro === "DUPLICATAS") {
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-amber-50/20 transition-colors border-b border-amber-200/80";
+          tr.innerHTML = `
+            <td colspan="5" class="p-4 space-y-3">
+              <div class="flex items-center justify-between gap-3 flex-wrap">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-mono font-black text-xs text-brand-900 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-300 shadow-2xs">${q.codigo}</span>
+                  <span class="text-xs font-bold text-slate-800 leading-snug">${q.enunciado}</span>
+                  ${btn2025}
+                  <span class="text-[11px] text-slate-400">(${q.tema})</span>
+                </div>
+                <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1.5 shadow-2xs">
+                  <i class="fa-solid fa-clone text-amber-600"></i> ${enviosAtivos.length} respostas para decidir
+                </span>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                ${enviosAtivos.map(e => {
+                  const emailE = (e.usuario_info?.email || "").toLowerCase();
+                  const isAprovada = resp && resp.status_validacao !== "devolvido" && (resp.respondido_por?.email || "").toLowerCase() === emailE;
+                  const opc = Array.isArray(e.opcao_marcada) ? e.opcao_marcada.join("; ") : (e.opcao_marcada || "-");
+
+                  return `
+                    <div class="p-3.5 rounded-2xl border ${isAprovada ? 'border-emerald-400 bg-emerald-50/20 shadow-xs' : 'border-slate-200 bg-white shadow-2xs'} flex flex-col justify-between space-y-3">
+                      <div class="space-y-1.5">
+                        <div class="flex items-center justify-between gap-2">
+                          <span class="font-extrabold text-xs text-slate-900">${e.usuario_info?.nome || 'Servidor'}</span>
+                          ${isAprovada 
+                            ? `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px]"><i class="fa-solid fa-check mr-1"></i>Aprovada</span>`
+                            : `<span class="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 font-bold text-[10px]">Aguardando</span>`}
+                        </div>
+                        <div class="text-[11px] text-slate-500 font-medium">Setor: <strong class="text-slate-700">${e.usuario_info?.setor || 'Não informado'}</strong></div>
+
+                        <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                          <span class="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Resposta enviada:</span>
+                          <p class="font-bold text-slate-900">${opc}</p>
+                          ${e.evidencia_normativa ? `<p class="text-[11px] text-brand-800 mt-1"><i class="fa-solid fa-file-shield mr-1"></i>${e.evidencia_normativa}</p>` : ''}
+                        </div>
+                      </div>
+
+                      <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-1.5 flex-wrap">
+                        ${!isAprovada ? `
+                          <button type="button" onclick="aprovarQuestaoPontoFocal('${q.codigo}', '${emailE}')"
+                                  class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] shadow-2xs flex items-center gap-1 transition-all">
+                            <i class="fa-solid fa-check"></i> Aprovar Esta
+                          </button>
+                          <button type="button" onclick="naoUtilizarRespostaUsuario('${q.codigo}', '${emailE}')"
+                                  class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all"
+                                  title="Descarta esta resposta e faz com que ela suma deste painel">
+                            <i class="fa-solid fa-ban text-slate-500"></i> Não Utilizar
+                          </button>
+                        ` : `
+                          <span class="text-[11px] font-bold text-emerald-700 mr-auto"><i class="fa-solid fa-check-double mr-1"></i>Atualmente Aprovada</span>
+                        `}
+                        <button type="button" onclick="abrirModalDevolver('${q.codigo}', '${emailE}')"
+                                class="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all">
+                          <i class="fa-solid fa-rotate-left"></i> Devolver
+                        </button>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </td>
+          </tr>
+          `;
+          corpo.appendChild(tr);
+          return;
+        }
+
+        // ==================== VISÃO PADRÃO DOS DEMAIS FILTROS ====================
         const tr = document.createElement("tr");
         tr.className = "hover:bg-slate-50/80 transition-colors align-middle";
 
@@ -2506,9 +2615,9 @@
         let htmlStatus = `<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-semibold">Pendente</span>`;
         let htmlAcoes = "";
 
-        const temDuplicidade = envios.length > 1;
+        const temDuplicidade = enviosAtivos.length > 1;
         const tagDuplicidade = temDuplicidade
-          ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold"><i class="fa-solid fa-triangle-exclamation"></i> ${envios.length} respostas enviadas</span>`
+          ? `<button type="button" onclick="drillDownMaster2('DUPLICATAS')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-[10px] font-bold transition-colors cursor-pointer" title="Clique para abrir o painel de resolução de duplicatas"><i class="fa-solid fa-clone text-amber-600"></i> ${enviosAtivos.length} duplicatas</button>`
           : "";
 
         if (resp && resp.status_validacao !== "devolvido") {
