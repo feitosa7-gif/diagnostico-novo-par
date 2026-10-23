@@ -217,7 +217,7 @@ def buscar_usuario_por_email(email: str) -> dict:
         print(f"Erro buscar_usuario_por_email: {e}")
     return {}
 
-def obter_quadro_subsecretaria(subsecretaria: str) -> dict:
+def obter_quadro_subsecretaria(subsecretaria: str, pular_hidratacao: bool = False) -> dict:
     """
     Retorna o documento consolidado vivo da Subsecretaria:
     - questoes_respondidas: questões aprovadas/no formulário espelhado do Ponto Focal
@@ -240,9 +240,9 @@ def obter_quadro_subsecretaria(subsecretaria: str) -> dict:
         if "respostas_usuarios" not in d or not isinstance(d["respostas_usuarios"], dict):
             d["respostas_usuarios"] = {}
 
-        # Se não estiver consolidado oficialmente, hidrata automaticamente submissões individuais
-        # que estavam apenas no histórico (submissoes_par) para dentro de respostas_usuarios
-        if d.get("status_consolidacao") != "consolidado_oficial":
+        # Se não estiver consolidado oficialmente e ainda não tiver respostas_usuarios carregadas,
+        # hidrata automaticamente submissões individuais que estavam apenas no histórico (submissoes_par)
+        if not pular_hidratacao and d.get("status_consolidacao") != "consolidado_oficial" and not d.get("respostas_usuarios"):
             ultima_limpeza = d.get("ultima_limpeza_homologacao", "")
             precisa_salvar = False
             try:
@@ -689,7 +689,7 @@ def aprovar_questao_ponto_focal(subsecretaria: str, codigo_questao: str, solicit
     """
     sub_upper = subsecretaria.strip().upper()
     email_u = (email_usuario or "").strip().lower()
-    quadro = obter_quadro_subsecretaria(sub_upper)
+    quadro = obter_quadro_subsecretaria(sub_upper, pular_hidratacao=True)
     q_map = quadro.get("questoes_respondidas", {})
     resp_usuarios = quadro.get("respostas_usuarios", {})
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -715,7 +715,8 @@ def aprovar_questao_ponto_focal(subsecretaria: str, codigo_questao: str, solicit
             db.collection("quadro_subsecretarias").document(sub_upper).set(quadro)
         return {
             "sucesso": True,
-            "mensagem": f"{count} questão(ões) de {resp_usuarios[email_u].get('usuario', {}).get('nome', email_u)} aprovada(s) e enviada(s) para o Formulário!"
+            "mensagem": f"{count} questão(ões) de {resp_usuarios[email_u].get('usuario', {}).get('nome', email_u)} aprovada(s) e enviada(s) para o Formulário!",
+            "quadro": quadro
         }
 
     item_alvo = None
@@ -755,7 +756,8 @@ def aprovar_questao_ponto_focal(subsecretaria: str, codigo_questao: str, solicit
 
     return {
         "sucesso": True,
-        "mensagem": f"Questão {codigo_questao} aprovada e enviada para o Formulário de Consolidação!"
+        "mensagem": f"Questão {codigo_questao} aprovada e enviada para o Formulário de Consolidação!",
+        "quadro": quadro
     }
 
 def devolver_questao_para_usuario(subsecretaria: str, codigo_questao: str, observacao: str, solicitante_email: str, email_usuario: str = "") -> dict:
@@ -764,7 +766,7 @@ def devolver_questao_para_usuario(subsecretaria: str, codigo_questao: str, obser
     """
     sub_upper = subsecretaria.strip().upper()
     email_u = (email_usuario or "").strip().lower()
-    quadro = obter_quadro_subsecretaria(sub_upper)
+    quadro = obter_quadro_subsecretaria(sub_upper, pular_hidratacao=True)
     q_map = quadro.get("questoes_respondidas", {})
     resp_usuarios = quadro.get("respostas_usuarios", {})
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -828,7 +830,8 @@ def devolver_questao_para_usuario(subsecretaria: str, codigo_questao: str, obser
 
     return {
         "sucesso": True,
-        "mensagem": f"Questão {codigo_questao} devolvida com sucesso para {item_alvo.get('respondido_por', {}).get('nome', autor_email)}."
+        "mensagem": f"Questão {codigo_questao} devolvida com sucesso para {item_alvo.get('respondido_por', {}).get('nome', autor_email)}.",
+        "quadro": quadro
     }
 
 def nao_utilizar_resposta_usuario(subsecretaria: str, codigo_questao: str, solicitante_email: str, email_usuario: str) -> dict:
@@ -837,7 +840,7 @@ def nao_utilizar_resposta_usuario(subsecretaria: str, codigo_questao: str, solic
     """
     sub_upper = subsecretaria.strip().upper()
     email_u = (email_usuario or "").strip().lower()
-    quadro = obter_quadro_subsecretaria(sub_upper)
+    quadro = obter_quadro_subsecretaria(sub_upper, pular_hidratacao=True)
     q_map = quadro.get("questoes_respondidas", {})
     resp_usuarios = quadro.get("respostas_usuarios", {})
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -873,7 +876,8 @@ def nao_utilizar_resposta_usuario(subsecretaria: str, codigo_questao: str, solic
 
     return {
         "sucesso": True,
-        "mensagem": f"Resposta da questão {codigo_questao} ({item.get('respondido_por', {}).get('nome', email_u)}) marcada como 'Não Utilizar'."
+        "mensagem": f"Resposta da questão {codigo_questao} ({item.get('respondido_por', {}).get('nome', email_u)}) marcada como 'Não Utilizar'.",
+        "quadro": quadro
     }
 
 def aprovar_mesclar_questoes_ponto_focal(subsecretaria: str, codigo_questao: str, solicitante_email: str) -> dict:
@@ -883,7 +887,7 @@ def aprovar_mesclar_questoes_ponto_focal(subsecretaria: str, codigo_questao: str
     consolidada conjunta para o formulário oficial (questoes_respondidas).
     """
     sub_upper = subsecretaria.strip().upper()
-    quadro = obter_quadro_subsecretaria(sub_upper)
+    quadro = obter_quadro_subsecretaria(sub_upper, pular_hidratacao=True)
     q_map = quadro.get("questoes_respondidas", {})
     resp_usuarios = quadro.get("respostas_usuarios", {})
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -983,7 +987,8 @@ def aprovar_mesclar_questoes_ponto_focal(subsecretaria: str, codigo_questao: str
     return {
         "sucesso": True,
         "mensagem": f"Respostas de {len(envios_ativos)} servidores consolidadas com sucesso na questão {codigo_questao} e enviadas para o formulário!",
-        "item_consolidado": item_consolidado
+        "item_consolidado": item_consolidado,
+        "quadro": quadro
     }
 
 def solicitar_reabertura_consolidacao(subsecretaria: str, motivo: str, solicitante_email: str) -> dict:

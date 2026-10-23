@@ -2064,6 +2064,142 @@
       drillDownMaster2("TODAS");
     }
 
+    function mostrarToastNotificacao(tipo, titulo, mensagem) {
+      let toastEl = document.getElementById("toast-global-flutuante");
+      if (!toastEl) {
+        toastEl = document.createElement("div");
+        toastEl.id = "toast-global-flutuante";
+        toastEl.className = "fixed top-5 right-5 z-[9999] transition-all duration-300 transform -translate-y-6 opacity-0 pointer-events-none";
+        document.body.appendChild(toastEl);
+      }
+
+      const isSuccess = tipo === "sucesso";
+      const isWarn = tipo === "aviso";
+      const bgClass = isSuccess 
+        ? "bg-gradient-to-r from-emerald-600 to-teal-700 border-emerald-400 text-white shadow-emerald-900/30" 
+        : (isWarn ? "bg-gradient-to-r from-amber-600 to-orange-700 border-amber-400 text-white shadow-amber-900/30" : "bg-gradient-to-r from-red-600 to-rose-700 border-red-400 text-white shadow-red-900/30");
+      const icon = isSuccess 
+        ? "fa-circle-check" 
+        : (isWarn ? "fa-triangle-exclamation" : "fa-circle-xmark");
+
+      toastEl.innerHTML = `
+        <div class="flex items-center gap-3.5 px-5 py-3.5 rounded-2xl border shadow-xl ${bgClass} pointer-events-auto max-w-md backdrop-blur-md">
+          <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+            <i class="fa-solid ${icon} text-lg text-white"></i>
+          </div>
+          <div class="space-y-0.5">
+            <p class="text-xs font-black uppercase tracking-wider">${titulo}</p>
+            <p class="text-xs font-semibold leading-tight text-white/95">${mensagem}</p>
+          </div>
+          <button type="button" onclick="fecharToastNotificacao()" class="ml-2 text-white/70 hover:text-white text-sm cursor-pointer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      `;
+
+      toastEl.classList.remove("-translate-y-6", "opacity-0", "pointer-events-none");
+      toastEl.classList.add("translate-y-0", "opacity-100");
+
+      if (window.toastTimeoutM2) clearTimeout(window.toastTimeoutM2);
+      window.toastTimeoutM2 = setTimeout(() => {
+        fecharToastNotificacao();
+      }, 4000);
+    }
+
+    function fecharToastNotificacao() {
+      const toastEl = document.getElementById("toast-global-flutuante");
+      if (toastEl) {
+        toastEl.classList.add("-translate-y-6", "opacity-0", "pointer-events-none");
+        toastEl.classList.remove("translate-y-0", "opacity-100");
+      }
+    }
+
+    function atualizarVisualizacaoMaster2() {
+      if (!quadroAtualSubsecretaria) return;
+
+      // Exibe banner caso a subsecretaria esteja consolidada oficialmente
+      const bannerCons = document.getElementById("banner-m2-consolidado");
+      if (bannerCons) {
+        if (quadroAtualSubsecretaria.status_consolidacao === "consolidado_oficial") {
+          bannerCons.classList.remove("hidden");
+          if (quadroAtualSubsecretaria.solicitou_reabertura) {
+            document.getElementById("banner-m2-consolidado-msg").innerHTML = `<strong class="text-emerald-800"><i class="fa-solid fa-bell mr-1"></i> Você já solicitou a devolução ao Administrador Geral.</strong> Assim que autorizada, o formulário será reaberto.`;
+          }
+        } else {
+          bannerCons.classList.add("hidden");
+        }
+      }
+
+      // Calcula métricas combinando questoes_respondidas (aprovadas no formulário) e respostas_usuarios
+      const qMap = quadroAtualSubsecretaria.questoes_respondidas || {};
+      const respUsuarios = quadroAtualSubsecretaria.respostas_usuarios || {};
+      const totalQ = questoesCarregadas.length;
+      const codigosCaderno = new Set(questoesCarregadas.map(q => q.codigo));
+
+      // Pre-calcula mapa de envios por código para renderização ultra-rápida sem recálculos
+      const enviosPorCodigo = {};
+      Object.values(respUsuarios).forEach(uObj => {
+        const uInfo = uObj.usuario || {};
+        Object.values(uObj.questoes || {}).forEach(qItem => {
+          const cod = qItem.codigo_questao;
+          if (!enviosPorCodigo[cod]) enviosPorCodigo[cod] = [];
+          enviosPorCodigo[cod].push({
+            ...qItem,
+            usuario_info: uInfo
+          });
+        });
+      });
+      window.enviosPorCodigoM2 = enviosPorCodigo;
+
+      const aprovadasCount = Object.values(qMap).filter(r => codigosCaderno.has(r.codigo_questao) && r.status_validacao !== "devolvido").length;
+
+      let aguardandoAprovacaoCount = 0;
+      let devolvidasCount = 0;
+      Object.values(respUsuarios).forEach(uObj => {
+        Object.values(uObj.questoes || {}).forEach(qItem => {
+          if (!codigosCaderno.has(qItem.codigo_questao)) return;
+          if (qItem.status_validacao === "devolvido") {
+            devolvidasCount++;
+          } else if (qItem.status_validacao === "enviado" || qItem.status_validacao === "retorno_para_ajuste") {
+            aguardandoAprovacaoCount++;
+          }
+        });
+      });
+
+      // Contagem de duplicatas ativas (questões com 2+ respostas válidas)
+      const respondentesMap = obterRespondentesPorQuestaoM2();
+      let duplicatasCount = 0;
+      Object.keys(respondentesMap).forEach(cod => {
+        if (codigosCaderno.has(cod)) {
+          const enviosValidos = (respondentesMap[cod] || []).filter(e => e.status !== "nao_utilizada");
+          if (enviosValidos.length > 1) {
+            duplicatasCount++;
+          }
+        }
+      });
+
+      const pendentesCount = Math.max(0, totalQ - aprovadasCount);
+
+      const elTot = document.getElementById("m2-stat-total-q"); if (elTot) elTot.textContent = totalQ;
+      const elApr = document.getElementById("m2-stat-respondidas"); if (elApr) elApr.textContent = aprovadasCount;
+      const elRet = document.getElementById("m2-stat-retorno"); if (elRet) elRet.textContent = aguardandoAprovacaoCount;
+      const elDup = document.getElementById("m2-stat-duplicatas"); if (elDup) elDup.textContent = duplicatasCount;
+      const elDev = document.getElementById("m2-stat-devolvidas"); if (elDev) elDev.textContent = devolvidasCount;
+      const elPen = document.getElementById("m2-stat-pendentes"); if (elPen) elPen.textContent = pendentesCount;
+
+      renderizarMonitoramentoPorUsuarioM2();
+      
+      const filtroAtual = document.getElementById("m2-filtro-status-questao")?.value || "TODAS";
+      drillDownMaster2(filtroAtual);
+      renderizarHistoricoSubmissoesM2();
+
+      // Se o modal de questões do servidor (Olhinho) estiver aberto, atualiza seu conteúdo sem fechar
+      const modalUser = document.getElementById("modal-questoes-usuario-m2");
+      if (usuarioAtivoModalM2 && modalUser && !modalUser.classList.contains("hidden")) {
+        renderizarConteudoModalQuestoesUsuarioM2();
+      }
+    }
+
     async function carregarDadosMaster2() {
       try {
         const [resSub, resQuestoes] = await Promise.all([
@@ -2077,87 +2213,7 @@
         questoesCarregadas = (dataQ.questoes || []).sort((a, b) => compararCodigosQuestoes(a.codigo, b.codigo));
         quadroAtualSubsecretaria = dataQ.quadro || dataSub.quadro || { questoes_respondidas: {}, respostas_usuarios: {} };
 
-        // Exibe banner caso a subsecretaria esteja consolidada oficialmente
-        const bannerCons = document.getElementById("banner-m2-consolidado");
-        if (bannerCons) {
-          if (quadroAtualSubsecretaria.status_consolidacao === "consolidado_oficial") {
-            bannerCons.classList.remove("hidden");
-            if (quadroAtualSubsecretaria.solicitou_reabertura) {
-              document.getElementById("banner-m2-consolidado-msg").innerHTML = `<strong class="text-emerald-800"><i class="fa-solid fa-bell mr-1"></i> Você já solicitou a devolução ao Administrador Geral.</strong> Assim que autorizada, o formulário será reaberto.`;
-            }
-          } else {
-            bannerCons.classList.add("hidden");
-          }
-        }
-
-        // Calcula métricas combinando questoes_respondidas (aprovadas no formulário) e respostas_usuarios
-        const qMap = quadroAtualSubsecretaria.questoes_respondidas || {};
-        const respUsuarios = quadroAtualSubsecretaria.respostas_usuarios || {};
-        const totalQ = questoesCarregadas.length;
-        const codigosCaderno = new Set(questoesCarregadas.map(q => q.codigo));
-
-        // Pre-calcula mapa de envios por código para renderização ultra-rápida sem recálculos
-        const enviosPorCodigo = {};
-        Object.values(respUsuarios).forEach(uObj => {
-          const uInfo = uObj.usuario || {};
-          Object.values(uObj.questoes || {}).forEach(qItem => {
-            const cod = qItem.codigo_questao;
-            if (!enviosPorCodigo[cod]) enviosPorCodigo[cod] = [];
-            enviosPorCodigo[cod].push({
-              ...qItem,
-              usuario_info: uInfo
-            });
-          });
-        });
-        window.enviosPorCodigoM2 = enviosPorCodigo;
-
-        const aprovadasCount = Object.values(qMap).filter(r => codigosCaderno.has(r.codigo_questao) && r.status_validacao !== "devolvido").length;
-
-        let aguardandoAprovacaoCount = 0;
-        let devolvidasCount = 0;
-        Object.values(respUsuarios).forEach(uObj => {
-          Object.values(uObj.questoes || {}).forEach(qItem => {
-            if (!codigosCaderno.has(qItem.codigo_questao)) return;
-            if (qItem.status_validacao === "devolvido") {
-              devolvidasCount++;
-            } else if (qItem.status_validacao === "enviado" || qItem.status_validacao === "retorno_para_ajuste") {
-              aguardandoAprovacaoCount++;
-            }
-          });
-        });
-
-        // Contagem de duplicatas ativas (questões com 2+ respostas válidas)
-        const respondentesMap = obterRespondentesPorQuestaoM2();
-        let duplicatasCount = 0;
-        Object.keys(respondentesMap).forEach(cod => {
-          if (codigosCaderno.has(cod)) {
-            const enviosValidos = (respondentesMap[cod] || []).filter(e => e.status !== "nao_utilizada");
-            if (enviosValidos.length > 1) {
-              duplicatasCount++;
-            }
-          }
-        });
-
-        const pendentesCount = Math.max(0, totalQ - aprovadasCount);
-
-        const elTot = document.getElementById("m2-stat-total-q"); if (elTot) elTot.textContent = totalQ;
-        const elApr = document.getElementById("m2-stat-respondidas"); if (elApr) elApr.textContent = aprovadasCount;
-        const elRet = document.getElementById("m2-stat-retorno"); if (elRet) elRet.textContent = aguardandoAprovacaoCount;
-        const elDup = document.getElementById("m2-stat-duplicatas"); if (elDup) elDup.textContent = duplicatasCount;
-        const elDev = document.getElementById("m2-stat-devolvidas"); if (elDev) elDev.textContent = devolvidasCount;
-        const elPen = document.getElementById("m2-stat-pendentes"); if (elPen) elPen.textContent = pendentesCount;
-
-        renderizarMonitoramentoPorUsuarioM2();
-        
-        const filtroAtual = document.getElementById("m2-filtro-status-questao")?.value || "TODAS";
-        drillDownMaster2(filtroAtual);
-        renderizarHistoricoSubmissoesM2();
-
-        // Se o modal de questões do servidor (Olhinho) estiver aberto, atualiza seu conteúdo sem fechar
-        const modalUser = document.getElementById("modal-questoes-usuario-m2");
-        if (usuarioAtivoModalM2 && modalUser && !modalUser.classList.contains("hidden")) {
-          renderizarConteudoModalQuestoesUsuarioM2();
-        }
+        atualizarVisualizacaoMaster2();
       } catch (e) {
         console.error("Erro ao carregar dados do Ponto Focal:", e);
       }
@@ -2452,7 +2508,13 @@
         });
         const data = await res.json();
         if (res.ok) {
-          await carregarDadosMaster2();
+          if (data.quadro) {
+            quadroAtualSubsecretaria = data.quadro;
+            atualizarVisualizacaoMaster2();
+          } else {
+            await carregarDadosMaster2();
+          }
+          mostrarToastNotificacao("sucesso", "Concluído!", `Todas as questões de ${nomeUsuario} foram aprovadas com sucesso e enviadas para o Formulário Oficial!`);
         } else {
           alert(data.detail || "Erro ao aprovar questões.");
         }
@@ -2477,7 +2539,13 @@
         });
         const data = await res.json();
         if (res.ok) {
-          await carregarDadosMaster2();
+          if (data.quadro) {
+            quadroAtualSubsecretaria = data.quadro;
+            atualizarVisualizacaoMaster2();
+          } else {
+            await carregarDadosMaster2();
+          }
+          mostrarToastNotificacao("aviso", "Concluído!", `A resposta da questão ${codigoQuestao} foi marcada como Não Utilizada e descartada.`);
         } else {
           alert(data.detail || "Erro ao marcar resposta como não utilizada.");
         }
@@ -2504,7 +2572,13 @@
         });
         const data = await res.json();
         if (res.ok) {
-          await carregarDadosMaster2();
+          if (data.quadro) {
+            quadroAtualSubsecretaria = data.quadro;
+            atualizarVisualizacaoMaster2();
+          } else {
+            await carregarDadosMaster2();
+          }
+          mostrarToastNotificacao("sucesso", "Concluído com Sucesso!", `Respostas da questão ${codigoQuestao} consolidadas em uma só e enviadas para o Formulário Oficial!`);
         } else {
           alert(data.detail || "Erro ao consolidar respostas.");
         }
@@ -2874,7 +2948,13 @@
         });
         const data = await res.json();
         if (res.ok) {
-          await carregarDadosMaster2();
+          if (data.quadro) {
+            quadroAtualSubsecretaria = data.quadro;
+            atualizarVisualizacaoMaster2();
+          } else {
+            await carregarDadosMaster2();
+          }
+          mostrarToastNotificacao("sucesso", "Concluído!", `Questão ${codigoQuestao} aprovada com sucesso e enviada para o Formulário Oficial!`);
         } else {
           alert(data.detail || "Erro ao aprovar questão.");
         }
@@ -2931,13 +3011,22 @@
         });
         const data = await res.json();
         if (res.ok) {
-          alert(data.mensagem || "Questão devolvida para nova análise do servidor!");
           fecharModalDevolver();
-          if (!document.getElementById("tela-master2-dashboard").classList.contains("hidden")) {
-            await carregarDadosMaster2();
+          if (data.quadro) {
+            quadroAtualSubsecretaria = data.quadro;
+            if (!document.getElementById("tela-master2-dashboard").classList.contains("hidden")) {
+              atualizarVisualizacaoMaster2();
+            } else {
+              await carregarQuestionario(true);
+            }
           } else {
-            await carregarQuestionario(true);
+            if (!document.getElementById("tela-master2-dashboard").classList.contains("hidden")) {
+              await carregarDadosMaster2();
+            } else {
+              await carregarQuestionario(true);
+            }
           }
+          mostrarToastNotificacao("aviso", "Devolvida com Sucesso!", `Questão ${questaoAlvoDevolucao || ''} devolvida para nova análise do servidor.`);
         } else {
           alert(data.detail || "Erro ao devolver questão.");
         }
@@ -3390,7 +3479,7 @@
         });
         const data = await res.json();
         if (res.ok) {
-          alert("Ajustes salvos com sucesso no Quadro da Subsecretaria!");
+          mostrarToastNotificacao("sucesso", "Salvo com Sucesso!", "Ajustes salvos no Quadro da Subsecretaria!");
           await carregarDadosMaster2();
           renderizarQuestoesEspelhadas();
         } else {
