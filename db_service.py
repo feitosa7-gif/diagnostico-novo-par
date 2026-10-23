@@ -876,6 +876,116 @@ def nao_utilizar_resposta_usuario(subsecretaria: str, codigo_questao: str, solic
         "mensagem": f"Resposta da questão {codigo_questao} ({item.get('respondido_por', {}).get('nome', email_u)}) marcada como 'Não Utilizar'."
     }
 
+def aprovar_mesclar_questoes_ponto_focal(subsecretaria: str, codigo_questao: str, solicitante_email: str) -> dict:
+    """
+    Aprova e consolida todas as respostas ativas enviadas por diferentes servidores para uma mesma questão.
+    Mescla as opções assinaladas (sem duplicatas) e combina as justificativas/evidências, enviando a versão
+    consolidada conjunta para o formulário oficial (questoes_respondidas).
+    """
+    sub_upper = subsecretaria.strip().upper()
+    quadro = obter_quadro_subsecretaria(sub_upper)
+    q_map = quadro.get("questoes_respondidas", {})
+    resp_usuarios = quadro.get("respostas_usuarios", {})
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    envios_ativos = []
+    for email_u, u_data in resp_usuarios.items():
+        q_item = u_data.get("questoes", {}).get(codigo_questao)
+        if q_item and q_item.get("status_validacao") != "nao_utilizada":
+            envios_ativos.append({
+                "email": email_u,
+                "usuario": u_data.get("usuario", {}),
+                "item": q_item
+            })
+
+    if not envios_ativos:
+        return {"sucesso": False, "mensagem": f"Nenhuma resposta ativa encontrada para a questão {codigo_questao}."}
+
+    opcoes_consolidadas = []
+    evidencias_combinadas = []
+    nomes_autores = []
+    setores_autores = []
+    emails_autores = []
+
+    for env in envios_ativos:
+        u_info = env["usuario"]
+        nome_u = u_info.get("nome", "Servidor")
+        setor_u = u_info.get("setor", "")
+        email_u = env["email"]
+        item = env["item"]
+
+        if nome_u not in nomes_autores:
+            nomes_autores.append(nome_u)
+        if setor_u and setor_u not in setores_autores:
+            setores_autores.append(setor_u)
+        if email_u not in emails_autores:
+            emails_autores.append(email_u)
+
+        opc = item.get("opcao_marcada")
+        if isinstance(opc, list):
+            for o in opc:
+                if o and o not in opcoes_consolidadas:
+                    opcoes_consolidadas.append(o)
+        elif isinstance(opc, str) and opc.strip():
+            partes = [p.strip() for p in opc.split(";") if p.strip()]
+            if len(partes) > 1:
+                for p in partes:
+                    if p not in opcoes_consolidadas:
+                        opcoes_consolidadas.append(p)
+            else:
+                if opc.strip() not in opcoes_consolidadas:
+                    opcoes_consolidadas.append(opc.strip())
+
+        evid = (item.get("evidencia_normativa") or "").strip()
+        if evid:
+            evidencias_combinadas.append(f"{nome_u} ({setor_u or 'Setor'}): {evid}")
+
+        item["status_validacao"] = "validado"
+        item["aprovado_em"] = now_iso
+        item["aprovado_por"] = solicitante_email
+        item["mensagem_devolucao"] = ""
+        item["observacao_devolucao"] = ""
+        item["consolidada_conjuntamente"] = True
+        resp_usuarios[email_u]["questoes"][codigo_questao] = item
+
+    resposta_final = opcoes_consolidadas if len(opcoes_consolidadas) > 1 else (opcoes_consolidadas[0] if opcoes_consolidadas else "")
+    evidencia_final = " | ".join(evidencias_combinadas)
+
+    respondido_por_coletivo = {
+        "nome": " & ".join(nomes_autores) + " (Consolidação Conjunta)",
+        "setor": " / ".join(setores_autores) if setores_autores else "Setores Integrados",
+        "email": ", ".join(emails_autores),
+        "subsecretaria": sub_upper
+    }
+
+    item_consolidado = {
+        "codigo_questao": codigo_questao,
+        "opcao_marcada": resposta_final,
+        "evidencia_normativa": evidencia_final,
+        "status_validacao": "validado",
+        "aprovado_em": now_iso,
+        "aprovado_por": solicitante_email,
+        "respondido_por": respondido_por_coletivo,
+        "consolidacao_conjunta": True,
+        "servidores_envolvidos": emails_autores
+    }
+
+    q_map[codigo_questao] = item_consolidado
+    quadro["questoes_respondidas"] = q_map
+    quadro["respostas_usuarios"] = resp_usuarios
+
+    if db:
+        try:
+            db.collection("quadro_subsecretarias").document(sub_upper).set(quadro)
+        except Exception as e:
+            return {"sucesso": False, "mensagem": str(e)}
+
+    return {
+        "sucesso": True,
+        "mensagem": f"Respostas de {len(envios_ativos)} servidores consolidadas com sucesso na questão {codigo_questao} e enviadas para o formulário!",
+        "item_consolidado": item_consolidado
+    }
+
 def solicitar_reabertura_consolidacao(subsecretaria: str, motivo: str, solicitante_email: str) -> dict:
     """
     Permite ao Master 2 solicitar ao Master 1 (Admin Geral) a devolução/reabertura da Consolidação Oficial para edição.

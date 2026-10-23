@@ -66,6 +66,11 @@ class NaoUtilizarQuestaoPayload(BaseModel):
     solicitante_email: str
     email_usuario: str
 
+class AprovarMesclarPayload(BaseModel):
+    subsecretaria: str
+    codigo_questao: str
+    solicitante_email: str
+
 class SolicitarReaberturaPayload(BaseModel):
     subsecretaria: str
     motivo: Optional[str] = ""
@@ -277,6 +282,17 @@ def nao_utilizar_questao(payload: NaoUtilizarQuestaoPayload):
         codigo_questao=payload.codigo_questao,
         solicitante_email=payload.solicitante_email,
         email_usuario=payload.email_usuario
+    )
+    if not res.get("sucesso"):
+        raise HTTPException(status_code=400, detail=res.get("mensagem"))
+    return res
+
+@app.post("/api/master2/aprovar_mesclar_questoes")
+def aprovar_mesclar_questoes(payload: AprovarMesclarPayload):
+    res = db_service.aprovar_mesclar_questoes_ponto_focal(
+        subsecretaria=payload.subsecretaria,
+        codigo_questao=payload.codigo_questao,
+        solicitante_email=payload.solicitante_email
     )
     if not res.get("sucesso"):
         raise HTTPException(status_code=400, detail=res.get("mensagem"))

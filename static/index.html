@@ -1248,6 +1248,37 @@
       { sigla: "SIAE", nome: "Infraestrutura e Apoio", total: 12 }
     ];
 
+    const ROMAN_MAP = { "I": 1, "II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6, "VII": 7, "VIII": 8, "IX": 9, "X": 10 };
+
+    function compararCodigosQuestoes(codA, codB) {
+      if (!codA) return -1;
+      if (!codB) return 1;
+      const partsA = String(codA).trim().split(".");
+      const partsB = String(codB).trim().split(".");
+
+      const p1A = (partsA[0] || "").toUpperCase();
+      const p1B = (partsB[0] || "").toUpperCase();
+      const num1A = ROMAN_MAP[p1A] ?? (isNaN(p1A) ? p1A : Number(p1A));
+      const num1B = ROMAN_MAP[p1B] ?? (isNaN(p1B) ? p1B : Number(p1B));
+
+      if (typeof num1A === "number" && typeof num1B === "number") {
+        if (num1A !== num1B) return num1A - num1B;
+      } else {
+        const cmp = String(p1A).localeCompare(String(p1B));
+        if (cmp !== 0) return cmp;
+      }
+
+      const num2A = parseInt(partsA[1] || "0", 10);
+      const num2B = parseInt(partsB[1] || "0", 10);
+      if (num2A !== num2B) return num2A - num2B;
+
+      const num3A = parseInt(partsA[2] || "0", 10);
+      const num3B = parseInt(partsB[2] || "0", 10);
+      if (num3A !== num3B) return num3A - num3B;
+
+      return String(codA).localeCompare(String(codB));
+    }
+
     document.addEventListener("DOMContentLoaded", async () => {
       const savedUser = localStorage.getItem("par_user");
       if (savedUser) {
@@ -2043,7 +2074,7 @@
         const dataQ = await resQuestoes.json();
 
         submissoesCarregadas = dataSub.submissoes || [];
-        questoesCarregadas = dataQ.questoes || [];
+        questoesCarregadas = (dataQ.questoes || []).sort((a, b) => compararCodigosQuestoes(a.codigo, b.codigo));
         quadroAtualSubsecretaria = dataQ.quadro || dataSub.quadro || { questoes_respondidas: {}, respostas_usuarios: {} };
 
         // Exibe banner caso a subsecretaria esteja consolidada oficialmente
@@ -2455,6 +2486,33 @@
       }
     }
 
+    async function aprovarMesclarRespostasM2(codigoQuestao) {
+      if (!usuarioAtual || !usuarioAtual.subsecretaria) return;
+
+      const confirmar = confirm(`Deseja aprovar e consolidar as respostas enviadas para a questão ${codigoQuestao}?\n\nTodas as opções assinaladas pelos servidores serão somadas e mescladas em uma única resposta oficial no formulário.`);
+      if (!confirmar) return;
+
+      try {
+        const res = await fetch("/api/master2/aprovar_mesclar_questoes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subsecretaria: usuarioAtual.subsecretaria,
+            codigo_questao: codigoQuestao,
+            solicitante_email: usuarioAtual.email
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          await carregarDadosMaster2();
+        } else {
+          alert(data.detail || "Erro ao consolidar respostas.");
+        }
+      } catch (e) {
+        alert("Erro de conexão: " + e.message);
+      }
+    }
+
     function drillDownMaster2(filtroAlvo) {
       const sel = document.getElementById("m2-filtro-status-questao");
       if (sel) sel.value = filtroAlvo;
@@ -2546,6 +2604,8 @@
         return;
       }
 
+      filtradas.sort((a, b) => compararCodigosQuestoes(a.codigo, b.codigo));
+
       const rowsHtml = [];
 
       filtradas.forEach(q => {
@@ -2571,9 +2631,17 @@
                   ${btn2025}
                   <span class="text-[11px] text-slate-400">(${q.tema})</span>
                 </div>
-                <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1.5 shadow-2xs">
-                  <i class="fa-solid fa-clone text-amber-600"></i> ${enviosAtivos.length} respostas para decidir
-                </span>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <button type="button" onclick="aprovarMesclarRespostasM2('${q.codigo}')"
+                          class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl font-extrabold text-xs shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                          title="Aprova e consolida as respostas dos servidores somando as opções em uma só">
+                    <i class="fa-solid fa-code-merge"></i>
+                    <span>Aprovar as Duas e Consolidar em Uma Só</span>
+                  </button>
+                  <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1.5 shadow-2xs">
+                    <i class="fa-solid fa-clone text-amber-600"></i> ${enviosAtivos.length} respostas para decidir
+                  </span>
+                </div>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -2588,7 +2656,7 @@
                         <div class="flex items-center justify-between gap-2">
                           <span class="font-extrabold text-xs text-slate-900">${e.usuario_info?.nome || 'Servidor'}</span>
                           ${isAprovada 
-                            ? `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px]"><i class="fa-solid fa-check mr-1"></i>Aprovada</span>`
+                            ? `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px]"><i class="fa-solid fa-check mr-1"></i>Aprovada${resp?.consolidacao_conjunta ? ' (Consolidada)' : ''}</span>`
                             : `<span class="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 font-bold text-[10px]">Aguardando</span>`}
                         </div>
                         <div class="text-[11px] text-slate-500 font-medium">Setor: <strong class="text-slate-700">${e.usuario_info?.setor || 'Não informado'}</strong></div>
@@ -2682,6 +2750,11 @@
                 <button onclick="aprovarQuestaoPontoFocal('${q.codigo}', '${emailPrimeiro}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1">
                   <i class="fa-solid fa-check"></i> Aprovar
                 </button>
+                ${temDuplicidade ? `
+                  <button type="button" onclick="aprovarMesclarRespostasM2('${q.codigo}')" class="px-2 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-2xs" title="Mesclar e aprovar respostas de todos os servidores em uma só">
+                    <i class="fa-solid fa-code-merge"></i> Mesclar Ambas
+                  </button>
+                ` : ''}
                 <button onclick="naoUtilizarRespostaUsuario('${q.codigo}', '${emailPrimeiro}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg font-bold text-[11px] flex items-center gap-1">
                   <i class="fa-solid fa-ban text-slate-500"></i> Não Usar
                 </button>
@@ -3058,10 +3131,12 @@
         return;
       }
 
+      questoesRespondidasApenas.sort((a, b) => compararCodigosQuestoes(a.codigo, b.codigo));
+
       const respondentesMap = obterRespondentesPorQuestaoM2();
       let ultimoTema = "";
 
-      questoesRespondidasApenas.forEach(q => {
+      questoesRespondidasApenas.forEach((q, idx) => {
         if (q.tema !== ultimoTema) {
           ultimoTema = q.tema;
           const divTema = document.createElement("div");
@@ -3190,8 +3265,9 @@
 
         card.innerHTML = `
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <span class="font-mono text-xs font-black text-brand-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">${q.codigo}</span>
+              <span class="text-[11px] font-semibold text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">Questão ${idx + 1} de ${questoesRespondidasApenas.length}</span>
               <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${q.is_comum ? 'badge-comum' : 'badge-especifica'}">${q.tipo_atribuicao}</span>
             </div>
             ${htmlAutor}
@@ -3520,7 +3596,7 @@
       try {
         const res = await fetch(`/api/questoes/${usuarioAtual.subsecretaria}`);
         const data = await res.json();
-        questoesCarregadas = data.questoes || [];
+        questoesCarregadas = (data.questoes || []).sort((a, b) => compararCodigosQuestoes(a.codigo, b.codigo));
         quadroAtualSubsecretaria = data.quadro || { questoes_respondidas: {}, respostas_usuarios: {} };
 
         document.getElementById("info-total-questoes").textContent = `${data.total || questoesCarregadas.length} questões no caderno da ${usuarioAtual.subsecretaria}`;
@@ -3623,7 +3699,9 @@
         ? questoesCarregadas.filter(q => codigosDevolvidosUsuario.has(q.codigo) || minhasQuestoesMap[q.codigo]?.status_validacao === "devolvido")
         : questoesCarregadas;
 
-      listaParaExibir.forEach((q) => {
+      listaParaExibir.sort((a, b) => compararCodigosQuestoes(a.codigo, b.codigo));
+
+      listaParaExibir.forEach((q, idx) => {
         if (q.tema !== ultimoTema) {
           ultimoTema = q.tema;
           const temaDiv = document.createElement("div");
@@ -3782,6 +3860,7 @@
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="font-mono text-xs font-black text-brand-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">${q.codigo}</span>
+              <span class="text-[11px] font-semibold text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">Questão ${idx + 1} de ${listaParaExibir.length}</span>
               <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${badgeClass}">${q.tipo_atribuicao}</span>
               ${htmlBotao2025}
             </div>
