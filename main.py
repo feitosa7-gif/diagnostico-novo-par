@@ -51,11 +51,28 @@ class AprovarQuestaoPayload(BaseModel):
     subsecretaria: str
     codigo_questao: str
     solicitante_email: str
+    email_usuario: Optional[str] = ""
 
 class DevolverQuestaoPayload(BaseModel):
     subsecretaria: str
     codigo_questao: str
     observacao: Optional[str] = ""
+    solicitante_email: str
+    email_usuario: Optional[str] = ""
+
+class NaoUtilizarQuestaoPayload(BaseModel):
+    subsecretaria: str
+    codigo_questao: str
+    solicitante_email: str
+    email_usuario: str
+
+class SolicitarReaberturaPayload(BaseModel):
+    subsecretaria: str
+    motivo: Optional[str] = ""
+    solicitante_email: str
+
+class ReabrirConsolidacaoPayload(BaseModel):
+    subsecretaria: str
     solicitante_email: str
 
 class ReporteCompetenciaPayload(BaseModel):
@@ -68,6 +85,12 @@ class ReporteCompetenciaPayload(BaseModel):
 class ResolverReportePayload(BaseModel):
     reporte_id: str
     novo_status: str
+    resposta_master1: Optional[str] = ""
+    solicitante_email: str
+
+class ReatribuirReportePayload(BaseModel):
+    reporte_id: str
+    nova_subsecretaria: str
     resposta_master1: Optional[str] = ""
     solicitante_email: str
 
@@ -135,27 +158,27 @@ def get_questoes(subsecretaria: str):
     filtradas = []
     quadro = db_service.obter_quadro_subsecretaria(sub_upper)
     q_respondidas = quadro.get("questoes_respondidas", {})
+    questoes_area = db_service.filtrar_questoes_subsecretaria(sub_upper)
     
-    for q in ALL_QUESTIONS:
-        if q["is_comum"] or sub_upper in q["subsecretarias"]:
-            tipo_calc = "Comum – todas as áreas" if q["is_comum"] else "Específica da área"
-            cod = q["codigo"]
-            estado_atual = q_respondidas.get(cod)
-            filtradas.append({
-                "codigo": cod,
-                "eixo": q["eixo"],
-                "tema": q["tema"],
-                "enunciado": q["enunciado"],
-                "tipo_atribuicao": tipo_calc,
-                "tipo_input": q["tipo_input"],
-                "opcoes": q["opcoes"],
-                "is_comum": q["is_comum"],
-                "tem_2025": q.get("tem_2025", False),
-                "correspondencia_2025": q.get("correspondencia_2025", ""),
-                "pergunta_2025": q.get("pergunta_2025", ""),
-                "resposta_2025": q.get("resposta_2025", ""),
-                "estado_coletivo": estado_atual
-            })
+    for q in questoes_area:
+        tipo_calc = q.get("tipo_atribuicao") or ("Comum – todas as áreas" if q["is_comum"] else "Específica da área")
+        cod = q["codigo"]
+        estado_atual = q_respondidas.get(cod)
+        filtradas.append({
+            "codigo": cod,
+            "eixo": q["eixo"],
+            "tema": q["tema"],
+            "enunciado": q["enunciado"],
+            "tipo_atribuicao": tipo_calc,
+            "tipo_input": q["tipo_input"],
+            "opcoes": q["opcoes"],
+            "is_comum": q["is_comum"],
+            "tem_2025": q.get("tem_2025", False),
+            "correspondencia_2025": q.get("correspondencia_2025", ""),
+            "pergunta_2025": q.get("pergunta_2025", ""),
+            "resposta_2025": q.get("resposta_2025", ""),
+            "estado_coletivo": estado_atual
+        })
             
     return {
         "subsecretaria": sub_upper,
@@ -227,7 +250,8 @@ def aprovar_questao(payload: AprovarQuestaoPayload):
     res = db_service.aprovar_questao_ponto_focal(
         subsecretaria=payload.subsecretaria,
         codigo_questao=payload.codigo_questao,
-        solicitante_email=payload.solicitante_email
+        solicitante_email=payload.solicitante_email,
+        email_usuario=payload.email_usuario or ""
     )
     if not res.get("sucesso"):
         raise HTTPException(status_code=400, detail=res.get("mensagem"))
@@ -239,7 +263,58 @@ def devolver_questao(payload: DevolverQuestaoPayload):
         subsecretaria=payload.subsecretaria,
         codigo_questao=payload.codigo_questao,
         observacao=payload.observacao or "",
+        solicitante_email=payload.solicitante_email,
+        email_usuario=payload.email_usuario or ""
+    )
+    if not res.get("sucesso"):
+        raise HTTPException(status_code=400, detail=res.get("mensagem"))
+    return res
+
+@app.post("/api/master2/nao_utilizar_questao")
+def nao_utilizar_questao(payload: NaoUtilizarQuestaoPayload):
+    res = db_service.nao_utilizar_resposta_usuario(
+        subsecretaria=payload.subsecretaria,
+        codigo_questao=payload.codigo_questao,
+        solicitante_email=payload.solicitante_email,
+        email_usuario=payload.email_usuario
+    )
+    if not res.get("sucesso"):
+        raise HTTPException(status_code=400, detail=res.get("mensagem"))
+    return res
+
+@app.post("/api/master2/solicitar_reabertura")
+def solicitar_reabertura(payload: SolicitarReaberturaPayload):
+    res = db_service.solicitar_reabertura_consolidacao(
+        subsecretaria=payload.subsecretaria,
+        motivo=payload.motivo or "",
         solicitante_email=payload.solicitante_email
+    )
+    if not res.get("sucesso"):
+        raise HTTPException(status_code=400, detail=res.get("mensagem"))
+    return res
+
+@app.post("/api/master1/reabrir_consolidacao")
+def reabrir_consolidacao(payload: ReabrirConsolidacaoPayload):
+    email_clean = payload.solicitante_email.strip().lower()
+    if email_clean != db_service.MASTER_1_EMAIL:
+        raise HTTPException(status_code=403, detail="Apenas o Administrador Central tem permissão.")
+    res = db_service.reabrir_consolidacao_oficial(
+        subsecretaria=payload.subsecretaria,
+        solicitante_email=payload.solicitante_email
+    )
+    if not res.get("sucesso"):
+        raise HTTPException(status_code=400, detail=res.get("mensagem"))
+    return res
+
+@app.post("/api/master1/reatribuir_reporte")
+def reatribuir_reporte(payload: ReatribuirReportePayload):
+    email_clean = payload.solicitante_email.strip().lower()
+    if email_clean != db_service.MASTER_1_EMAIL:
+        raise HTTPException(status_code=403, detail="Apenas o Administrador Central tem permissão.")
+    res = db_service.reatribuir_questao_reporte(
+        reporte_id=payload.reporte_id,
+        nova_subsecretaria=payload.nova_subsecretaria,
+        resposta_master1=payload.resposta_master1 or ""
     )
     if not res.get("sucesso"):
         raise HTTPException(status_code=400, detail=res.get("mensagem"))

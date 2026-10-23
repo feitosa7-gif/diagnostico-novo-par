@@ -241,10 +241,21 @@
         <div><span class="text-slate-400">Responsável:</span> <span id="ja-enviou-nome" class="text-slate-700"></span></div>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-3 justify-center flex-wrap">
-        <button id="btn-ja-enviou-editar" onclick="editarRespostasUsuarioComum()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow flex items-center justify-center gap-1.5 transition-all">
-          <i class="fa-solid fa-pen-to-square"></i> Editar Minhas Respostas
+      <!-- Aviso / Status de Solicitação de Reabertura (Apenas Master 2 quando consolidado) -->
+      <div id="box-solicitar-reabertura-m2" class="hidden mb-5 p-4 bg-amber-50 border border-amber-300 rounded-xl text-left text-xs space-y-2">
+        <p class="font-bold text-amber-900 flex items-center gap-1.5">
+          <i class="fa-solid fa-unlock-keyhole text-amber-700"></i>
+          Precisa fazer alguma alteração na Consolidação Oficial enviada?
+        </p>
+        <p class="text-amber-800 text-[11px]" id="texto-status-reabertura-m2">
+          Solicite ao Administrador Geral a devolução da consolidação final para que você possa editar novamente o formulário e reenviar.
+        </p>
+        <button id="btn-solicitar-reabertura-m2" onclick="solicitarReaberturaConsolidacaoM2()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold shadow flex items-center gap-1.5 transition-all">
+          <i class="fa-solid fa-rotate-left"></i> Solicitar ao Admin Geral Devolução p/ Editar Novamente
         </button>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 justify-center flex-wrap">
         <button id="btn-ja-enviou-pdf" onclick="baixarPdfComprovante()" class="px-4 py-2.5 bg-brand-700 hover:bg-brand-800 text-white rounded-lg text-xs font-semibold shadow flex items-center justify-center gap-1.5">
           <i class="fa-solid fa-file-pdf"></i> Baixar Comprovante em PDF
         </button>
@@ -709,10 +720,31 @@
             <i class="fa-solid fa-table-cells-large"></i>
             <span>Painel do Formulário & Edição Espelhada</span>
           </button>
+          <button onclick="alternarHistoricoM2()" id="btn-toggle-historico-m2" class="px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl flex items-center gap-1.5 transition-all">
+            <i class="fa-solid fa-clock-rotate-left text-brand-700"></i>
+            <span id="label-toggle-historico-m2">Ver Histórico</span>
+          </button>
           <button onclick="carregarDadosMaster2()" title="Atualizar painel" class="px-3.5 py-2.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">
             <i class="fa-solid fa-rotate"></i>
           </button>
         </div>
+      </div>
+
+      <!-- Banner se a Consolidação Oficial já foi enviada (Com opção de Solicitar Reabertura ao Master 1) -->
+      <div id="banner-m2-consolidado" class="hidden p-4 bg-amber-50 border-2 border-amber-400 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-full bg-amber-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fa-solid fa-lock text-sm"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-amber-950 text-sm">Consolidação Oficial Homologada e Enviada</h4>
+            <p class="text-amber-800 mt-0.5" id="banner-m2-consolidado-msg">Caso precise realizar alguma alteração ou edição no formulário consolidado, solicite a devolução ao Administrador Geral.</p>
+          </div>
+        </div>
+        <button onclick="solicitarReaberturaConsolidacaoM2()" id="btn-banner-solicitar-reabertura-m2" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow flex items-center gap-1.5 shrink-0 transition-all">
+          <i class="fa-solid fa-rotate-left"></i>
+          <span>Solicitar Devolução p/ Editar Novamente</span>
+        </button>
       </div>
 
       <!-- Resumo de Progresso do Quadro da Subsecretaria (Com Drill-Down) -->
@@ -732,25 +764,25 @@
         <div onclick="drillDownMaster2('RESPONDIDAS')" id="card-m2-respondidas"
              class="cursor-pointer bg-white p-4 rounded-2xl border-2 border-emerald-600 shadow-sm hover:shadow-md transition-all group">
           <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold text-emerald-700 uppercase">Respondidas</span>
+            <span class="text-[11px] font-bold text-emerald-700 uppercase">Aprovadas (Formulário)</span>
             <span class="w-6 h-6 flex items-center justify-center bg-emerald-50 text-emerald-700 rounded-full group-hover:bg-emerald-600 group-hover:text-white transition-colors">
               <i class="fa-solid fa-magnifying-glass-chart text-[10px]"></i>
             </span>
           </div>
           <p id="m2-stat-respondidas" class="text-xl font-extrabold text-emerald-600 mt-1">0</p>
-          <span class="text-[10px] text-emerald-700 font-medium block mt-0.5">Validadas / Aceitas</span>
+          <span class="text-[10px] text-emerald-700 font-medium block mt-0.5">No formulário oficial</span>
         </div>
 
         <div onclick="drillDownMaster2('RETORNO')" id="card-m2-retorno"
              class="cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-purple-600 hover:shadow-md transition-all group">
           <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold text-purple-700 uppercase">Retorno Ajuste</span>
+            <span class="text-[11px] font-bold text-purple-700 uppercase">Aguardando Aprovação</span>
             <span class="w-6 h-6 flex items-center justify-center bg-purple-50 text-purple-700 rounded-full group-hover:bg-purple-600 group-hover:text-white transition-colors">
               <i class="fa-solid fa-magnifying-glass-chart text-[10px]"></i>
             </span>
           </div>
           <p id="m2-stat-retorno" class="text-xl font-extrabold text-purple-700 mt-1">0</p>
-          <span class="text-[10px] text-purple-600 font-medium block mt-0.5">Reenviadas p/ validar</span>
+          <span class="text-[10px] text-purple-600 font-medium block mt-0.5">Enviadas / Retorno ajuste</span>
         </div>
 
         <div onclick="drillDownMaster2('DEVOLVIDAS')" id="card-m2-devolvidas"
@@ -762,7 +794,7 @@
             </span>
           </div>
           <p id="m2-stat-devolvidas" class="text-xl font-extrabold text-red-600 mt-1">0</p>
-          <span class="text-[10px] text-slate-400 block mt-0.5">Aguardando setor</span>
+          <span class="text-[10px] text-slate-400 block mt-0.5">Aguardando servidor</span>
         </div>
 
         <div onclick="drillDownMaster2('PENDENTES')" id="card-m2-pendentes"
@@ -774,27 +806,45 @@
             </span>
           </div>
           <p id="m2-stat-pendentes" class="text-xl font-extrabold text-amber-600 mt-1">0</p>
-          <span class="text-[10px] text-slate-400 block mt-0.5">Não respondidas</span>
+          <span class="text-[10px] text-slate-400 block mt-0.5">Sem resposta no formulário</span>
         </div>
       </div>
 
-      <!-- FORMULÁRIO DE MONITORAMENTO DE QUESTÕES POR SETOR / SERVIDOR -->
+      <!-- SEÇÃO PRINCIPAL: MONITORAMENTO DE QUESTÕES POR PESSOA / SERVIDOR (COM OLHINHO 👁️) -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-users-viewfinder text-brand-700"></i>
+              Monitoramento de Questões — Pessoas que Enviaram Respostas
+            </h3>
+            <p class="text-[11px] text-slate-500">Clique no <strong>olhinho (<i class="fa-regular fa-eye text-brand-700"></i>)</strong> ao lado do nome da pessoa para abrir as questões que ela enviou e <strong>Aprovar</strong> (enviar ao formulário), <strong>Devolver</strong> ou <strong>Não Utilizar Resposta</strong>.</p>
+          </div>
+          <span id="m2-contagem-usuarios-monitoramento" class="text-xs font-bold text-brand-900 bg-blue-100/80 px-3 py-1 rounded-full">0 pessoa(s)</span>
+        </div>
+
+        <div id="m2-lista-usuarios-monitoramento" class="divide-y divide-slate-200">
+          <!-- Injetado via JS: Lista de pessoas com Olhinho e gaveta expansível das questões enviadas -->
+        </div>
+      </div>
+
+      <!-- VISÃO COMPLEMENTAR POR QUESTÃO DO CADERNO (FILTRO PELOS CARDS ACIMA) -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
               <i class="fa-solid fa-list-check text-brand-700"></i>
-              Monitoramento de Questões por Nome e Setor (Questionário da Subsecretaria)
+              Visão Geral do Caderno de Questões da Subsecretaria
             </h3>
-            <p class="text-[11px] text-slate-500">As questões já enviadas pelos setores aparecem primeiro. Clique nos cards acima ou use o seletor ao lado para filtrar.</p>
+            <p class="text-[11px] text-slate-500">Acompanhe o status de cada questão do caderno (aprovadas no formulário, aguardando aprovação, devolvidas ou pendentes).</p>
           </div>
           <div class="flex items-center gap-2">
             <select id="m2-filtro-status-questao" onchange="drillDownMaster2(this.value)" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-semibold">
-              <option value="RESPONDIDAS" selected>Questões Respondidas / Validadas</option>
-              <option value="RETORNO">Retorno para Ajuste (Reenviadas p/ Validar)</option>
-              <option value="TODAS">Todas as Questões (Respondidas Primeiro)</option>
+              <option value="RESPONDIDAS" selected>Aprovadas no Formulário</option>
+              <option value="RETORNO">Aguardando Aprovação / Retorno Ajuste</option>
+              <option value="TODAS">Todas as Questões do Caderno</option>
               <option value="DEVOLVIDAS">Devolvidas p/ Nova Análise</option>
-              <option value="PENDENTES">Ainda Não Respondidas</option>
+              <option value="PENDENTES">Ainda Pendentes no Formulário</option>
             </select>
           </div>
         </div>
@@ -804,8 +854,8 @@
             <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
               <tr>
                 <th class="p-3 w-24">Questão</th>
-                <th class="p-3">Enunciado / Resposta Atual</th>
-                <th class="p-3 w-56">Respondido Por (Nome / Setor)</th>
+                <th class="p-3">Enunciado / Resposta</th>
+                <th class="p-3 w-56">Servidor(es) Respondente(s)</th>
                 <th class="p-3 w-36">Status</th>
                 <th class="p-3 w-64 text-center">Ações do Ponto Focal</th>
               </tr>
@@ -817,14 +867,22 @@
         </div>
       </div>
 
-      <!-- Histórico de Envios Individuais dos Setores -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="p-4 border-b border-slate-200 flex justify-between items-center">
+      <!-- Histórico de Envios Individuais dos Setores (OCULTO POR PADRÃO — ABRE NO BOTÃO "VER HISTÓRICO") -->
+      <div id="secao-historico-m2" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
           <div>
-            <h3 class="text-sm font-bold text-slate-800">Histórico de Protocolos Enviados pelos Setores</h3>
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-clock-rotate-left text-brand-700"></i>
+              Histórico de Protocolos Enviados pelos Setores
+            </h3>
             <p class="text-[11px] text-slate-500">Registro individual de cada submissão realizada pelos servidores da subsecretaria.</p>
           </div>
-          <span id="m2-contagem-respostas" class="text-xs text-slate-500 font-medium"></span>
+          <div class="flex items-center gap-3">
+            <span id="m2-contagem-respostas" class="text-xs text-slate-500 font-medium"></span>
+            <button onclick="alternarHistoricoM2()" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-[11px] font-bold">
+              <i class="fa-solid fa-xmark mr-1"></i> Fechar Histórico
+            </button>
+          </div>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
@@ -1402,15 +1460,21 @@
         const qtdDevolvidas = Object.values(qMap).filter(x => x.status_validacao === "devolvido").length;
         const qtdRespondidas = Object.values(qMap).filter(x => x.status_validacao !== "devolvido").length;
 
-        const submissoesSetores = submissoesCarregadas.filter(s => s.responsavel?.subsecretaria === sigla && s.tipo_envio !== "consolidacao_oficial");
+        const submissoesSetores = submissoesCarregadas.filter(s => s.responsavel?.subsecretaria === sigla && s.tipo_envio === "resposta_individual");
         const temOficial = quadro.status_consolidacao === "consolidado_oficial" || submissoesCarregadas.some(s => s.responsavel?.subsecretaria === sigla && s.tipo_envio === "consolidacao_oficial");
         const gestoresM2 = usuariosLista.filter(u => u.subsecretaria === sigla && u.perfil === "master_2");
 
-        const pct = Math.round((qtdRespondidas / subItem.total) * 100);
+        const pct = temOficial ? 100 : Math.round((qtdRespondidas / subItem.total) * 100);
+        const qtdExibida = temOficial ? subItem.total : qtdRespondidas;
 
-        const statusOficial = temOficial 
+        const solicitouReabertura = quadro.solicitou_reabertura === true;
+        let statusOficial = temOficial 
           ? `<span class="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold text-[10px] inline-flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Consolidado Oficial</span>`
           : `<span class="bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-full font-semibold text-[10px] inline-flex items-center gap-1"><i class="fa-regular fa-clock"></i> Em Preenchimento</span>`;
+
+        if (solicitouReabertura) {
+          statusOficial += `<span class="block mt-1 bg-red-100 text-red-700 border border-red-300 px-2 py-0.5 rounded text-[10px] font-extrabold"><i class="fa-solid fa-bell mr-1"></i>Solicitou Reabertura</span>`;
+        }
 
         const gestorStr = gestoresM2.length > 0 
           ? gestoresM2.map(g => `<span class="font-semibold text-slate-800 block">${g.nome} <span class="text-[10px] text-slate-400">(${g.setor || 'Ponto Focal'})</span></span>`).join("")
@@ -1419,6 +1483,12 @@
         const badgeDevolvidas = qtdDevolvidas > 0
           ? `<span class="bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded text-[10px]"><i class="fa-solid fa-rotate-left mr-1"></i>${qtdDevolvidas} devolvida(s)</span>`
           : `<span class="text-slate-400">0</span>`;
+
+        const btnReabrir = temOficial ? `
+          <button onclick="devolverConsolidacaoParaPontoFocal('${sigla}')" class="mt-1 px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[10px] shadow-2xs inline-flex items-center gap-1">
+            <i class="fa-solid fa-rotate-left"></i> Devolver p/ Ponto Focal
+          </button>
+        ` : "";
 
         const tr = document.createElement("tr");
         tr.className = "hover:bg-slate-50 transition-colors";
@@ -1429,7 +1499,7 @@
               <div class="w-24 bg-slate-100 h-2 rounded-full overflow-hidden">
                 <div class="bg-brand-700 h-2 rounded-full" style="width:${pct}%"></div>
               </div>
-              <span class="font-bold text-slate-700">${qtdRespondidas}/${subItem.total} (${pct}%)</span>
+              <span class="font-bold text-slate-700">${qtdExibida}/${subItem.total} (${pct}%)</span>
             </div>
           </td>
           <td class="p-3 font-semibold text-slate-700">${submissoesSetores.length} envio(s) de setores</td>
@@ -1437,9 +1507,12 @@
           <td class="p-3">${statusOficial}</td>
           <td class="p-3">${gestorStr}</td>
           <td class="p-3 text-center">
-            <button onclick="inspecionarQuadroSubsecretariaM1('${sigla}')" class="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-800 rounded-lg font-bold text-[11px] border border-brand-200">
-              <i class="fa-solid fa-magnifying-glass mr-1"></i> Inspecionar Quadro
-            </button>
+            <div class="flex flex-col items-center gap-1">
+              <button onclick="inspecionarQuadroSubsecretariaM1('${sigla}')" class="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-800 rounded-lg font-bold text-[11px] border border-brand-200">
+                <i class="fa-solid fa-magnifying-glass mr-1"></i> Inspecionar Quadro
+              </button>
+              ${btnReabrir}
+            </div>
           </td>
         `;
         corpo.appendChild(tr);
@@ -1452,7 +1525,7 @@
       const listaRespostas = Object.values(qMap);
 
       document.getElementById("modal-sub-proto").textContent = `QUADRO COLETIVO • ${sigla}`;
-      document.getElementById("modal-sub-info").textContent = `${listaRespostas.length} questão(ões) respondida(s) pelos setores de ${sigla}`;
+      document.getElementById("modal-sub-info").textContent = `${listaRespostas.length} questão(ões) no formulário da ${sigla}`;
       
       const tag = document.getElementById("modal-sub-tag");
       const isConsolidado = quadro?.status_consolidacao === "consolidado_oficial";
@@ -1471,7 +1544,7 @@
       container.innerHTML = "";
 
       if (listaRespostas.length === 0) {
-        container.innerHTML = `<div class="p-8 text-center text-slate-400">Nenhuma questão foi respondida pelos setores de ${sigla} até o momento.</div>`;
+        container.innerHTML = `<div class="p-8 text-center text-slate-400">Nenhuma questão ativa no formulário de rascunho de ${sigla} no momento.</div>`;
       } else {
         listaRespostas.sort((a, b) => (a.codigo_questao || "").localeCompare(b.codigo_questao || ""));
         listaRespostas.forEach(r => {
@@ -1515,7 +1588,7 @@
       // 1) Submissões preliminares dos setores
       const preliminares = submissoesCarregadas.filter(s => {
         const matchSub = (filtroSub === "TODAS" || s.responsavel?.subsecretaria === filtroSub);
-        return matchSub && s.tipo_envio !== "consolidacao_oficial";
+        return matchSub && s.tipo_envio !== "consolidacao_oficial" && s.tipo_envio !== "consolidacao_reaberta_historico";
       });
 
       document.getElementById("m1-contagem-submissoes").textContent = `${preliminares.length} submissão(ões) de setores`;
@@ -1558,25 +1631,72 @@
         corpoOficiais.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Nenhuma subsecretaria enviou a Consolidação Oficial ainda.</td></tr>`;
       } else {
         oficiais.forEach(sub => {
+          const siglaSub = sub.responsavel?.subsecretaria || "";
+          const quadroRef = quadrosTodasSubsecretarias.find(q => q.subsecretaria === siglaSub);
+          const pediuReabertura = sub.solicitou_reabertura || quadroRef?.solicitou_reabertura;
+          const motivoReabertura = sub.motivo_reabertura || quadroRef?.motivo_reabertura || "";
+
+          const badgePedido = pediuReabertura ? `
+            <div class="mt-1 p-1.5 bg-red-50 border border-red-300 rounded text-[10px] text-red-800 font-bold">
+              <i class="fa-solid fa-bell text-red-600 mr-1"></i> Ponto Focal solicitou devolução p/ editar
+              ${motivoReabertura ? `<span class="block font-normal italic text-red-700">"${motivoReabertura}"</span>` : ''}
+            </div>
+          ` : "";
+
           const tr = document.createElement("tr");
           tr.className = "hover:bg-emerald-50/40 transition-colors";
           tr.innerHTML = `
             <td class="p-3 font-mono font-bold text-emerald-900">${sub.protocolo_id || sub.id}</td>
-            <td class="p-3 font-extrabold text-slate-800">${sub.responsavel?.subsecretaria || "-"}</td>
+            <td class="p-3 font-extrabold text-slate-800">
+              ${siglaSub || "-"}
+              ${badgePedido}
+            </td>
             <td class="p-3">${sub.responsavel?.nome || "-"}<br><span class="text-slate-400">${sub.responsavel?.email || ""}</span></td>
             <td class="p-3 font-bold text-emerald-700">${sub.metricas?.total_respondido || (sub.respostas || []).length} questões consolidadas</td>
             <td class="p-3 text-slate-500">${formatarData(sub.data_envio)}</td>
-            <td class="p-3 text-center space-x-1">
-              <button onclick="verDetalhesSubmissao('${sub.protocolo_id || sub.id}')" class="px-3 py-1 bg-emerald-600 text-white hover:bg-emerald-700 rounded font-bold text-[11px]">
-                <i class="fa-regular fa-eye mr-1"></i> Inspecionar Consolidação
-              </button>
-              <a href="/api/submissoes/pdf/${sub.protocolo_id || sub.id}" target="_blank" class="px-3 py-1 bg-red-600 text-white hover:bg-red-700 rounded font-bold text-[11px] inline-block">
-                <i class="fa-solid fa-file-pdf mr-1"></i> PDF Oficial
-              </a>
+            <td class="p-3 text-center">
+              <div class="flex flex-wrap items-center justify-center gap-1.5">
+                <button onclick="verDetalhesSubmissao('${sub.protocolo_id || sub.id}')" class="px-2.5 py-1 bg-emerald-600 text-white hover:bg-emerald-700 rounded font-bold text-[11px]">
+                  <i class="fa-regular fa-eye mr-1"></i> Inspecionar
+                </button>
+                <a href="/api/submissoes/pdf/${sub.protocolo_id || sub.id}" target="_blank" class="px-2.5 py-1 bg-red-600 text-white hover:bg-red-700 rounded font-bold text-[11px] inline-block">
+                  <i class="fa-solid fa-file-pdf mr-1"></i> PDF Oficial
+                </a>
+                <button onclick="devolverConsolidacaoParaPontoFocal('${siglaSub}')" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded font-bold text-[11px] shadow-xs">
+                  <i class="fa-solid fa-rotate-left mr-1"></i> Devolver p/ Ponto Focal Editar
+                </button>
+              </div>
             </td>
           `;
           corpoOficiais.appendChild(tr);
         });
+      }
+    }
+
+    async function devolverConsolidacaoParaPontoFocal(subsecretaria) {
+      if (!subsecretaria) return;
+      if (!confirm(`Deseja DEVOLVER a Consolidação Oficial da ${subsecretaria} para o Ponto Focal editar novamente?\n\nTodas as respostas consolidadas voltarão automaticamente para o formulário do Ponto Focal da ${subsecretaria} para que ele faça as alterações necessárias.`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/master1/reabrir_consolidacao", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subsecretaria: subsecretaria,
+            solicitante_email: usuarioAtual.email
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert(data.mensagem || `Consolidação da ${subsecretaria} devolvida ao Ponto Focal com sucesso!`);
+          await carregarDadosMaster1();
+        } else {
+          alert(data.detail || "Erro ao devolver consolidação.");
+        }
+      } catch (e) {
+        alert("Erro de conexão: " + e.message);
       }
     }
 
@@ -1589,14 +1709,26 @@
         return;
       }
 
+      const opcoesSubs = SUBSECRETARIAS_NOMES.map(s => `<option value="${s.sigla}">${s.sigla} — ${s.nome}</option>`).join("");
+
       reportesCompetenciaLista.forEach(rep => {
         const isPendente = rep.status === "pendente_analise";
-        const badgeStatus = isPendente
-          ? `<span class="bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded text-[10px]">Pendente de Análise</span>`
-          : `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">Analisado / Resolvido</span>`;
+        const isReatribuido = rep.status === "reatribuido";
+        let badgeStatus = "";
+        if (isPendente) {
+          badgeStatus = `<span class="bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded text-[10px]">Pendente de Análise</span>`;
+        } else if (isReatribuido) {
+          badgeStatus = `
+            <span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded text-[10px] inline-flex items-center gap-1">
+              <i class="fa-solid fa-share-from-square"></i> Enviada p/ ${rep.nova_subsecretaria || "Área Correta"}
+            </span>
+          `;
+        } else {
+          badgeStatus = `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">Analisado / Mantido</span>`;
+        }
 
         const tr = document.createElement("tr");
-        tr.className = "hover:bg-slate-50 transition-colors";
+        tr.className = "hover:bg-slate-50 transition-colors align-top";
         tr.innerHTML = `
           <td class="p-3 font-bold text-slate-800">${rep.subsecretaria}</td>
           <td class="p-3">
@@ -1607,16 +1739,61 @@
           <td class="p-3">${rep.reportado_por?.nome || "-"}<br><span class="text-slate-400 text-[10px]">${rep.reportado_por?.email || ""}</span></td>
           <td class="p-3 text-slate-500">${formatarData(rep.data_reporte)}</td>
           <td class="p-3">${badgeStatus}</td>
-          <td class="p-3 text-center">
-            ${isPendente ? `
-              <button onclick="marcarReporteResolvido('${rep.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[11px]">
-                <i class="fa-solid fa-check mr-1"></i> Marcar Analisado
-              </button>
-            ` : `<span class="text-slate-400 text-[11px]"><i class="fa-solid fa-check-double"></i> Concluído</span>`}
+          <td class="p-3">
+            <div class="flex flex-col gap-1.5 min-w-[210px]">
+              <div class="flex items-center gap-1">
+                <select id="select-reatrib-${rep.id}" class="border border-slate-300 rounded-lg px-2 py-1 text-[11px] bg-white font-semibold flex-1 focus:ring-2 focus:ring-brand-700">
+                  <option value="" disabled ${!rep.nova_subsecretaria ? 'selected' : ''}>Mandar p/ Área Correta...</option>
+                  ${SUBSECRETARIAS_NOMES.map(s => `<option value="${s.sigla}" ${rep.nova_subsecretaria === s.sigla ? 'selected' : ''}>${s.sigla} — ${s.nome}</option>`).join("")}
+                </select>
+                <button onclick="reatribuirReporteParaArea('${rep.id}')" class="px-2.5 py-1 bg-brand-700 hover:bg-brand-800 text-white rounded-lg font-bold text-[11px] shrink-0 shadow-2xs" title="Enviar questão para a Subsecretaria selecionada">
+                  <i class="fa-solid fa-paper-plane mr-1"></i> Enviar
+                </button>
+              </div>
+              ${isPendente ? `
+                <button onclick="marcarReporteResolvido('${rep.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[10px]">
+                  <i class="fa-solid fa-check mr-1"></i> Manter na Área / Analisado
+                </button>
+              ` : `<span class="text-slate-400 text-[10px] text-center"><i class="fa-solid fa-check-double"></i> ${rep.resposta_master1 || 'Processado'}</span>`}
+            </div>
           </td>
         `;
         corpo.appendChild(tr);
       });
+    }
+
+    async function reatribuirReporteParaArea(reporteId) {
+      const sel = document.getElementById(`select-reatrib-${reporteId}`);
+      const novaSub = sel ? sel.value : "";
+      if (!novaSub) {
+        alert("Selecione a Subsecretaria correta para a qual deseja enviar esta questão.");
+        return;
+      }
+
+      if (!confirm(`Confirma redirecionar esta questão para a subsecretaria ${novaSub}? Ela será retirada da área que reportou e incluída no caderno da ${novaSub}.`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/master1/reatribuir_reporte", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reporte_id: reporteId,
+            nova_subsecretaria: novaSub,
+            solicitante_email: usuarioAtual.email
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert(data.mensagem || `Questão enviada para ${novaSub} com sucesso!`);
+          await carregarDadosMaster1();
+        } else {
+          alert(data.detail || "Erro ao redirecionar questão.");
+        }
+      } catch (e) {
+        alert("Erro de conexão: " + e.message);
+      }
     }
 
     async function marcarReporteResolvido(reporteId) {
@@ -1738,6 +1915,53 @@
     }
 
     // ==================== PAINEL DO PONTO FOCAL / ADMINISTRADOR DA SUBSECRETARIA (MASTER 2) ====================
+    let usuariosAbertosOlhinhoM2 = new Set();
+    let emailAlvoDevolucao = "";
+
+    function alternarHistoricoM2() {
+      const secao = document.getElementById("secao-historico-m2");
+      const label = document.getElementById("label-toggle-historico-m2");
+      if (!secao) return;
+      const estavaOculto = secao.classList.contains("hidden");
+      if (estavaOculto) {
+        secao.classList.remove("hidden");
+        if (label) label.textContent = "Ocultar Histórico";
+        secao.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        secao.classList.add("hidden");
+        if (label) label.textContent = "Ver Histórico";
+      }
+    }
+
+    async function solicitarReaberturaConsolidacaoM2() {
+      const motivo = prompt("Informe brevemente o motivo para solicitar ao Administrador Geral a devolução/reabertura da Consolidação Oficial para edição:", "Necessidade de ajuste/complementação nas respostas consolidadas.");
+      if (motivo === null) return;
+
+      try {
+        const res = await fetch("/api/master2/solicitar_reabertura", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subsecretaria: usuarioAtual.subsecretaria,
+            motivo: motivo.trim() || "Solicitação de ajuste pelo Ponto Focal.",
+            solicitante_email: usuarioAtual.email
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert(data.mensagem || "Solicitação enviada ao Administrador Geral!");
+          const txt1 = document.getElementById("texto-status-reabertura-m2");
+          if (txt1) txt1.innerHTML = `<strong class="text-emerald-700"><i class="fa-solid fa-check-circle mr-1"></i> Solicitação já enviada ao Administrador Geral!</strong> Aguarde a liberação para editar novamente.`;
+          const txt2 = document.getElementById("banner-m2-consolidado-msg");
+          if (txt2) txt2.innerHTML = `<strong class="text-emerald-800"><i class="fa-solid fa-check-circle mr-1"></i> Solicitação de reabertura enviada ao Admin Geral!</strong> Assim que ele devolver, as questões reaparecerão no formulário.`;
+        } else {
+          alert(data.detail || "Não foi possível enviar a solicitação.");
+        }
+      } catch (e) {
+        alert("Erro de conexão: " + e.message);
+      }
+    }
+
     async function abrirPainelMaster2() {
       esconderTodasTelas();
       document.getElementById("tela-master2-dashboard").classList.remove("hidden");
@@ -1756,28 +1980,347 @@
 
         submissoesCarregadas = dataSub.submissoes || [];
         questoesCarregadas = dataQ.questoes || [];
-        quadroAtualSubsecretaria = dataQ.quadro || dataSub.quadro || { questoes_respondidas: {} };
+        quadroAtualSubsecretaria = dataQ.quadro || dataSub.quadro || { questoes_respondidas: {}, respostas_usuarios: {} };
 
-        // Atualiza métricas do topo do Ponto Focal
-        // Quando uma questão é devolvida para análise, ela abate 1 do total de "Questões Respondidas"
+        // Exibe banner caso a subsecretaria esteja consolidada oficialmente
+        const bannerCons = document.getElementById("banner-m2-consolidado");
+        if (bannerCons) {
+          if (quadroAtualSubsecretaria.status_consolidacao === "consolidado_oficial") {
+            bannerCons.classList.remove("hidden");
+            if (quadroAtualSubsecretaria.solicitou_reabertura) {
+              document.getElementById("banner-m2-consolidado-msg").innerHTML = `<strong class="text-emerald-800"><i class="fa-solid fa-bell mr-1"></i> Você já solicitou a devolução ao Administrador Geral.</strong> Assim que autorizada, o formulário será reaberto.`;
+            }
+          } else {
+            bannerCons.classList.add("hidden");
+          }
+        }
+
+        // Calcula métricas combinando questoes_respondidas (aprovadas no formulário) e respostas_usuarios
         const qMap = quadroAtualSubsecretaria.questoes_respondidas || {};
+        const respUsuarios = quadroAtualSubsecretaria.respostas_usuarios || {};
         const totalQ = questoesCarregadas.length;
-        const respondidasList = Object.values(qMap);
-        const devolvidasCount = respondidasList.filter(r => r.status_validacao === "devolvido").length;
-        const retornoCount = respondidasList.filter(r => r.status_validacao === "retorno_para_ajuste").length;
-        const respondidasValidasCount = respondidasList.filter(r => r.status_validacao === "validado" || (r.status_validacao !== "devolvido" && r.status_validacao !== "retorno_para_ajuste")).length;
-        const pendentesCount = Math.max(0, totalQ - respondidasList.length);
+        const codigosCaderno = new Set(questoesCarregadas.map(q => q.codigo));
+
+        const aprovadasCount = Object.values(qMap).filter(r => codigosCaderno.has(r.codigo_questao) && r.status_validacao !== "devolvido").length;
+
+        let aguardandoAprovacaoCount = 0;
+        let devolvidasCount = 0;
+        Object.values(respUsuarios).forEach(uObj => {
+          Object.values(uObj.questoes || {}).forEach(qItem => {
+            if (!codigosCaderno.has(qItem.codigo_questao)) return;
+            if (qItem.status_validacao === "devolvido") {
+              devolvidasCount++;
+            } else if (qItem.status_validacao === "enviado" || qItem.status_validacao === "retorno_para_ajuste") {
+              aguardandoAprovacaoCount++;
+            }
+          });
+        });
+
+        const pendentesCount = Math.max(0, totalQ - aprovadasCount);
 
         document.getElementById("m2-stat-total-q").textContent = totalQ;
-        document.getElementById("m2-stat-respondidas").textContent = respondidasValidasCount;
-        document.getElementById("m2-stat-retorno").textContent = retornoCount;
+        document.getElementById("m2-stat-respondidas").textContent = aprovadasCount;
+        document.getElementById("m2-stat-retorno").textContent = aguardandoAprovacaoCount;
         document.getElementById("m2-stat-devolvidas").textContent = devolvidasCount;
         document.getElementById("m2-stat-pendentes").textContent = pendentesCount;
 
+        renderizarMonitoramentoPorUsuarioM2();
         renderizarMonitoramentoQuestoesM2();
         renderizarHistoricoSubmissoesM2();
       } catch (e) {
         console.error("Erro ao carregar dados do Ponto Focal:", e);
+      }
+    }
+
+    function alternarOlhinhoUsuarioM2(emailUsuario) {
+      const emailClean = (emailUsuario || "").trim().toLowerCase();
+      if (usuariosAbertosOlhinhoM2.has(emailClean)) {
+        usuariosAbertosOlhinhoM2.delete(emailClean);
+      } else {
+        usuariosAbertosOlhinhoM2.add(emailClean);
+      }
+      renderizarMonitoramentoPorUsuarioM2();
+    }
+
+    function renderizarMonitoramentoPorUsuarioM2() {
+      const container = document.getElementById("m2-lista-usuarios-monitoramento");
+      const badgeCount = document.getElementById("m2-contagem-usuarios-monitoramento");
+      if (!container) return;
+      container.innerHTML = "";
+
+      const respUsuarios = quadroAtualSubsecretaria?.respostas_usuarios || {};
+      const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
+      const listaUsuarios = Object.values(respUsuarios).filter(u => Object.keys(u.questoes || {}).length > 0);
+
+      // Ordena pelo envio mais recente
+      listaUsuarios.sort((a, b) => (b.ultima_submissao || "").localeCompare(a.ultima_submissao || ""));
+
+      if (badgeCount) {
+        badgeCount.textContent = `${listaUsuarios.length} pessoa(s) enviaram questões`;
+      }
+
+      if (listaUsuarios.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center text-slate-400 space-y-1">
+            <i class="fa-solid fa-users-slash text-2xl text-slate-300"></i>
+            <p class="font-semibold text-xs text-slate-600">Nenhum servidor enviou questões ainda.</p>
+            <p class="text-[11px] text-slate-400">Assim que os servidores enviarem respostas, seus nomes, setores e quantidades aparecerão aqui com o olhinho para sua análise.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Mapa de quais usuários responderam cada questão (para detectar duplicidade/sobreposição)
+      const respondentesPorQuestao = {};
+      listaUsuarios.forEach(uObj => {
+        const uEmail = (uObj.usuario?.email || "").toLowerCase();
+        Object.values(uObj.questoes || {}).forEach(qItem => {
+          const cod = qItem.codigo_questao;
+          if (!respondentesPorQuestao[cod]) respondentesPorQuestao[cod] = [];
+          respondentesPorQuestao[cod].push({
+            email: uEmail,
+            nome: uObj.usuario?.nome || "Servidor",
+            setor: uObj.usuario?.setor || "Setor",
+            status: qItem.status_validacao,
+            opcao_marcada: qItem.opcao_marcada
+          });
+        });
+      });
+
+      listaUsuarios.forEach(uObj => {
+        const uInfo = uObj.usuario || {};
+        const uEmail = (uInfo.email || "").trim().toLowerCase();
+        const questoesMap = uObj.questoes || {};
+        const listaQ = Object.values(questoesMap).sort((a, b) => (a.codigo_questao || "").localeCompare(b.codigo_questao || ""));
+        const totalEnviadas = listaQ.length;
+
+        const qtdAprovadas = listaQ.filter(q => q.status_validacao === "validado").length;
+        const qtdPendentesAnalise = listaQ.filter(q => q.status_validacao === "enviado" || q.status_validacao === "retorno_para_ajuste").length;
+        const qtdDevolvidas = listaQ.filter(q => q.status_validacao === "devolvido").length;
+        const qtdNaoUtilizadas = listaQ.filter(q => q.status_validacao === "nao_utilizada").length;
+
+        const estaAberto = usuariosAbertosOlhinhoM2.has(uEmail);
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "transition-colors";
+
+        // Linha principal do usuário com o Olhinho ao lado do nome
+        const headerDiv = document.createElement("div");
+        headerDiv.className = `p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 ${estaAberto ? 'bg-blue-50/60' : 'hover:bg-slate-50'}`;
+        headerDiv.innerHTML = `
+          <div class="flex items-start md:items-center gap-3 flex-wrap">
+            <div class="w-10 h-10 rounded-full bg-brand-700 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-extrabold text-slate-900 text-sm">${uInfo.nome || "Servidor"}</span>
+                <!-- OLHINHO AO LADO DO NOME DA PESSOA -->
+                <button type="button" onclick="alternarOlhinhoUsuarioM2('${uEmail}')"
+                        class="px-3 py-1 rounded-full font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-2xs ${estaAberto ? 'bg-brand-700 text-white' : 'bg-blue-100 hover:bg-blue-200 text-brand-900 border border-blue-300'}"
+                        title="Abrir/fechar questões enviadas por ${uInfo.nome || 'este servidor'}">
+                  <i class="fa-regular ${estaAberto ? 'fa-eye-slash' : 'fa-eye'}"></i>
+                  <span>${estaAberto ? 'Ocultar Questões' : 'Ver Questões Enviadas'}</span>
+                </button>
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-slate-800 text-white">
+                  ${totalEnviadas} questão(ões) enviada(s)
+                </span>
+              </div>
+              <div class="flex items-center gap-2 text-[11px] text-slate-500 mt-1 flex-wrap">
+                <span class="font-semibold text-brand-800"><i class="fa-solid fa-building-user mr-1"></i>Setor: ${uInfo.setor || "Não informado"}</span>
+                <span>•</span>
+                <span>${uEmail}</span>
+                <span>•</span>
+                <span>Último envio: ${formatarData(uObj.ultima_submissao)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            ${qtdPendentesAnalise > 0 ? `<span class="px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 border border-purple-300 font-bold text-[11px]"><i class="fa-solid fa-hourglass-half mr-1"></i>${qtdPendentesAnalise} p/ analisar</span>` : ''}
+            ${qtdAprovadas > 0 ? `<span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[11px]"><i class="fa-solid fa-check mr-1"></i>${qtdAprovadas} aprovada(s)</span>` : ''}
+            ${qtdDevolvidas > 0 ? `<span class="px-2.5 py-1 rounded-lg bg-red-100 text-red-700 border border-red-300 font-bold text-[11px]"><i class="fa-solid fa-rotate-left mr-1"></i>${qtdDevolvidas} devolvida(s)</span>` : ''}
+            ${qtdNaoUtilizadas > 0 ? `<span class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-600 font-bold text-[11px]"><i class="fa-solid fa-ban mr-1"></i>${qtdNaoUtilizadas} não utilizada(s)</span>` : ''}
+
+            ${qtdPendentesAnalise > 0 ? `
+              <button type="button" onclick="aprovarTodasDoUsuario('${uEmail}', '${(uInfo.nome || 'Servidor').replace(/'/g, "\\'")}')"
+                      class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-[11px] shadow-xs flex items-center gap-1">
+                <i class="fa-solid fa-check-double"></i> Aprovar Todas (${qtdPendentesAnalise})
+              </button>
+            ` : ''}
+          </div>
+        `;
+        wrapper.appendChild(headerDiv);
+
+        // Gaveta expansível com as questões que essa pessoa enviou
+        if (estaAberto) {
+          const drawer = document.createElement("div");
+          drawer.className = "p-4 bg-slate-50/90 border-t border-blue-200 space-y-3";
+
+          listaQ.forEach(qUser => {
+            const cod = qUser.codigo_questao;
+            const qCatalogo = questoesCarregadas.find(item => item.codigo === cod) || {};
+            const st = qUser.status_validacao || "enviado";
+            const opcFmt = Array.isArray(qUser.opcao_marcada) ? qUser.opcao_marcada.join("; ") : (qUser.opcao_marcada || "-");
+            const devCount = qUser.total_devolucoes || 0;
+            const badgeCiclo = devCount > 0
+              ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-purple-100 text-purple-800 border border-purple-300 ml-1"><i class="fa-solid fa-rotate-left text-[8px]"></i> ${devCount}x</span>`
+              : "";
+
+            // Verifica se outro(s) usuário(s) também responderam esta mesma questão
+            const outros = (respondentesPorQuestao[cod] || []).filter(x => x.email !== uEmail);
+            let htmlConflito = "";
+            if (outros.length > 0) {
+              const descOutros = outros.map(o => {
+                const respOutro = Array.isArray(o.opcao_marcada) ? o.opcao_marcada.join("; ") : (o.opcao_marcada || "-");
+                const stLabel = o.status === "validado" ? " [JÁ APROVADA NO FORMULÁRIO]" : (o.status === "nao_utilizada" ? " [Não utilizada]" : "");
+                return `<strong>${o.nome} (${o.setor})</strong>${stLabel}: <em>"${respOutro}"</em>`;
+              }).join(" | ");
+              htmlConflito = `
+                <div class="p-2.5 bg-amber-50 border border-amber-300 rounded-xl text-[11px] text-amber-900 flex items-start gap-2">
+                  <i class="fa-solid fa-users-rectangle text-amber-600 mt-0.5"></i>
+                  <div>
+                    <span class="font-extrabold uppercase text-[10px] tracking-wider block text-amber-800">Atenção: Questão respondida por mais de um servidor!</span>
+                    <span>Também respondida por: ${descOutros}</span>
+                  </div>
+                </div>
+              `;
+            }
+
+            let badgeSt = "";
+            if (st === "validado") {
+              badgeSt = `<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-full font-bold text-[10px] inline-flex items-center"><i class="fa-solid fa-circle-check mr-1"></i> Aprovada (No Formulário)${badgeCiclo}</span>`;
+            } else if (st === "retorno_para_ajuste") {
+              badgeSt = `<span class="bg-purple-100 text-purple-800 border border-purple-300 px-2.5 py-0.5 rounded-full font-extrabold text-[10px] inline-flex items-center"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Retorno de Ajuste p/ Validar${badgeCiclo}</span>`;
+            } else if (st === "devolvido") {
+              badgeSt = `<span class="bg-red-100 text-red-700 border border-red-300 px-2.5 py-0.5 rounded-full font-bold text-[10px] inline-flex items-center"><i class="fa-solid fa-rotate-left mr-1"></i> Devolvida p/ Servidor${badgeCiclo}</span>`;
+            } else if (st === "nao_utilizada") {
+              badgeSt = `<span class="bg-slate-200 text-slate-600 border border-slate-300 px-2.5 py-0.5 rounded-full font-bold text-[10px] inline-flex items-center"><i class="fa-solid fa-ban mr-1"></i> Resposta Não Utilizada${badgeCiclo}</span>`;
+            } else {
+              badgeSt = `<span class="bg-blue-100 text-blue-800 border border-blue-300 px-2.5 py-0.5 rounded-full font-bold text-[10px] inline-flex items-center"><i class="fa-solid fa-paper-plane mr-1"></i> Enviada (Aguardando Aprovação)${badgeCiclo}</span>`;
+            }
+
+            const btn2025 = qCatalogo.tem_2025 ? `
+              <button type="button" onclick="abrirModal2025('${cod}')" class="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-md font-bold text-[10px] inline-flex items-center gap-1">
+                <i class="fa-regular fa-eye"></i> resposta de 2025
+              </button>
+            ` : "";
+
+            const itemCard = document.createElement("div");
+            itemCard.className = `p-4 rounded-xl bg-white border ${st === 'validado' ? 'border-emerald-300' : (st === 'devolvido' ? 'border-red-300' : (st === 'nao_utilizada' ? 'border-slate-200 opacity-75' : 'border-slate-200'))} shadow-2xs space-y-2.5`;
+            itemCard.innerHTML = `
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-mono font-black text-brand-900 bg-slate-100 px-2.5 py-0.5 rounded border border-slate-200 text-xs">${cod}</span>
+                  <span class="text-[11px] font-semibold text-slate-500">${qUser.tema || qCatalogo.tema || ""}</span>
+                  ${btn2025}
+                </div>
+                ${badgeSt}
+              </div>
+
+              <p class="font-bold text-slate-800 text-xs leading-snug">${qUser.enunciado || qCatalogo.enunciado || ""}</p>
+
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Resposta enviada por ${uInfo.nome || "Servidor"} (${uInfo.setor || "Setor"}):</span>
+                <p class="font-bold text-slate-900 text-xs">${opcFmt}</p>
+                ${qUser.evidencia_normativa ? `<p class="text-[11px] text-brand-800 mt-1"><i class="fa-solid fa-file-shield mr-1"></i><strong>Evidência Normativa:</strong> ${qUser.evidencia_normativa}</p>` : ''}
+              </div>
+
+              ${qUser.observacao_devolucao && st === 'devolvido' ? `
+                <div class="p-2 bg-red-50 border border-red-200 rounded-lg text-[11px] text-red-700 font-semibold">
+                  <i class="fa-solid fa-comment-dots mr-1"></i> Motivo da devolução: "${qUser.observacao_devolucao}"
+                </div>
+              ` : ''}
+
+              ${htmlConflito}
+
+              <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-end gap-2">
+                ${st !== 'validado' ? `
+                  <button type="button" onclick="aprovarQuestaoPontoFocal('${cod}', '${uEmail}')"
+                          class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] shadow-xs flex items-center gap-1.5 transition-all">
+                    <i class="fa-solid fa-circle-check"></i> Aprovar Resposta (Enviar p/ Formulário)
+                  </button>
+                ` : `
+                  <span class="text-[11px] font-bold text-emerald-700 mr-auto"><i class="fa-solid fa-check-double mr-1"></i>Esta resposta já está aprovada no Painel do Formulário</span>
+                `}
+
+                ${st !== 'devolvido' ? `
+                  <button type="button" onclick="abrirModalDevolver('${cod}', '${uEmail}')"
+                          class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center gap-1.5 transition-all">
+                    <i class="fa-solid fa-rotate-left"></i> Devolver p/ Usuário Responder Novamente
+                  </button>
+                ` : ''}
+
+                ${st !== 'nao_utilizada' ? `
+                  <button type="button" onclick="naoUtilizarRespostaUsuario('${cod}', '${uEmail}')"
+                          class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg font-bold text-[11px] flex items-center gap-1.5 transition-all"
+                          title="Descarta esta resposta sem devolver para retrabalho (útil quando dois usuários responderam a mesma questão)">
+                    <i class="fa-solid fa-ban text-slate-500"></i> Não Utilizar Resposta
+                  </button>
+                ` : ''}
+
+                <button type="button" onclick="abrirModalReporte('${cod}')"
+                        class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-lg font-semibold text-[11px] flex items-center gap-1">
+                  <i class="fa-solid fa-flag text-amber-600"></i> Reportar Competência
+                </button>
+              </div>
+            `;
+            drawer.appendChild(itemCard);
+          });
+
+          wrapper.appendChild(drawer);
+        }
+
+        container.appendChild(wrapper);
+      });
+    }
+
+    async function aprovarTodasDoUsuario(emailUsuario, nomeUsuario) {
+      if (!confirm(`Deseja aprovar todas as respostas pendentes enviadas por ${nomeUsuario} e enviá-las para o Painel do Formulário?`)) return;
+      try {
+        const res = await fetch("/api/master2/aprovar_questao", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subsecretaria: usuarioAtual.subsecretaria,
+            codigo_questao: "TODAS",
+            solicitante_email: usuarioAtual.email,
+            email_usuario: emailUsuario
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          await carregarDadosMaster2();
+        } else {
+          alert(data.detail || "Erro ao aprovar questões.");
+        }
+      } catch (e) {
+        alert("Erro de conexão: " + e.message);
+      }
+    }
+
+    async function naoUtilizarRespostaUsuario(codigoQuestao, emailUsuario) {
+      if (!confirm(`Deseja marcar esta resposta da questão ${codigoQuestao} como "Não Utilizar Resposta"?\n\nEla ficará registrada como descartada (sem exigir retrabalho do servidor) e não irá para o formulário final.`)) return;
+
+      try {
+        const res = await fetch("/api/master2/nao_utilizar_questao", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subsecretaria: usuarioAtual.subsecretaria,
+            codigo_questao: codigoQuestao,
+            solicitante_email: usuarioAtual.email,
+            email_usuario: emailUsuario
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          await carregarDadosMaster2();
+        } else {
+          alert(data.detail || "Erro ao marcar resposta como não utilizada.");
+        }
+      } catch (e) {
+        alert("Erro de conexão: " + e.message);
       }
     }
 
@@ -1812,36 +2355,38 @@
       corpo.innerHTML = "";
 
       const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
+      const respUsuarios = quadroAtualSubsecretaria?.respostas_usuarios || {};
 
-      // Filtra conforme o card ou dropdown selecionado
-      const filtradas = questoesCarregadas.filter(q => {
-        const resp = qMap[q.codigo];
-        if (filtro === "RESPONDIDAS") return resp && resp.status_validacao !== "devolvido" && resp.status_validacao !== "retorno_para_ajuste";
-        if (filtro === "RETORNO") return resp && resp.status_validacao === "retorno_para_ajuste";
-        if (filtro === "DEVOLVIDAS") return resp && resp.status_validacao === "devolvido";
-        if (filtro === "PENDENTES") return !resp;
-        return true;
+      // Mapeia todas as respostas enviadas por usuários para cada código de questão
+      const enviosPorCodigo = {};
+      Object.values(respUsuarios).forEach(uObj => {
+        const uInfo = uObj.usuario || {};
+        Object.values(uObj.questoes || {}).forEach(qItem => {
+          const cod = qItem.codigo_questao;
+          if (!enviosPorCodigo[cod]) enviosPorCodigo[cod] = [];
+          enviosPorCodigo[cod].push({
+            ...qItem,
+            usuario_info: uInfo
+          });
+        });
       });
 
-      // Ordena sempre colocando primeiro retorno para ajuste, depois devolvidas, depois respondidas e pendentes por último
-      filtradas.sort((a, b) => {
-        const respA = qMap[a.codigo];
-        const respB = qMap[b.codigo];
-        const prioridade = (resp) => {
-          if (!resp) return 4;
-          if (resp.status_validacao === "retorno_para_ajuste") return 0;
-          if (resp.status_validacao === "devolvido") return 1;
-          return 2;
-        };
-        const pA = prioridade(respA);
-        const pB = prioridade(respB);
-        if (pA !== pB) return pA - pB;
-        return 0;
+      const filtradas = questoesCarregadas.filter(q => {
+        const aprovada = qMap[q.codigo];
+        const envios = enviosPorCodigo[q.codigo] || [];
+        const temAguardando = envios.some(e => e.status_validacao === "enviado" || e.status_validacao === "retorno_para_ajuste");
+        const temDevolvida = envios.some(e => e.status_validacao === "devolvido") || (aprovada && aprovada.status_validacao === "devolvido");
+
+        if (filtro === "RESPONDIDAS") return aprovada && aprovada.status_validacao !== "devolvido";
+        if (filtro === "RETORNO") return temAguardando;
+        if (filtro === "DEVOLVIDAS") return temDevolvida;
+        if (filtro === "PENDENTES") return !aprovada;
+        return true;
       });
 
       if (filtradas.length === 0) {
         const msgVazio = filtro === "RESPONDIDAS"
-          ? `Nenhuma questão foi enviada pelos setores ainda. Clique no card "Total de Questões da Área" ou "Pendentes de Resposta" acima para visualizar as questões não respondidas.`
+          ? `Nenhuma questão foi aprovada para o formulário ainda. Use o olhinho na seção "Pessoas que Enviaram Respostas" acima para aprovar as questões enviadas pelos servidores.`
           : `Nenhuma questão encontrada para o filtro selecionado.`;
         corpo.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">${msgVazio}</td></tr>`;
         return;
@@ -1849,78 +2394,67 @@
 
       filtradas.forEach(q => {
         const resp = qMap[q.codigo];
+        const envios = enviosPorCodigo[q.codigo] || [];
         const tr = document.createElement("tr");
         tr.className = "hover:bg-slate-50 transition-colors align-top";
 
-        let htmlResposta = `<span class="text-slate-400 italic">Ainda não respondida por nenhum setor.</span>`;
+        let htmlResposta = `<span class="text-slate-400 italic">Sem resposta aprovada no formulário ainda.</span>`;
         let htmlAutor = `<span class="text-slate-400">—</span>`;
-        let htmlStatus = `<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-semibold">Pendente</span>`;
-        let btnDevolver = "";
+        let htmlStatus = `<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-semibold">Pendente no Formulário</span>`;
+        let htmlAcoes = "";
 
-        if (resp) {
+        if (resp && resp.status_validacao !== "devolvido") {
           const opc = Array.isArray(resp.opcao_marcada) ? resp.opcao_marcada.join("; ") : (resp.opcao_marcada || "-");
           htmlResposta = `
-            <div class="mt-1.5 p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-800">
+            <div class="mt-1.5 p-2.5 bg-emerald-50/50 border border-emerald-200 rounded-lg font-bold text-slate-800">
+              <span class="text-[9px] uppercase font-black text-emerald-700 block mb-0.5">Resposta Aprovada no Formulário:</span>
               ${opc}
               ${resp.evidencia_normativa ? `<div class="text-[10px] text-brand-700 font-normal mt-1"><i class="fa-solid fa-file-shield mr-1"></i>Evidência: ${resp.evidencia_normativa}</div>` : ''}
             </div>
           `;
-
           const autor = resp.respondido_por || {};
           htmlAutor = `
-            <div class="p-2 rounded-lg bg-blue-50/70 border border-blue-200">
-              <p class="font-bold text-slate-800 text-xs flex items-center gap-1">
-                <i class="fa-solid fa-user-tag text-brand-700"></i> ${autor.nome || "Servidor"}
-              </p>
-              <p class="text-[10px] font-semibold text-brand-800 mt-0.5">Setor: ${autor.setor || "Não informado"}</p>
-              <p class="text-[10px] text-slate-400">${autor.email || ""}</p>
+            <div class="p-2 rounded-lg bg-emerald-50/70 border border-emerald-200">
+              <p class="font-bold text-slate-800 text-xs"><i class="fa-solid fa-user-check text-emerald-700 mr-1"></i>${autor.nome || "Servidor"}</p>
+              <p class="text-[10px] font-semibold text-emerald-800">Setor: ${autor.setor || "Não informado"}</p>
             </div>
           `;
-
-          const totalDevolucoesNum = resp.total_devolucoes || 0;
-          const badgeDevolucoesCiclo = totalDevolucoesNum > 0
-            ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-purple-100 text-purple-800 border border-purple-300 ml-1" title="Número de devoluções realizadas para esta questão"><i class="fa-solid fa-rotate-left text-[8px]"></i> ${totalDevolucoesNum}x</span>`
-            : '';
-
-          if (resp.status_validacao === "devolvido") {
-            htmlStatus = `
-              <div class="space-y-1">
-                <span class="bg-red-100 text-red-700 border border-red-300 px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center">
-                  <i class="fa-solid fa-rotate-left mr-1"></i> Devolvida p/ Análise
-                  ${badgeDevolucoesCiclo}
-                </span>
-                ${resp.observacao_devolucao ? `<p class="text-[10px] text-red-600 italic">"${resp.observacao_devolucao}"</p>` : ''}
+          htmlStatus = `<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center"><i class="fa-solid fa-check mr-1"></i> Aprovada no Formulário</span>`;
+          htmlAcoes = `
+            <button onclick="abrirModalDevolver('${q.codigo}', '${autor.email || ''}')" class="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1">
+              <i class="fa-solid fa-rotate-left"></i> Devolver p/ Usuário
+            </button>
+          `;
+        } else if (envios.length > 0) {
+          // Mostra quem já enviou esta questão e aguarda aprovação ou devolução
+          htmlResposta = envios.map(e => {
+            const opc = Array.isArray(e.opcao_marcada) ? e.opcao_marcada.join("; ") : (e.opcao_marcada || "-");
+            return `
+              <div class="mt-1.5 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+                <span class="font-bold text-brand-800">${e.usuario_info?.nome || 'Servidor'} (${e.usuario_info?.setor || 'Setor'}):</span>
+                <span class="font-semibold text-slate-800 ml-1">${opc}</span>
               </div>
             `;
-            btnDevolver = "";
-          } else if (resp.status_validacao === "retorno_para_ajuste") {
-            htmlStatus = `
-              <div class="space-y-1">
-                <span class="bg-purple-100 text-purple-800 border border-purple-300 px-2 py-0.5 rounded text-[10px] font-extrabold inline-flex items-center shadow-2xs">
-                  <i class="fa-solid fa-clock-rotate-left mr-1"></i> Retorno para Ajuste
-                  ${badgeDevolucoesCiclo}
-                </span>
-                <span class="block text-[9px] text-purple-600 font-semibold">Reenviada pelo setor p/ sua validação</span>
-              </div>
-            `;
-            btnDevolver = `
-              <button onclick="aprovarQuestaoPontoFocal('${q.codigo}')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] flex items-center justify-center gap-1 shadow-xs">
+          }).join("");
+
+          htmlAutor = envios.map(e => `
+            <div class="p-1.5 mb-1 rounded bg-blue-50 border border-blue-200 text-[11px]">
+              <strong>${e.usuario_info?.nome || 'Servidor'}</strong> (${e.usuario_info?.setor || 'Setor'})
+            </div>
+          `).join("");
+
+          const primeiroEnvio = envios[0];
+          const emailPrimeiro = primeiroEnvio.usuario_info?.email || "";
+          if (primeiroEnvio.status_validacao === "devolvido") {
+            htmlStatus = `<span class="bg-red-100 text-red-700 border border-red-300 px-2 py-0.5 rounded text-[10px] font-bold">Devolvida p/ Servidor</span>`;
+          } else {
+            htmlStatus = `<span class="bg-purple-100 text-purple-800 border border-purple-300 px-2 py-0.5 rounded text-[10px] font-bold">Aguardando Sua Aprovação (${envios.length})</span>`;
+            htmlAcoes = `
+              <button onclick="aprovarQuestaoPontoFocal('${q.codigo}', '${emailPrimeiro}')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] flex items-center justify-center gap-1">
                 <i class="fa-solid fa-circle-check"></i> Aprovar Resposta
               </button>
-              <button onclick="abrirModalDevolver('${q.codigo}')" class="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1">
-                <i class="fa-solid fa-rotate-left"></i> Devolver Novamente
-              </button>
-            `;
-          } else {
-            htmlStatus = `
-              <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center">
-                <i class="fa-solid fa-check mr-1"></i> Respondida
-                ${badgeDevolucoesCiclo}
-              </span>
-            `;
-            btnDevolver = `
-              <button onclick="abrirModalDevolver('${q.codigo}')" class="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1">
-                <i class="fa-solid fa-rotate-left"></i> Devolver p/ Análise
+              <button onclick="abrirModalDevolver('${q.codigo}', '${emailPrimeiro}')" class="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1">
+                <i class="fa-solid fa-rotate-left"></i> Devolver p/ Usuário
               </button>
             `;
           }
@@ -1948,8 +2482,8 @@
           <td class="p-3">${htmlStatus}</td>
           <td class="p-3">
             <div class="flex flex-col gap-1.5 items-stretch">
-              ${btnDevolver}
-              <button onclick="abrirModalReporte('${q.codigo}')" class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-lg font-semibold text-[11px] flex items-center gap-1">
+              ${htmlAcoes}
+              <button onclick="abrirModalReporte('${q.codigo}')" class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-lg font-semibold text-[11px] flex items-center justify-center gap-1">
                 <i class="fa-solid fa-flag text-amber-600"></i> Reportar Competência
               </button>
             </div>
@@ -2022,9 +2556,7 @@
       document.getElementById("modal-resposta-2025").classList.add("hidden");
     }
 
-    async function aprovarQuestaoPontoFocal(codigoQuestao) {
-      if (!confirm(`Deseja aprovar e validar a resposta da questão ${codigoQuestao}? Ela passará para o status "Respondida".`)) return;
-
+    async function aprovarQuestaoPontoFocal(codigoQuestao, emailUsuario = "") {
       try {
         const res = await fetch("/api/master2/aprovar_questao", {
           method: "POST",
@@ -2032,7 +2564,8 @@
           body: JSON.stringify({
             subsecretaria: usuarioAtual.subsecretaria,
             codigo_questao: codigoQuestao,
-            solicitante_email: usuarioAtual.email
+            solicitante_email: usuarioAtual.email,
+            email_usuario: emailUsuario || ""
           })
         });
         const data = await res.json();
@@ -2046,13 +2579,21 @@
       }
     }
 
-    function abrirModalDevolver(codigoQuestao) {
-      const resp = quadroAtualSubsecretaria?.questoes_respondidas?.[codigoQuestao];
+    function abrirModalDevolver(codigoQuestao, emailUsuario = "") {
+      const emailClean = (emailUsuario || "").trim().toLowerCase();
+      let resp = null;
+      if (emailClean && quadroAtualSubsecretaria?.respostas_usuarios?.[emailClean]?.questoes?.[codigoQuestao]) {
+        resp = quadroAtualSubsecretaria.respostas_usuarios[emailClean].questoes[codigoQuestao];
+      } else if (quadroAtualSubsecretaria?.questoes_respondidas?.[codigoQuestao]) {
+        resp = quadroAtualSubsecretaria.questoes_respondidas[codigoQuestao];
+      }
+
       if (!resp) {
         alert("Esta questão ainda não possui resposta registrada para ser devolvida.");
         return;
       }
       questaoAlvoDevolucao = codigoQuestao;
+      emailAlvoDevolucao = emailClean || (resp.respondido_por?.email || "").toLowerCase();
       const autor = resp.respondido_por || {};
       document.getElementById("modal-devolver-info").textContent = `Questão ${codigoQuestao} • Respondida por: ${autor.nome || "Servidor"} (${autor.setor || "Setor"})`;
       document.getElementById("input-obs-devolucao").value = resp.observacao_devolucao || "";
@@ -2061,6 +2602,7 @@
 
     function fecharModalDevolver() {
       questaoAlvoDevolucao = null;
+      emailAlvoDevolucao = "";
       document.getElementById("modal-devolver-questao").classList.add("hidden");
     }
 
@@ -2079,7 +2621,8 @@
             subsecretaria: usuarioAtual.subsecretaria,
             codigo_questao: questaoAlvoDevolucao,
             observacao: obs,
-            solicitante_email: usuarioAtual.email
+            solicitante_email: usuarioAtual.email,
+            email_usuario: emailAlvoDevolucao || ""
           })
         });
         const data = await res.json();
@@ -2159,6 +2702,42 @@
       }
     }
 
+    // ==================== FUNÇÕES AUXILIARES PARA OPÇÃO "OUTROS" COM LINHA DE ESCRITA ====================
+    function ehOpcaoOutros(opt) {
+      if (!opt || typeof opt !== "string") return false;
+      const limpo = opt.trim();
+      return /^(outr[oa]s?\b|por outro meio)/i.test(limpo);
+    }
+
+    function extrairMatchOutros(valorSalvo, optBase) {
+      if (valorSalvo === undefined || valorSalvo === null) return { marcado: false, texto: "" };
+      const strVal = String(valorSalvo);
+      if (strVal === optBase) {
+        return { marcado: true, texto: "" };
+      }
+      const prefixo = optBase + ": ";
+      if (strVal.startsWith(prefixo)) {
+        return { marcado: true, texto: strVal.slice(prefixo.length) };
+      }
+      return { marcado: false, texto: "" };
+    }
+
+    function atualizarVisibilidadeOutros(prefixo, codigo) {
+      const inputs = document.querySelectorAll(`input[name="${prefixo}_resp_${codigo}"]`);
+      inputs.forEach((inp) => {
+        const idx = inp.getAttribute("data-opt-idx");
+        if (idx === null) return;
+        const wrap = document.getElementById(`wrap_outros_${prefixo}_${codigo}_${idx}`);
+        if (wrap) {
+          if (inp.checked) {
+            wrap.classList.remove("hidden");
+          } else {
+            wrap.classList.add("hidden");
+          }
+        }
+      });
+    }
+
     // ==================== PAINEL DE FORMULÁRIO COM ESPELHAMENTO E AJUSTES DO PONTO FOCAL ====================
     function abrirModalPainelEspelhamento() {
       if (!usuarioAtual || !quadroAtualSubsecretaria) return;
@@ -2177,23 +2756,23 @@
 
       const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
       
-      // Filtra APENAS questões que já possuem respostas enviadas pelos usuários/setores
+      // Filtra questões que já estão aprovadas no formulário (questoes_respondidas)
       const questoesRespondidasApenas = questoesCarregadas.filter(q => !!qMap[q.codigo]);
       
       const totalRespondidas = questoesRespondidasApenas.length;
       const totalQ = questoesCarregadas.length;
       if (totalRespondidas < totalQ) {
-        document.getElementById("espelho-contagem-info").innerHTML = `<span class="text-amber-800 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ${totalRespondidas} de ${totalQ} questões respondidas</span> <span class="text-slate-500 font-medium">(A consolidação oficial exige 100% das questões enviadas)</span>`;
+        document.getElementById("espelho-contagem-info").innerHTML = `<span class="text-amber-800 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ${totalRespondidas} de ${totalQ} questões aprovadas no formulário</span> <span class="text-slate-500 font-medium">(A consolidação oficial exige 100% das questões aprovadas no formulário)</span>`;
       } else {
-        document.getElementById("espelho-contagem-info").innerHTML = `<span class="text-emerald-700 font-bold"><i class="fa-solid fa-circle-check mr-1"></i> 100% das questões respondidas (${totalRespondidas} de ${totalQ})</span> <span class="text-slate-500 font-medium">— Pronto para consolidação oficial</span>`;
+        document.getElementById("espelho-contagem-info").innerHTML = `<span class="text-emerald-700 font-bold"><i class="fa-solid fa-circle-check mr-1"></i> 100% das questões aprovadas no formulário (${totalRespondidas} de ${totalQ})</span> <span class="text-slate-500 font-medium">— Pronto para consolidação oficial</span>`;
       }
 
       if (totalRespondidas === 0) {
         container.innerHTML = `
           <div class="p-12 text-center text-slate-400 space-y-2">
             <i class="fa-solid fa-inbox text-3xl text-slate-300"></i>
-            <p class="font-semibold text-sm text-slate-600">Nenhuma resposta foi enviada pelos setores ainda.</p>
-            <p class="text-xs text-slate-400">Assim que os servidores comuns enviarem as questões da competência de seus setores, elas aparecerão espelhadas aqui para sua revisão.</p>
+            <p class="font-semibold text-sm text-slate-600">Nenhuma questão foi aprovada para o formulário ainda.</p>
+            <p class="text-xs text-slate-400">No painel de Monitoramento, clique no <strong>olhinho (👁️)</strong> ao lado do nome de quem enviou e clique em <strong>"Aprovar Resposta"</strong> para que ela venha para este formulário.</p>
           </div>
         `;
         return;
@@ -2243,13 +2822,36 @@
             <div class="space-y-2">
               <p class="text-[11px] font-bold text-slate-600">Opções selecionadas:</p>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                ${q.opcoes.map((opt) => `
-                  <label class="flex items-start gap-2.5 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs">
-                    <input type="checkbox" name="espelho_resp_${q.codigo}" value="${opt}" ${marcadas.includes(opt) ? 'checked' : ''}
-                           class="mt-0.5 rounded text-blue-600 focus:ring-blue-600 border-slate-300">
-                    <span class="text-slate-700">${opt}</span>
-                  </label>
-                `).join('')}
+                ${q.opcoes.map((opt, idx) => {
+                  const isOutros = ehOpcaoOutros(opt);
+                  let estaMarcado = false;
+                  let txtOutros = "";
+                  for (const itemM of marcadas) {
+                    const m = extrairMatchOutros(itemM, opt);
+                    if (m.marcado) {
+                      estaMarcado = true;
+                      txtOutros = m.texto;
+                      break;
+                    }
+                  }
+                  return `
+                    <div class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs bg-white">
+                      <label class="flex items-start gap-2.5 cursor-pointer">
+                        <input type="checkbox" name="espelho_resp_${q.codigo}" value="${opt}" data-opt-idx="${idx}" ${estaMarcado ? 'checked' : ''}
+                               onchange="atualizarVisibilidadeOutros('espelho', '${q.codigo}')"
+                               class="mt-0.5 rounded text-blue-600 focus:ring-blue-600 border-slate-300">
+                        <span class="text-slate-700">${opt}</span>
+                      </label>
+                      ${isOutros ? `
+                        <div id="wrap_outros_espelho_${q.codigo}_${idx}" class="${estaMarcado ? '' : 'hidden'} mt-2 pl-6">
+                          <input type="text" id="txt_outros_espelho_${q.codigo}_${idx}" value="${txtOutros.replace(/"/g, '&quot;')}"
+                                 placeholder="Especifique aqui..."
+                                 class="w-full px-3 py-1.5 border border-blue-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none bg-blue-50/30">
+                        </div>
+                      ` : ''}
+                    </div>
+                  `;
+                }).join('')}
               </div>
             </div>
           `;
@@ -2262,13 +2864,27 @@
                 <button type="button" onclick="limparRadioEspelho('${q.codigo}')" class="text-[10px] text-slate-400 hover:text-red-600">Limpar</button>
               </div>
               <div class="space-y-1.5">
-                ${q.opcoes.map((opt) => `
-                  <label class="flex items-start gap-2.5 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs">
-                    <input type="radio" name="espelho_resp_${q.codigo}" value="${opt}" ${valAtual === opt ? 'checked' : ''}
-                           class="mt-0.5 text-blue-600 focus:ring-blue-600 border-slate-300 custom-radio">
-                    <span class="text-slate-700">${opt}</span>
-                  </label>
-                `).join('')}
+                ${q.opcoes.map((opt, idx) => {
+                  const isOutros = ehOpcaoOutros(opt);
+                  const m = extrairMatchOutros(valAtual, opt);
+                  return `
+                    <div class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs bg-white">
+                      <label class="flex items-start gap-2.5 cursor-pointer">
+                        <input type="radio" name="espelho_resp_${q.codigo}" value="${opt}" data-opt-idx="${idx}" ${m.marcado ? 'checked' : ''}
+                               onchange="atualizarVisibilidadeOutros('espelho', '${q.codigo}')"
+                               class="mt-0.5 text-blue-600 focus:ring-blue-600 border-slate-300 custom-radio">
+                        <span class="text-slate-700">${opt}</span>
+                      </label>
+                      ${isOutros ? `
+                        <div id="wrap_outros_espelho_${q.codigo}_${idx}" class="${m.marcado ? '' : 'hidden'} mt-2 pl-6">
+                          <input type="text" id="txt_outros_espelho_${q.codigo}_${idx}" value="${m.texto.replace(/"/g, '&quot;')}"
+                                 placeholder="Especifique aqui..."
+                                 class="w-full px-3 py-1.5 border border-blue-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none bg-blue-50/30">
+                        </div>
+                      ` : ''}
+                    </div>
+                  `;
+                }).join('')}
               </div>
             </div>
           `;
@@ -2304,6 +2920,7 @@
 
     function limparRadioEspelho(codigo) {
       document.querySelectorAll(`input[name="espelho_resp_${codigo}"]`).forEach(el => el.checked = false);
+      atualizarVisibilidadeOutros('espelho', codigo);
     }
 
     function coletarRespostasDoEspelhamento() {
@@ -2317,11 +2934,28 @@
           const v = document.querySelector(`input[name="espelho_resp_${q.codigo}"]`)?.value;
           if (v !== undefined && v.trim() !== "") valMarcado = v.trim();
         } else if (q.tipo_input === "checkbox") {
-          const checks = Array.from(document.querySelectorAll(`input[name="espelho_resp_${q.codigo}"]:checked`)).map(c => c.value);
+          const checks = Array.from(document.querySelectorAll(`input[name="espelho_resp_${q.codigo}"]:checked`)).map(c => {
+            const optVal = c.value;
+            const idx = c.getAttribute("data-opt-idx");
+            if (ehOpcaoOutros(optVal) && idx !== null) {
+              const txt = document.getElementById(`txt_outros_espelho_${q.codigo}_${idx}`)?.value?.trim() || "";
+              return txt ? `${optVal}: ${txt}` : optVal;
+            }
+            return optVal;
+          });
           if (checks.length > 0) valMarcado = checks;
         } else {
           const rad = document.querySelector(`input[name="espelho_resp_${q.codigo}"]:checked`);
-          if (rad) valMarcado = rad.value;
+          if (rad) {
+            const optVal = rad.value;
+            const idx = rad.getAttribute("data-opt-idx");
+            if (ehOpcaoOutros(optVal) && idx !== null) {
+              const txt = document.getElementById(`txt_outros_espelho_${q.codigo}_${idx}`)?.value?.trim() || "";
+              valMarcado = txt ? `${optVal}: ${txt}` : optVal;
+            } else {
+              valMarcado = optVal;
+            }
+          }
         }
 
         const evid = document.querySelector(`input[name="espelho_evid_${q.codigo}"]`)?.value || "";
@@ -2462,23 +3096,29 @@
       const totalQ = questoesCarregadas.length;
 
       if (respostas.length === 0) {
-        alert("Não é possível consolidar sem nenhuma questão respondida.");
+        alert("Não é possível consolidar sem nenhuma questão aprovada no formulário.");
         return;
       }
 
-      // REGRA: O Master 2 só pode consolidar e enviar oficialmente se TODAS as questões forem enviadas pelos usuários
+      // REGRA: O Master 2 só pode consolidar e enviar oficialmente se TODAS as questões estiverem aprovadas no formulário
       const codigosRespondidos = new Set(respostas.map(r => r.codigo_questao));
       const faltantes = questoesCarregadas.filter(q => !codigosRespondidos.has(q.codigo));
 
       if (faltantes.length > 0) {
-        alert(`A Consolidação Oficial só pode ser homologada quando TODAS as questões da subsecretaria forem respondidas pelos setores.\n\nTotal exigido: ${totalQ} questões\nRespondidas no espelho: ${respostas.length} questões\nFaltam responder: ${faltantes.length} questão(ões) (${faltantes.slice(0, 5).map(f => f.codigo).join(", ")}${faltantes.length > 5 ? '...' : ''}).`);
+        alert(`A Consolidação Oficial só pode ser homologada quando TODAS as questões da subsecretaria estiverem aprovadas no formulário.\n\nTotal exigido: ${totalQ} questões\nAprovadas no formulário: ${respostas.length} questões\nFaltam aprovar/responder: ${faltantes.length} questão(ões) (${faltantes.slice(0, 5).map(f => f.codigo).join(", ")}${faltantes.length > 5 ? '...' : ''}).`);
         return;
       }
 
-      const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
-      const devolvidasPendentes = Object.values(qMap).filter(r => r.status_validacao === "devolvido");
-      if (devolvidasPendentes.length > 0) {
-        alert(`Não é possível homologar a Consolidação Oficial: existem ${devolvidasPendentes.length} questão(ões) devolvida(s) que ainda aguardam revisão e reenvio pelo setor.`);
+      const respUsuarios = quadroAtualSubsecretaria?.respostas_usuarios || {};
+      let devolvidasPendentes = 0;
+      Object.values(respUsuarios).forEach(uObj => {
+        Object.values(uObj.questoes || {}).forEach(qItem => {
+          if (qItem.status_validacao === "devolvido") devolvidasPendentes++;
+        });
+      });
+
+      if (devolvidasPendentes > 0) {
+        alert(`Não é possível homologar a Consolidação Oficial: existem ${devolvidasPendentes} questão(ões) devolvida(s) que ainda aguardam revisão e reenvio pelos servidores.`);
         return;
       }
 
@@ -2524,88 +3164,6 @@
       }
     }
 
-    // ==================== FLUXO DE CONSOLIDAÇÃO DO PONTO FOCAL (DIRETO) ====================
-    async function consolidaDiretoPontoFocal() {
-      const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
-      const listaRespondidas = Object.values(qMap);
-      const totalQ = questoesCarregadas.length;
-
-      if (listaRespondidas.length === 0) {
-        alert("Ainda não há nenhuma questão respondida pelos setores para consolidar.");
-        return;
-      }
-
-      // REGRA OBRIGATÓRIA: O Master 2 só pode consolidar e enviar oficialmente se todas as questões forem enviadas pelos usuários
-      const faltantes = questoesCarregadas.filter(q => !qMap[q.codigo]);
-      if (faltantes.length > 0) {
-        alert(`A Consolidação Oficial só pode ser enviada quando TODAS as questões da subsecretaria forem respondidas pelos setores.\n\nTotal do caderno: ${totalQ} questões\nRespondidas até o momento: ${listaRespondidas.length}\nFaltam responder: ${faltantes.length} questão(ões) (${faltantes.slice(0, 5).map(f => f.codigo).join(", ")}${faltantes.length > 5 ? '...' : ''}).`);
-        return;
-      }
-
-      const devolvidasAtivas = listaRespondidas.filter(r => r.status_validacao === "devolvido");
-      if (devolvidasAtivas.length > 0) {
-        alert(`Não é possível homologar a Consolidação Oficial: existem ${devolvidasAtivas.length} questão(ões) devolvida(s) que ainda aguardam revisão e reenvio pelo setor.`);
-        return;
-      }
-
-      if (!confirm(`Confirma a VALIDAÇÃO E ENVIO FINAL da Consolidação Oficial da subsecretaria ${usuarioAtual.subsecretaria} (${listaRespondidas.length} de ${totalQ} questões respondidas - 100%) para o Administrador Geral?`)) {
-        return;
-      }
-
-      const btn = document.getElementById("btn-m2-consolidar-direto");
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Consolidando e Enviando...`;
-      }
-
-      let totalComEvidencia = 0;
-      listaRespondidas.forEach(r => {
-        if ((r.evidencia_normativa || "").trim()) totalComEvidencia++;
-      });
-
-      const payload = {
-        acao_master2: "consolidar_oficial",
-        responsavel: {
-          nome: usuarioAtual.nome,
-          email: usuarioAtual.email,
-          subsecretaria: usuarioAtual.subsecretaria,
-          setor: usuarioAtual.setor || "Ponto Focal",
-          perfil: usuarioAtual.perfil
-        },
-        metricas: {
-          total_atribuido: questoesCarregadas.length,
-          total_respondido: listaRespondidas.length,
-          total_com_evidencia: totalComEvidencia
-        },
-        respostas: listaRespondidas
-      };
-
-      try {
-        const res = await fetch("/api/submissoes/enviar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-          usuarioAtual.ja_enviou = true;
-          usuarioAtual.submissao_protocolo = data.protocolo_id;
-          localStorage.setItem("par_user", JSON.stringify(usuarioAtual));
-          exibirSucesso(data);
-        } else {
-          alert("Aviso: " + (data.detail || "Não foi possível consolidar."));
-        }
-      } catch (e) {
-        alert("Erro de conexão: " + e.message);
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> <span>Validar e Enviar Consolidação Oficial</span>`;
-        }
-      }
-    }
-
     function abrirQuestionarioParaRevisao() {
       modoApenasDevolvidas = true;
       acaoFormularioMaster2 = null;
@@ -2639,24 +3197,8 @@
       }
     }
 
-    // ==================== FORMULÁRIO DE QUESTÕES (COLETIVO + MINI-CARDS + 2025) ====================
-    async function editarRespostasUsuarioComum() {
-      modoApenasDevolvidas = false;
-      acaoFormularioMaster2 = null;
-
-      const bannerEdicao = document.getElementById("banner-modo-edicao-usuario");
-      if (bannerEdicao) bannerEdicao.classList.remove("hidden");
-
-      const labelBtn = document.getElementById("label-btn-enviar");
-      if (labelBtn) labelBtn.textContent = "Atualizar e Reenviar Minhas Respostas";
-
-      const btnVoltar = document.getElementById("btn-voltar-topo");
-      if (btnVoltar) btnVoltar.classList.remove("hidden");
-
-      await carregarQuestionario(true);
-    }
-
-    async function carregarQuestionario(preencherDoQuadro = true) {
+    // ==================== FORMULÁRIO DE QUESTÕES (POR USUÁRIO + OPÇÃO OUTROS + 2025) ====================
+    async function carregarQuestionario(preencherDoQuadro = false) {
       esconderTodasTelas();
       document.getElementById("tela-questionario").classList.remove("hidden");
       document.getElementById("badge-sub-ativa").textContent = `${usuarioAtual.subsecretaria}${usuarioAtual.setor ? ' • ' + usuarioAtual.setor : ''}`;
@@ -2681,7 +3223,7 @@
         const res = await fetch(`/api/questoes/${usuarioAtual.subsecretaria}`);
         const data = await res.json();
         questoesCarregadas = data.questoes || [];
-        quadroAtualSubsecretaria = data.quadro || { questoes_respondidas: {} };
+        quadroAtualSubsecretaria = data.quadro || { questoes_respondidas: {}, respostas_usuarios: {} };
 
         document.getElementById("info-total-questoes").textContent = `${data.total || questoesCarregadas.length} questões no caderno da ${usuarioAtual.subsecretaria}`;
         document.getElementById("progresso-total").textContent = data.total || questoesCarregadas.length;
@@ -2700,8 +3242,20 @@
     }
 
     function preencherFormularioDoQuadroColetivo() {
-      const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
-      Object.values(qMap).forEach(r => {
+      let fonteRespostas = {};
+      if (usuarioAtual && usuarioAtual.perfil === "usuario_comum") {
+        // Usuário comum em revisão de devolução: preenche APENAS as respostas dele mesmo, nunca as de outros usuários
+        const emailClean = (usuarioAtual.email || "").trim().toLowerCase();
+        const minhasNoQuadro = quadroAtualSubsecretaria?.respostas_usuarios?.[emailClean]?.questoes || {};
+        fonteRespostas = { ...minhasNoQuadro };
+        (pendenciasDevolucaoUsuario || []).forEach(p => {
+          if (p.codigo_questao) fonteRespostas[p.codigo_questao] = p;
+        });
+      } else {
+        fonteRespostas = quadroAtualSubsecretaria?.questoes_respondidas || {};
+      }
+
+      Object.values(fonteRespostas).forEach(r => {
         const cod = r.codigo_questao;
         const opc = r.opcao_marcada;
         const evid = r.evidencia_normativa;
@@ -2712,17 +3266,44 @@
         }
 
         if (Array.isArray(opc)) {
-          opc.forEach(val => {
-            const chk = document.querySelector(`input[name="resp_${cod}"][value="${CSS.escape(val)}"]`) ||
-                        Array.from(document.querySelectorAll(`input[name="resp_${cod}"]`)).find(el => el.value === val);
-            if (chk) chk.checked = true;
+          const inputsChk = Array.from(document.querySelectorAll(`input[name="form_resp_${cod}"][type="checkbox"]`));
+          inputsChk.forEach(chk => {
+            const optBase = chk.value;
+            const idx = chk.getAttribute("data-opt-idx");
+            for (const itemVal of opc) {
+              const m = extrairMatchOutros(itemVal, optBase);
+              if (m.marcado) {
+                chk.checked = true;
+                if (ehOpcaoOutros(optBase) && idx !== null) {
+                  const wrap = document.getElementById(`wrap_outros_form_${cod}_${idx}`);
+                  const txtInp = document.getElementById(`txt_outros_form_${cod}_${idx}`);
+                  if (wrap) wrap.classList.remove("hidden");
+                  if (txtInp) txtInp.value = m.texto;
+                }
+                break;
+              }
+            }
           });
         } else if (opc !== undefined && opc !== null && opc !== "") {
-          const rad = Array.from(document.querySelectorAll(`input[name="resp_${cod}"][type="radio"]`)).find(el => el.value === String(opc));
-          if (rad) {
-            rad.checked = true;
-          } else {
-            const numInput = document.querySelector(`input[name="resp_${cod}"][type="number"]`);
+          const inputsRad = Array.from(document.querySelectorAll(`input[name="form_resp_${cod}"][type="radio"]`));
+          let achouRadio = false;
+          inputsRad.forEach(rad => {
+            const optBase = rad.value;
+            const idx = rad.getAttribute("data-opt-idx");
+            const m = extrairMatchOutros(opc, optBase);
+            if (m.marcado) {
+              rad.checked = true;
+              achouRadio = true;
+              if (ehOpcaoOutros(optBase) && idx !== null) {
+                const wrap = document.getElementById(`wrap_outros_form_${cod}_${idx}`);
+                const txtInp = document.getElementById(`txt_outros_form_${cod}_${idx}`);
+                if (wrap) wrap.classList.remove("hidden");
+                if (txtInp) txtInp.value = m.texto;
+              }
+            }
+          });
+          if (!achouRadio) {
+            const numInput = document.querySelector(`input[name="form_resp_${cod}"][type="number"]`);
             if (numInput) numInput.value = opc;
           }
         }
@@ -2734,12 +3315,14 @@
       container.innerHTML = "";
 
       const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
+      const emailClean = (usuarioAtual?.email || "").trim().toLowerCase();
+      const minhasQuestoesMap = quadroAtualSubsecretaria?.respostas_usuarios?.[emailClean]?.questoes || {};
       const codigosDevolvidosUsuario = new Set(pendenciasDevolucaoUsuario.map(p => p.codigo_questao));
 
       let ultimoTema = "";
 
       const listaParaExibir = modoApenasDevolvidas
-        ? questoesCarregadas.filter(q => codigosDevolvidosUsuario.has(q.codigo) || qMap[q.codigo]?.status_validacao === "devolvido")
+        ? questoesCarregadas.filter(q => codigosDevolvidosUsuario.has(q.codigo) || minhasQuestoesMap[q.codigo]?.status_validacao === "devolvido")
         : questoesCarregadas;
 
       listaParaExibir.forEach((q) => {
@@ -2755,8 +3338,11 @@
           container.appendChild(temaDiv);
         }
 
-        const estadoQ = qMap[q.codigo] || q.estado_coletivo;
-        const isDevolvida = estadoQ && estadoQ.status_validacao === "devolvido";
+        const estadoQ = (usuarioAtual?.perfil === "usuario_comum")
+          ? (minhasQuestoesMap[q.codigo] || pendenciasDevolucaoUsuario.find(p => p.codigo_questao === q.codigo))
+          : (qMap[q.codigo] || q.estado_coletivo);
+
+        const isDevolvida = (estadoQ && estadoQ.status_validacao === "devolvido") || codigosDevolvidosUsuario.has(q.codigo);
 
         const card = document.createElement("div");
         card.className = `bg-white p-5 md:p-6 rounded-2xl shadow-xs border border-slate-200 transition-all space-y-4 ${isDevolvida ? 'card-devolvido' : ''}`;
@@ -2764,7 +3350,6 @@
 
         const badgeClass = q.is_comum ? "badge-comum" : "badge-especifica";
 
-        // Botão "resposta de 2025" com olhinho se a pergunta existiu em 2025
         const htmlBotao2025 = q.tem_2025 ? `
           <button type="button" onclick="abrirModal2025('${q.codigo}')"
                   class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-2xs transition-colors">
@@ -2773,7 +3358,6 @@
           </button>
         ` : "";
 
-        // Ações exclusivas do Ponto Focal (Master 2) diretamente no card da questão
         const htmlAcoesMaster2Card = (usuarioAtual && usuarioAtual.perfil === "master_2") ? `
           <div class="flex items-center gap-1.5">
             ${estadoQ ? `
@@ -2789,9 +3373,8 @@
           </div>
         ` : "";
 
-        // Mini-card indicando o nome e setor de quem respondeu aquela determinada pergunta
         let htmlMiniCardAutor = "";
-        if (estadoQ && estadoQ.respondido_por) {
+        if (usuarioAtual?.perfil !== "usuario_comum" && estadoQ && estadoQ.respondido_por) {
           const autor = estadoQ.respondido_por;
           htmlMiniCardAutor = `
             <div class="p-3 rounded-xl bg-blue-50/80 border border-blue-200 flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -2810,7 +3393,6 @@
           `;
         }
 
-        // Mini-card em VERMELHO indicando devolução pelo Ponto Focal: "o ponto focal do PAR solicitou uma nova analise"
         let htmlMiniCardDevolucao = "";
         if (isDevolvida) {
           htmlMiniCardDevolucao = `
@@ -2820,7 +3402,7 @@
                 <p class="text-xs md:text-sm font-extrabold uppercase tracking-wide">
                   o ponto focal do PAR solicitou uma nova analise
                 </p>
-                ${estadoQ.observacao_devolucao ? `<p class="text-xs text-red-100 font-medium">Orientação do Ponto Focal: "${estadoQ.observacao_devolucao}"</p>` : '<p class="text-[11px] text-red-100">Revise a resposta desta questão e envie novamente.</p>'}
+                ${estadoQ?.observacao_devolucao ? `<p class="text-xs text-red-100 font-medium">Orientação do Ponto Focal: "${estadoQ.observacao_devolucao}"</p>` : '<p class="text-[11px] text-red-100">Revise a resposta desta questão e envie novamente.</p>'}
               </div>
             </div>
           `;
@@ -2832,7 +3414,7 @@
           htmlInputs = `
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Informe o valor numérico ou percentual:</label>
-              <input type="number" step="any" name="resp_${q.codigo}" oninput="limparDestaqueErro('${q.codigo}'); atualizarProgresso();"
+              <input type="number" step="any" name="form_resp_${q.codigo}" oninput="limparDestaqueErro('${q.codigo}'); atualizarProgresso();"
                      placeholder="Digite o número (ex: 15)"
                      class="w-full sm:w-64 px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-700 focus:outline-none bg-white">
             </div>
@@ -2842,13 +3424,26 @@
             <div class="space-y-2">
               <p class="text-[11px] font-bold text-slate-600"><i class="fa-solid fa-square-check mr-1"></i> Selecione as opções aplicáveis:</p>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                ${q.opcoes.map((opt) => `
-                  <label class="flex items-start gap-2.5 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs transition-colors bg-white">
-                    <input type="checkbox" name="resp_${q.codigo}" value="${opt}" onchange="limparDestaqueErro('${q.codigo}'); atualizarProgresso();"
-                           class="mt-0.5 rounded text-brand-700 focus:ring-brand-700 border-slate-300">
-                    <span class="text-slate-700 leading-snug">${opt}</span>
-                  </label>
-                `).join('')}
+                ${q.opcoes.map((opt, idx) => {
+                  const isOutros = ehOpcaoOutros(opt);
+                  return `
+                    <div class="p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs transition-colors bg-white">
+                      <label class="flex items-start gap-2.5 cursor-pointer">
+                        <input type="checkbox" name="form_resp_${q.codigo}" value="${opt}" data-opt-idx="${idx}"
+                               onchange="limparDestaqueErro('${q.codigo}'); atualizarVisibilidadeOutros('form', '${q.codigo}'); atualizarProgresso();"
+                               class="mt-0.5 rounded text-brand-700 focus:ring-brand-700 border-slate-300">
+                        <span class="text-slate-700 leading-snug">${opt}</span>
+                      </label>
+                      ${isOutros ? `
+                        <div id="wrap_outros_form_${q.codigo}_${idx}" class="hidden mt-2 pl-6">
+                          <input type="text" id="txt_outros_form_${q.codigo}_${idx}"
+                                 placeholder="Especifique aqui..."
+                                 class="w-full px-3 py-1.5 border border-brand-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-700 focus:outline-none bg-brand-50/30">
+                        </div>
+                      ` : ''}
+                    </div>
+                  `;
+                }).join('')}
               </div>
             </div>
           `;
@@ -2860,13 +3455,26 @@
                 <button type="button" onclick="limparRespostaQuestao('${q.codigo}')" class="text-[10px] text-slate-400 hover:text-red-600">Limpar seleção</button>
               </div>
               <div class="space-y-1.5">
-                ${q.opcoes.map((opt) => `
-                  <label class="flex items-start gap-2.5 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs transition-colors bg-white">
-                    <input type="radio" name="resp_${q.codigo}" value="${opt}" onchange="limparDestaqueErro('${q.codigo}'); atualizarProgresso();"
-                           class="mt-0.5 text-brand-700 focus:ring-brand-700 border-slate-300 custom-radio">
-                    <span class="text-slate-700 leading-snug">${opt}</span>
-                  </label>
-                `).join('')}
+                ${q.opcoes.map((opt, idx) => {
+                  const isOutros = ehOpcaoOutros(opt);
+                  return `
+                    <div class="p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs transition-colors bg-white">
+                      <label class="flex items-start gap-2.5 cursor-pointer">
+                        <input type="radio" name="form_resp_${q.codigo}" value="${opt}" data-opt-idx="${idx}"
+                               onchange="limparDestaqueErro('${q.codigo}'); atualizarVisibilidadeOutros('form', '${q.codigo}'); atualizarProgresso();"
+                               class="mt-0.5 text-brand-700 focus:ring-brand-700 border-slate-300 custom-radio">
+                        <span class="text-slate-700 leading-snug">${opt}</span>
+                      </label>
+                      ${isOutros ? `
+                        <div id="wrap_outros_form_${q.codigo}_${idx}" class="hidden mt-2 pl-6">
+                          <input type="text" id="txt_outros_form_${q.codigo}_${idx}"
+                                 placeholder="Especifique aqui..."
+                                 class="w-full px-3 py-1.5 border border-brand-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-700 focus:outline-none bg-brand-50/30">
+                        </div>
+                      ` : ''}
+                    </div>
+                  `;
+                }).join('')}
               </div>
             </div>
           `;
@@ -2905,10 +3513,11 @@
     }
 
     function limparRespostaQuestao(codigo) {
-      document.querySelectorAll(`input[name="resp_${codigo}"]`).forEach(el => {
+      document.querySelectorAll(`input[name="form_resp_${codigo}"]`).forEach(el => {
         if (el.type === "radio" || el.type === "checkbox") el.checked = false;
         else el.value = "";
       });
+      atualizarVisibilidadeOutros('form', codigo);
       atualizarProgresso();
     }
 
@@ -2922,14 +3531,29 @@
 
     function obterValorMarcadoQuestao(q) {
       if (q.tipo_input === "number") {
-        const val = document.querySelector(`input[name="resp_${q.codigo}"]`)?.value;
+        const val = document.querySelector(`input[name="form_resp_${q.codigo}"]`)?.value;
         return (val !== undefined && val.trim() !== "") ? val.trim() : null;
       } else if (q.tipo_input === "checkbox") {
-        const checked = Array.from(document.querySelectorAll(`input[name="resp_${q.codigo}"]:checked`)).map(c => c.value);
+        const checked = Array.from(document.querySelectorAll(`input[name="form_resp_${q.codigo}"]:checked`)).map(c => {
+          const optVal = c.value;
+          const idx = c.getAttribute("data-opt-idx");
+          if (ehOpcaoOutros(optVal) && idx !== null) {
+            const txt = document.getElementById(`txt_outros_form_${q.codigo}_${idx}`)?.value?.trim() || "";
+            return txt ? `${optVal}: ${txt}` : optVal;
+          }
+          return optVal;
+        });
         return checked.length > 0 ? checked : null;
       } else {
-        const radio = document.querySelector(`input[name="resp_${q.codigo}"]:checked`);
-        return radio ? radio.value : null;
+        const radio = document.querySelector(`input[name="form_resp_${q.codigo}"]:checked`);
+        if (!radio) return null;
+        const optVal = radio.value;
+        const idx = radio.getAttribute("data-opt-idx");
+        if (ehOpcaoOutros(optVal) && idx !== null) {
+          const txt = document.getElementById(`txt_outros_form_${q.codigo}_${idx}`)?.value?.trim() || "";
+          return txt ? `${optVal}: ${txt}` : optVal;
+        }
+        return optVal;
       }
     }
 
@@ -2951,31 +3575,14 @@
     async function enviarRespostas(e) {
       e.preventDefault();
 
-      const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
       const respostasParaEnviar = [];
       let totalComEvidencia = 0;
 
       questoesCarregadas.forEach(q => {
         const valorMarcado = obterValorMarcadoQuestao(q);
-        if (valorMarcado === null) return; // Ignora questões em branco (abertas para outros setores)
+        if (valorMarcado === null) return;
 
         const evidencia = document.querySelector(`input[name="evid_${q.codigo}"]`)?.value || "";
-
-        // Para usuário comum, envia apenas questões novas OU questões que ele alterou / revisou
-        const anterior = qMap[q.codigo];
-        if (usuarioAtual.perfil === "usuario_comum" && anterior) {
-          const souAutor = (anterior.respondido_por?.email || "").toLowerCase() === usuarioAtual.email.toLowerCase();
-          const valAntStr = JSON.stringify(anterior.opcao_marcada || "");
-          const valNovoStr = JSON.stringify(valorMarcado || "");
-          const evidAnt = (anterior.evidencia_normativa || "").trim();
-          const evidNova = evidencia.trim();
-
-          // Se já estava respondida por outro setor e o usuário atual não mexeu nela, não sobrescreve a autoria do outro setor
-          if (!souAutor && valAntStr === valNovoStr && evidAnt === evidNova) {
-            return;
-          }
-        }
-
         if (evidencia.trim()) totalComEvidencia++;
 
         respostasParaEnviar.push({
@@ -2986,7 +3593,7 @@
           enunciado: q.enunciado,
           opcao_marcada: valorMarcado,
           evidencia_normativa: evidencia,
-          respondido_por: anterior?.respondido_por || {
+          respondido_por: {
             nome: usuarioAtual.nome,
             setor: usuarioAtual.setor || "Não informado",
             email: usuarioAtual.email,
@@ -2997,13 +3604,13 @@
 
       if (respostasParaEnviar.length === 0) {
         document.getElementById("alerta-obrigatorias").classList.remove("hidden");
-        alert("Responda ou edite pelo menos uma questão da competência do seu setor antes de enviar.");
+        alert("Responda pelo menos uma questão da competência do seu setor antes de enviar.");
         return;
       }
 
       const msgConfirm = (usuarioAtual.perfil === "master_2" && acaoFormularioMaster2 === "consolidar_oficial")
         ? `Confirma a HOMOLOGAÇÃO E ENVIO FINAL da Consolidação Oficial da subsecretaria ${usuarioAtual.subsecretaria} para o Administrador Geral?`
-        : `Confirma o envio de ${respostasParaEnviar.length} questão(ões) respondida(s)?`;
+        : `Confirma o envio de ${respostasParaEnviar.length} questão(ões) respondida(s) para o Ponto Focal?`;
 
       if (!confirm(msgConfirm)) return;
 
@@ -3099,6 +3706,7 @@
 
       const boxPendencia = document.getElementById("box-pendencia-devolucao");
       const listaResumo = document.getElementById("lista-questoes-devolvidas-resumo");
+      const boxReaberturaM2 = document.getElementById("box-solicitar-reabertura-m2");
 
       if (pendenciasDevolucaoUsuario && pendenciasDevolucaoUsuario.length > 0 && usuarioAtual.perfil === "usuario_comum") {
         boxPendencia.classList.remove("hidden");
@@ -3118,24 +3726,25 @@
 
       const btnMonit = document.getElementById("btn-ja-enviou-monitoramento");
       const btnSolic = document.getElementById("btn-ja-enviou-solicitar");
-      const btnEditar = document.getElementById("btn-ja-enviou-editar");
 
       if (usuarioAtual.perfil === "master_2") {
-        document.getElementById("ja-enviou-msg").textContent = `A Consolidação Oficial da subsecretaria ${usuarioAtual.subsecretaria} já foi homologada e enviada sob o protocolo abaixo. Você pode continuar acessando o painel de monitoramento da área.`;
+        document.getElementById("ja-enviou-msg").textContent = `A Consolidação Oficial da subsecretaria ${usuarioAtual.subsecretaria} já foi homologada e enviada sob o protocolo abaixo. Você pode continuar acessando o painel de monitoramento ou solicitar a devolução ao Admin Geral caso precise editar algo.`;
         btnMonit.classList.remove("hidden");
         btnSolic.classList.add("hidden");
-        if (btnEditar) btnEditar.classList.add("hidden");
+        if (boxReaberturaM2) {
+          boxReaberturaM2.classList.remove("hidden");
+          if (submissao?.solicitou_reabertura || quadroAtualSubsecretaria?.solicitou_reabertura) {
+            document.getElementById("texto-status-reabertura-m2").innerHTML = `<strong class="text-emerald-700"><i class="fa-solid fa-check-circle mr-1"></i> Solicitação de reabertura já enviada ao Administrador Geral!</strong> Aguarde a devolução para editar novamente.`;
+          }
+        }
       } else {
         btnMonit.classList.add("hidden");
         btnSolic.classList.remove("hidden");
-        if (btnEditar) {
-          if (ehMaster2Consolidado || submissao?.tipo_envio === "consolidacao_oficial") {
-            btnEditar.classList.add("hidden");
-            document.getElementById("ja-enviou-msg").innerHTML = `A consolidação oficial da subsecretaria <strong>${usuarioAtual.subsecretaria}</strong> já foi homologada pelo Ponto Focal. O questionário deste ciclo está encerrado.`;
-          } else {
-            btnEditar.classList.remove("hidden");
-            document.getElementById("ja-enviou-msg").innerHTML = `Identificamos que suas respostas já foram registradas para a subsecretaria <strong>${submissao?.responsavel?.subsecretaria || usuarioAtual.subsecretaria}</strong>. Caso deseje revisar ou alterar alguma resposta do seu setor, clique no botão <strong>Editar Minhas Respostas</strong> abaixo.`;
-          }
+        if (boxReaberturaM2) boxReaberturaM2.classList.add("hidden");
+        if (ehMaster2Consolidado || submissao?.tipo_envio === "consolidacao_oficial") {
+          document.getElementById("ja-enviou-msg").innerHTML = `A consolidação oficial da subsecretaria <strong>${usuarioAtual.subsecretaria}</strong> já foi homologada pelo Ponto Focal. O questionário deste ciclo está encerrado.`;
+        } else {
+          document.getElementById("ja-enviou-msg").innerHTML = `Identificamos que suas respostas já foram registradas para a subsecretaria <strong>${submissao?.responsavel?.subsecretaria || usuarioAtual.subsecretaria}</strong>. O envio é permitido uma única vez, sendo liberada a edição apenas quando o Ponto Focal devolver alguma questão para revisão.`;
         }
       }
     }

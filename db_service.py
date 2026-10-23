@@ -55,13 +55,67 @@ if os.path.exists("questions_data.json"):
     except Exception as e:
         print(f"Erro ao carregar questions_data.json em db_service: {e}")
 
-def obter_total_questoes_subsecretaria(subsecretaria: str) -> int:
-    sub_upper = subsecretaria.strip().upper()
-    total = 0
+def obter_reatribuicoes_questoes() -> dict:
+    """
+    Retorna mapa de reatribuições de competência feitas pelo Master 1:
+    {
+      "I.1.1": {
+         "codigo_questao": "I.1.1",
+         "remover_de": ["SUPLAV"],
+         "adicionar_em": ["SIAE"]
+      }
+    }
+    """
+    if not db:
+        return {}
+    try:
+        docs = db.collection("reatribuicoes_questoes").stream()
+        mapa = {}
+        for d in docs:
+            item = d.to_dict()
+            cod = item.get("codigo_questao") or d.id
+            mapa[cod] = item
+        return mapa
+    except Exception as e:
+        print(f"Erro obter_reatribuicoes_questoes: {e}")
+        return {}
+
+def questao_pertence_subsecretaria(q: dict, sub_upper: str, reatrib_map: dict = None) -> bool:
+    if sub_upper == "TODAS":
+        return True
+    cod = q.get("codigo", "")
+    if reatrib_map and cod in reatrib_map:
+        info_r = reatrib_map[cod]
+        if sub_upper in [s.upper() for s in info_r.get("remover_de", [])]:
+            return False
+        if sub_upper in [s.upper() for s in info_r.get("adicionar_em", [])]:
+            return True
+    return bool(q.get("is_comum") or sub_upper in [s.upper() for s in q.get("subsecretarias", [])])
+
+def filtrar_questoes_subsecretaria(subsecretaria: str) -> list:
+    sub_upper = (subsecretaria or "TODAS").strip().upper()
+    if sub_upper == "TODAS":
+        return ALL_QUESTIONS_DATA
+    reatrib_map = obter_reatribuicoes_questoes()
+    filtradas = []
     for q in ALL_QUESTIONS_DATA:
-        if q.get("is_comum") or sub_upper in q.get("subsecretarias", []):
-            total += 1
-    return total
+        if questao_pertence_subsecretaria(q, sub_upper, reatrib_map):
+            q_copy = dict(q)
+            cod = q_copy.get("codigo", "")
+            if cod in reatrib_map and sub_upper in [s.upper() for s in reatrib_map[cod].get("adicionar_em", [])]:
+                subs_atuais = list(q_copy.get("subsecretarias", []))
+                if sub_upper not in subs_atuais:
+                    subs_atuais.append(sub_upper)
+                q_copy["subsecretarias"] = subs_atuais
+                q_copy["tipo_atribuicao"] = f"Redirecionada ({sub_upper})"
+            filtradas.append(q_copy)
+    return filtradas
+
+def obter_total_questoes_subsecretaria(subsecretaria: str) -> int:
+    sub_upper = (subsecretaria or "").strip().upper()
+    if not sub_upper or sub_upper == "TODAS":
+        return len(ALL_QUESTIONS_DATA)
+    return len(filtrar_questoes_subsecretaria(sub_upper))
 
 MASTER_1_EMAIL = "joao.carmo@nees.ufal.br".strip().lower()
 MASTER_1_NAME = "jooa vitor feitosa do carmo"
@@ -156,42 +210,97 @@ def buscar_usuario_por_email(email: str) -> dict:
 def obter_quadro_subsecretaria(subsecretaria: str) -> dict:
     """
     Retorna o documento consolidado vivo da Subsecretaria:
-    {
-      "subsecretaria": "SUBEB",
-      "status_consolidacao": "em_andamento" | "consolidado_oficial",
-      "protocolo_consolidacao": "...",
-      "data_consolidacao": "...",
-      "consolidado_por": {...},
-      "questoes_respondidas": {
-         "I.1.1": {
-            "codigo_questao": "I.1.1",
-            "opcao_marcada": [...],
-            "evidencia_normativa": "...",
-            "respondido_por": {"nome": "...", "email": "...", "setor": "..."},
-            "data_resposta": "...",
-            "status_validacao": "enviado" | "devolvido" | "validado",
-            "mensagem_devolucao": "",
-            "observacao_devolucao": ""
-         }
-      }
-    }
+    - questoes_respondidas: questões aprovadas/no formulário espelhado do Ponto Focal
+    - respostas_usuarios: questões enviadas agrupadas por servidor (email)
     """
     sub_upper = (subsecretaria or "GERAL").strip().upper()
     default_doc = {
         "subsecretaria": sub_upper,
         "status_consolidacao": "em_andamento",
-        "questoes_respondidas": {}
+        "questoes_respondidas": {},
+        "respostas_usuarios": {}
     }
     if not db:
         return default_doc
     try:
         doc = db.collection("quadro_subsecretarias").document(sub_upper).get()
-        if doc.exists:
-            d = doc.to_dict()
-            if "questoes_respondidas" not in d:
-                d["questoes_respondidas"] = {}
-            return d
-        return default_doc
+        d = doc.to_dict() if doc.exists else dict(default_doc)
+        if "questoes_respondidas" not in d or not isinstance(d["questoes_respondidas"], dict):
+            d["questoes_respondidas"] = {}
+        if "respostas_usuarios" not in d or not isinstance(d["respostas_usuarios"], dict):
+            d["respostas_usuarios"] = {}
+
+        # Se não estiver consolidado oficialmente, hidrata automaticamente submissões individuais
+        # que estavam apenas no histórico (submissoes_par) para dentro de respostas_usuarios
+        if d.get("status_consolidacao") != "consolidado_oficial":
+            ultima_limpeza = d.get("ultima_limpeza_homologacao", "")
+            precisa_salvar = False
+            try:
+                subs_docs = db.collection("submissoes_par").where("responsavel.subsecretaria", "==", sub_upper).stream()
+                subs_list = [s.to_dict() for s in subs_docs]
+                subs_list.sort(key=lambda x: x.get("data_envio", ""))
+                for s in subs_list:
+                    if s.get("tipo_envio") not in ["resposta_individual", None]:
+                        continue
+                    dt_env = s.get("data_envio", "")
+                    if ultima_limpeza and dt_env <= ultima_limpeza:
+                        continue
+                    resp_info = s.get("responsavel", {})
+                    u_email = (resp_info.get("email") or "").strip().lower()
+                    if not u_email:
+                        continue
+                    if u_email not in d["respostas_usuarios"]:
+                        q_user_map = {}
+                        for r in s.get("respostas", []):
+                            cod = r.get("codigo_questao")
+                            if not cod:
+                                continue
+                            no_quadro = d["questoes_respondidas"].get(cod, {})
+                            email_no_quadro = (no_quadro.get("respondido_por", {}).get("email") or "").strip().lower()
+                            st_inicial = no_quadro.get("status_validacao", "enviado") if email_no_quadro == u_email else "enviado"
+                            q_user_map[cod] = {
+                                "codigo_questao": cod,
+                                "eixo": r.get("eixo", ""),
+                                "tema": r.get("tema", ""),
+                                "tipo_atribuicao": r.get("tipo_atribuicao", ""),
+                                "enunciado": r.get("enunciado", ""),
+                                "opcao_marcada": r.get("opcao_marcada"),
+                                "evidencia_normativa": r.get("evidencia_normativa", ""),
+                                "respondido_por": {
+                                    "nome": resp_info.get("nome", "Servidor"),
+                                    "email": u_email,
+                                    "setor": resp_info.get("setor", "Não informado"),
+                                    "subsecretaria": sub_upper
+                                },
+                                "data_resposta": dt_env,
+                                "status_validacao": st_inicial,
+                                "mensagem_devolucao": no_quadro.get("mensagem_devolucao", "") if email_no_quadro == u_email else "",
+                                "observacao_devolucao": no_quadro.get("observacao_devolucao", "") if email_no_quadro == u_email else "",
+                                "total_devolucoes": no_quadro.get("total_devolucoes", 0) if email_no_quadro == u_email else 0
+                            }
+                        if q_user_map:
+                            d["respostas_usuarios"][u_email] = {
+                                "usuario": {
+                                    "nome": resp_info.get("nome", "Servidor"),
+                                    "email": u_email,
+                                    "setor": resp_info.get("setor", "Não informado"),
+                                    "subsecretaria": sub_upper
+                                },
+                                "protocolo_id": s.get("protocolo_id", ""),
+                                "ultima_submissao": dt_env,
+                                "questoes": q_user_map
+                            }
+                            precisa_salvar = True
+            except Exception as eh:
+                print(f"Aviso hidratacao respostas_usuarios: {eh}")
+
+            if precisa_salvar:
+                try:
+                    db.collection("quadro_subsecretarias").document(sub_upper).set(d)
+                except Exception:
+                    pass
+
+        return d
     except Exception as e:
         print(f"Erro obter_quadro_subsecretaria: {e}")
         return default_doc
@@ -218,7 +327,6 @@ def check_user_submission(email: str):
             s["id"] = d.id
             subs.append(s)
         if subs:
-            # Retorna a mais recente
             subs.sort(key=lambda x: x.get("data_envio", ""), reverse=True)
             return subs[0]
 
@@ -249,16 +357,27 @@ def check_user_submission(email: str):
     return None
 
 def obter_pendencias_devolucao_usuario(email: str, subsecretaria: str) -> list:
-    """Retorna lista de codigos de questoes que foram devolvidas para este usuario."""
+    """Retorna lista de questoes que foram devolvidas especificamente para este usuario."""
     email_clean = email.strip().lower()
     quadro = obter_quadro_subsecretaria(subsecretaria)
+    devolvidas_map = {}
+
+    # 1. Verifica em respostas_usuarios[email_clean]
+    resp_usuarios = quadro.get("respostas_usuarios", {})
+    if email_clean in resp_usuarios:
+        u_questoes = resp_usuarios[email_clean].get("questoes", {})
+        for cod, info in u_questoes.items():
+            if info.get("status_validacao") == "devolvido":
+                devolvidas_map[cod] = info
+
+    # 2. Fallback em questoes_respondidas
     q_resp = quadro.get("questoes_respondidas", {})
-    devolvidas = []
     for cod, info in q_resp.items():
         resp_email = (info.get("respondido_por", {}).get("email") or "").strip().lower()
         if resp_email == email_clean and info.get("status_validacao") == "devolvido":
-            devolvidas.append(info)
-    return devolvidas
+            devolvidas_map[cod] = info
+
+    return list(devolvidas_map.values())
 
 def check_consolidacao_subsecretaria(subsecretaria: str):
     if not db or not subsecretaria:
@@ -272,12 +391,16 @@ def check_consolidacao_subsecretaria(subsecretaria: str):
                 if sub_doc.exists:
                     d = sub_doc.to_dict()
                     d["id"] = sub_doc.id
+                    d["solicitou_reabertura"] = quadro.get("solicitou_reabertura", False)
+                    d["motivo_reabertura"] = quadro.get("motivo_reabertura", "")
                     return d
             return {
                 "protocolo_id": proto or f"{subsecretaria.upper()}-OFICIAL",
                 "data_envio": quadro.get("data_consolidacao"),
                 "responsavel": quadro.get("consolidado_por", {"subsecretaria": subsecretaria.upper()}),
-                "tipo_envio": "consolidacao_oficial"
+                "tipo_envio": "consolidacao_oficial",
+                "solicitou_reabertura": quadro.get("solicitou_reabertura", False),
+                "motivo_reabertura": quadro.get("motivo_reabertura", "")
             }
 
         docs = db.collection("submissoes_par")\
@@ -287,6 +410,8 @@ def check_consolidacao_subsecretaria(subsecretaria: str):
         for d in docs:
             sub = d.to_dict()
             sub["id"] = d.id
+            sub["solicitou_reabertura"] = quadro.get("solicitou_reabertura", False)
+            sub["motivo_reabertura"] = quadro.get("motivo_reabertura", "")
             return sub
     except Exception as e:
         print(f"Erro ao checar consolidação oficial: {e}")
@@ -304,7 +429,6 @@ def salvar_submissao(dados: dict) -> dict:
     eh_envio_final_master2 = dados.get("acao_master2") == "consolidar_oficial"
 
     respostas_enviadas = dados.get("respostas", [])
-    # Filtra apenas questões que efetivamente possuem resposta preenchida
     respostas_preenchidas = []
     for r in respostas_enviadas:
         opc = r.get("opcao_marcada")
@@ -327,6 +451,16 @@ def salvar_submissao(dados: dict) -> dict:
             "mensagem": f"questionario ja enviado (Consolidação oficial da subsecretaria {subsecretaria} já foi homologada sob o protocolo {ja_consolidado.get('protocolo_id')})."
         }
 
+    existente = check_user_submission(email_clean)
+    # REGRA: Usuário comum NÃO pode editar livremente após enviar; só pode reenviar se houver devolução pelo Master 2
+    if user_perfil == "usuario_comum" and existente:
+        devolucoes_pendentes = obter_pendencias_devolucao_usuario(email_clean, subsecretaria)
+        if len(devolucoes_pendentes) == 0:
+            return {
+                "sucesso": False,
+                "mensagem": f"questionario ja enviado (Protocolo {existente.get('protocolo_id')} já registrado). A edição só é liberada caso o Ponto Focal devolva alguma questão para revisão."
+            }
+
     # Se for Master 2 consolidando oficialmente:
     if user_perfil in ["master_2", "master_1"] and eh_envio_final_master2:
         if ja_consolidado:
@@ -335,26 +469,35 @@ def salvar_submissao(dados: dict) -> dict:
                 "mensagem": f"questionario ja enviado (Consolidação oficial da subsecretaria {subsecretaria} já foi homologada sob o protocolo {ja_consolidado.get('protocolo_id')})."
             }
         
-        # REGRA OBRIGATÓRIA: O Master 2 só pode consolidar e enviar oficialmente se todas as questões forem enviadas pelos usuários
+        # REGRA OBRIGATÓRIA: O Master 2 só pode consolidar e enviar oficialmente se todas as questões estiverem aprovadas/respondidas no formulário
         total_esperado = obter_total_questoes_subsecretaria(subsecretaria)
         quadro_temp = obter_quadro_subsecretaria(subsecretaria)
         q_map_temp = dict(quadro_temp.get("questoes_respondidas", {}))
         for r in respostas_preenchidas:
             q_map_temp[r["codigo_questao"]] = r
 
-        total_respondidas_efetivas = len(q_map_temp)
+        # Filtra apenas questões pertencentes atualmente à subsecretaria
+        questoes_atuais_cods = {q.get("codigo") for q in filtrar_questoes_subsecretaria(subsecretaria)}
+        respondidas_validas = [cod for cod in q_map_temp.keys() if cod in questoes_atuais_cods]
+        total_respondidas_efetivas = len(respondidas_validas)
+
         if total_esperado > 0 and total_respondidas_efetivas < total_esperado:
             faltantes = total_esperado - total_respondidas_efetivas
             return {
                 "sucesso": False,
-                "mensagem": f"A Consolidação Oficial só pode ser enviada quando TODAS as questões da subsecretaria forem enviadas pelos setores. Total exigido: {total_esperado} questões. Respondidas até o momento: {total_respondidas_efetivas}. Faltam {faltantes} questão(ões) para completar 100%."
+                "mensagem": f"A Consolidação Oficial só pode ser enviada quando TODAS as questões da subsecretaria estiverem aprovadas/preenchidas no formulário. Total exigido: {total_esperado} questões. No formulário até o momento: {total_respondidas_efetivas}. Faltam {faltantes} questão(ões) para completar 100%."
             }
 
-        devolvidas = [r for r in q_map_temp.values() if r.get("status_validacao") == "devolvido"]
+        # Verifica se há questões devolvidas aguardando retorno nos usuários
+        devolvidas = []
+        for u_data in quadro_temp.get("respostas_usuarios", {}).values():
+            for q_u in u_data.get("questoes", {}).values():
+                if q_u.get("status_validacao") == "devolvido":
+                    devolvidas.append(q_u)
         if devolvidas:
             return {
                 "sucesso": False,
-                "mensagem": f"Não é possível consolidar oficialmente: existem {len(devolvidas)} questão(ões) devolvida(s) aguardando revisão e reenvio pelos setores."
+                "mensagem": f"Não é possível consolidar oficialmente: existem {len(devolvidas)} questão(ões) devolvida(s) aguardando revisão e reenvio pelos servidores."
             }
 
         dados["tipo_envio"] = "consolidacao_oficial"
@@ -363,84 +506,149 @@ def salvar_submissao(dados: dict) -> dict:
     else:
         dados["tipo_envio"] = "resposta_individual"
 
-    existente = check_user_submission(email_clean)
     now_iso = datetime.now(timezone.utc).isoformat()
-    # Se o usuário já possuía protocolo anterior ou enviou o protocolo no payload, reaproveita
-    sub_id = dados.get("protocolo_id") or (existente.get("protocolo_id") if existente else None) or gerar_protocolo(subsecretaria)
+    if eh_envio_final_master2 and user_perfil in ["master_2", "master_1"]:
+        sub_id = gerar_protocolo(subsecretaria)
+    else:
+        sub_id = dados.get("protocolo_id") or (existente.get("protocolo_id") if existente else None) or gerar_protocolo(subsecretaria)
     dados["protocolo_id"] = sub_id
     dados["data_envio"] = now_iso
     dados["respostas"] = respostas_preenchidas
     dados["metricas"]["total_respondido"] = len(respostas_preenchidas)
 
-    # Atualiza o Quadro Coletivo da Subsecretaria
     quadro = obter_quadro_subsecretaria(subsecretaria)
     q_map = quadro.get("questoes_respondidas", {})
+    resp_usuarios = quadro.get("respostas_usuarios", {})
 
-    for r in respostas_preenchidas:
-        cod = r["codigo_questao"]
-        anterior = q_map.get(cod, {})
-        devolucoes_count = anterior.get("total_devolucoes", 0)
-        
-        # Se for reenvio de uma questão devolvida anteriormente pelo usuário comum:
-        if user_perfil == "usuario_comum" and anterior.get("status_validacao") == "devolvido":
-            status_val = "retorno_para_ajuste"
-        elif user_perfil in ["master_2", "master_1"]:
-            status_val = "validado"
-        else:
-            status_val = "enviado"
-        
-        # Se for Master 2 editando, preserva quem respondeu originalmente se já existir, ou assina como Ponto Focal
-        if user_perfil in ["master_2", "master_1"] and anterior.get("respondido_por"):
-            autor_info = anterior.get("respondido_por")
-            autor_info["editado_pelo_ponto_focal"] = nome_resp
-        else:
+    if user_perfil == "usuario_comum":
+        # Registra as respostas na ficha individual do servidor em respostas_usuarios
+        user_entry = resp_usuarios.get(email_clean, {
+            "usuario": {
+                "nome": nome_resp,
+                "email": email_clean,
+                "setor": setor_resp,
+                "subsecretaria": subsecretaria
+            },
+            "protocolo_id": sub_id,
+            "ultima_submissao": now_iso,
+            "questoes": {}
+        })
+        user_entry["usuario"] = {
+            "nome": nome_resp,
+            "email": email_clean,
+            "setor": setor_resp,
+            "subsecretaria": subsecretaria
+        }
+        user_entry["protocolo_id"] = sub_id
+        user_entry["ultima_submissao"] = now_iso
+        u_questoes = user_entry.get("questoes", {})
+
+        for r in respostas_preenchidas:
+            cod = r["codigo_questao"]
+            anterior_u = u_questoes.get(cod, {})
+            devolucoes_count = anterior_u.get("total_devolucoes", 0)
+
+            if anterior_u.get("status_validacao") == "devolvido":
+                status_val = "retorno_para_ajuste"
+            else:
+                status_val = "enviado"
+
             autor_info = {
                 "nome": nome_resp,
                 "email": email_clean,
                 "setor": setor_resp,
                 "subsecretaria": subsecretaria
             }
+            item_q = {
+                "codigo_questao": cod,
+                "eixo": r.get("eixo", ""),
+                "tema": r.get("tema", ""),
+                "tipo_atribuicao": r.get("tipo_atribuicao", ""),
+                "enunciado": r.get("enunciado", ""),
+                "opcao_marcada": r.get("opcao_marcada"),
+                "evidencia_normativa": r.get("evidencia_normativa", ""),
+                "respondido_por": autor_info,
+                "data_resposta": now_iso,
+                "status_validacao": status_val,
+                "mensagem_devolucao": "",
+                "observacao_devolucao": "",
+                "total_devolucoes": devolucoes_count
+            }
+            u_questoes[cod] = item_q
 
-        q_map[cod] = {
-            "codigo_questao": cod,
-            "eixo": r.get("eixo", ""),
-            "tema": r.get("tema", ""),
-            "tipo_atribuicao": r.get("tipo_atribuicao", ""),
-            "enunciado": r.get("enunciado", ""),
-            "opcao_marcada": r.get("opcao_marcada"),
-            "evidencia_normativa": r.get("evidencia_normativa", ""),
-            "respondido_por": autor_info,
-            "data_resposta": now_iso,
-            "status_validacao": status_val,
-            "mensagem_devolucao": "",
-            "observacao_devolucao": "",
-            "total_devolucoes": devolucoes_count
-        }
+            # Se esta questão no quadro principal pertencia a este usuário e estava como devolvida, atualiza lá também
+            if cod in q_map:
+                qm_email = (q_map[cod].get("respondido_por", {}).get("email") or "").strip().lower()
+                if qm_email == email_clean and q_map[cod].get("status_validacao") == "devolvido":
+                    q_map[cod] = dict(item_q)
+
+        user_entry["questoes"] = u_questoes
+        resp_usuarios[email_clean] = user_entry
+        # Salva na submissão a lista consolidada de todas as questões enviadas por este usuário
+        dados["respostas"] = list(u_questoes.values())
+        dados["metricas"]["total_respondido"] = len(dados["respostas"])
+
+    else:
+        # Master 2 ou Master 1 salvando diretamente no Formulário / Espelhamento
+        for r in respostas_preenchidas:
+            cod = r["codigo_questao"]
+            anterior = q_map.get(cod, {})
+            devolucoes_count = anterior.get("total_devolucoes", 0)
+            if anterior.get("respondido_por"):
+                autor_info = dict(anterior.get("respondido_por"))
+                autor_info["editado_pelo_ponto_focal"] = nome_resp
+            else:
+                autor_info = {
+                    "nome": nome_resp,
+                    "email": email_clean,
+                    "setor": setor_resp,
+                    "subsecretaria": subsecretaria
+                }
+            q_map[cod] = {
+                "codigo_questao": cod,
+                "eixo": r.get("eixo", ""),
+                "tema": r.get("tema", ""),
+                "tipo_atribuicao": r.get("tipo_atribuicao", ""),
+                "enunciado": r.get("enunciado", ""),
+                "opcao_marcada": r.get("opcao_marcada"),
+                "evidencia_normativa": r.get("evidencia_normativa", ""),
+                "respondido_por": autor_info,
+                "data_resposta": now_iso,
+                "status_validacao": "validado",
+                "mensagem_devolucao": "",
+                "observacao_devolucao": "",
+                "total_devolucoes": devolucoes_count
+            }
 
     quadro["questoes_respondidas"] = q_map
+    quadro["respostas_usuarios"] = resp_usuarios
     quadro["ultima_atualizacao"] = now_iso
 
     if eh_envio_final_master2 and user_perfil in ["master_2", "master_1"]:
         quadro["status_consolidacao"] = "consolidado_oficial"
         quadro["protocolo_consolidacao"] = sub_id
         quadro["data_consolidacao"] = now_iso
+        quadro["solicitou_reabertura"] = False
+        quadro["motivo_reabertura"] = ""
         quadro["consolidado_por"] = {
             "nome": nome_resp,
             "email": email_clean,
             "setor": setor_resp,
             "subsecretaria": subsecretaria
         }
-        # Na consolidação oficial, o documento da submissão leva TODAS as questões consolidadas do quadro
+        # Na consolidação oficial, o documento da submissão leva TODAS as questões consolidadas do quadro + backup de respostas_usuarios
         dados["respostas"] = list(q_map.values())
+        dados["respostas_usuarios_backup"] = dict(resp_usuarios)
         dados["metricas"]["total_respondido"] = len(dados["respostas"])
 
-        # Após o envio para homologação/consolidação oficial, zera os registros provisórios do quadro vivo
-        # para que fique limpo e zerado conforme solicitado
+        # Após enviar para homologação oficial, limpa os dados provisórios do quadro vivo
         quadro["questoes_respondidas"] = {}
+        quadro["respostas_usuarios"] = {}
+        quadro["ultima_limpeza_homologacao"] = now_iso
 
     if db:
         try:
-            db.collection("quadro_subsecretarias").document(subsecretaria).set(quadro, merge=True)
+            db.collection("quadro_subsecretarias").document(subsecretaria).set(quadro)
             db.collection("submissoes_par").document(sub_id).set(dados)
             db.collection("usuarios_perfis").document(email_clean).set({
                 "ja_enviou": True,
@@ -464,68 +672,143 @@ def salvar_submissao(dados: dict) -> dict:
         "dados": dados
     }
 
-def aprovar_questao_ponto_focal(subsecretaria: str, codigo_questao: str, solicitante_email: str) -> dict:
+def aprovar_questao_ponto_focal(subsecretaria: str, codigo_questao: str, solicitante_email: str, email_usuario: str = "") -> dict:
     """
-    Permite ao Ponto Focal aprovar com um 'certinho' a resposta (seja retorno para ajuste ou enviada)
-    marcando-a formalmente como validada/respondida.
+    Aprova a resposta enviada por um servidor (ou todas de um servidor se codigo_questao == 'TODAS')
+    e a envia imediatamente para o Formulário & Edição Espelhada (questoes_respondidas).
     """
     sub_upper = subsecretaria.strip().upper()
+    email_u = (email_usuario or "").strip().lower()
     quadro = obter_quadro_subsecretaria(sub_upper)
     q_map = quadro.get("questoes_respondidas", {})
+    resp_usuarios = quadro.get("respostas_usuarios", {})
+    now_iso = datetime.now(timezone.utc).isoformat()
 
-    if codigo_questao not in q_map:
-        return {"sucesso": False, "mensagem": "Questão não encontrada no quadro."}
+    # Caso especial: aprovar todas as questões pendentes de um usuário de uma só vez
+    if codigo_questao == "TODAS" and email_u and email_u in resp_usuarios:
+        u_questoes = resp_usuarios[email_u].get("questoes", {})
+        count = 0
+        for cod, item in u_questoes.items():
+            if item.get("status_validacao") in ["enviado", "retorno_para_ajuste", "validado"]:
+                item["status_validacao"] = "validado"
+                item["aprovado_em"] = now_iso
+                item["aprovado_por"] = solicitante_email
+                item["mensagem_devolucao"] = ""
+                item["observacao_devolucao"] = ""
+                u_questoes[cod] = item
+                q_map[cod] = dict(item)
+                count += 1
+        resp_usuarios[email_u]["questoes"] = u_questoes
+        quadro["questoes_respondidas"] = q_map
+        quadro["respostas_usuarios"] = resp_usuarios
+        if db:
+            db.collection("quadro_subsecretarias").document(sub_upper).set(quadro)
+        return {
+            "sucesso": True,
+            "mensagem": f"{count} questão(ões) de {resp_usuarios[email_u].get('usuario', {}).get('nome', email_u)} aprovada(s) e enviada(s) para o Formulário!"
+        }
 
-    item = q_map[codigo_questao]
-    item["status_validacao"] = "validado"
-    item["aprovado_em"] = datetime.now(timezone.utc).isoformat()
-    item["aprovado_por"] = solicitante_email
-    item["mensagem_devolucao"] = ""
-    item["observacao_devolucao"] = ""
+    item_alvo = None
+    if email_u and email_u in resp_usuarios:
+        u_questoes = resp_usuarios[email_u].get("questoes", {})
+        if codigo_questao in u_questoes:
+            item_alvo = u_questoes[codigo_questao]
+            item_alvo["status_validacao"] = "validado"
+            item_alvo["aprovado_em"] = now_iso
+            item_alvo["aprovado_por"] = solicitante_email
+            item_alvo["mensagem_devolucao"] = ""
+            item_alvo["observacao_devolucao"] = ""
+            u_questoes[codigo_questao] = item_alvo
+            resp_usuarios[email_u]["questoes"] = u_questoes
 
-    q_map[codigo_questao] = item
+    if not item_alvo and codigo_questao in q_map:
+        item_alvo = q_map[codigo_questao]
+        item_alvo["status_validacao"] = "validado"
+        item_alvo["aprovado_em"] = now_iso
+        item_alvo["aprovado_por"] = solicitante_email
+        item_alvo["mensagem_devolucao"] = ""
+        item_alvo["observacao_devolucao"] = ""
+
+    if not item_alvo:
+        return {"sucesso": False, "mensagem": "Questão não encontrada para aprovação."}
+
+    # Envia para o formulário consolidado (questoes_respondidas)
+    q_map[codigo_questao] = dict(item_alvo)
     quadro["questoes_respondidas"] = q_map
+    quadro["respostas_usuarios"] = resp_usuarios
 
     if db:
         try:
-            db.collection("quadro_subsecretarias").document(sub_upper).set(quadro, merge=True)
+            db.collection("quadro_subsecretarias").document(sub_upper).set(quadro)
         except Exception as e:
             return {"sucesso": False, "mensagem": str(e)}
 
     return {
         "sucesso": True,
-        "mensagem": f"Questão {codigo_questao} validada e aprovada com sucesso!"
+        "mensagem": f"Questão {codigo_questao} aprovada e enviada para o Formulário de Consolidação!"
     }
 
-def devolver_questao_para_usuario(subsecretaria: str, codigo_questao: str, observacao: str, solicitante_email: str) -> dict:
+def devolver_questao_para_usuario(subsecretaria: str, codigo_questao: str, observacao: str, solicitante_email: str, email_usuario: str = "") -> dict:
     """
-    Marca uma questão específica no quadro da subsecretaria como 'devolvido' com a mensagem:
-    'o ponto focal do PAR solicitou uma nova analise'
-    e notifica o usuário que a respondeu para que ele possa editar e reenviar.
+    Marca uma questão específica de um servidor como 'devolvido' para que ele possa editar e reenviar.
     """
     sub_upper = subsecretaria.strip().upper()
+    email_u = (email_usuario or "").strip().lower()
     quadro = obter_quadro_subsecretaria(sub_upper)
     q_map = quadro.get("questoes_respondidas", {})
+    resp_usuarios = quadro.get("respostas_usuarios", {})
+    now_iso = datetime.now(timezone.utc).isoformat()
 
-    if codigo_questao not in q_map:
-        return {"sucesso": False, "mensagem": "Esta questão ainda não foi respondida por nenhum servidor."}
+    item_alvo = None
+    autor_email = email_u
 
-    item = q_map[codigo_questao]
-    autor_email = (item.get("respondido_por", {}).get("email") or "").strip().lower()
+    if email_u and email_u in resp_usuarios:
+        u_questoes = resp_usuarios[email_u].get("questoes", {})
+        if codigo_questao in u_questoes:
+            item_alvo = u_questoes[codigo_questao]
+            item_alvo["status_validacao"] = "devolvido"
+            item_alvo["mensagem_devolucao"] = "o ponto focal do PAR solicitou uma nova analise"
+            item_alvo["observacao_devolucao"] = observacao or ""
+            item_alvo["devolvido_em"] = now_iso
+            item_alvo["devolvido_por"] = solicitante_email
+            item_alvo["total_devolucoes"] = item_alvo.get("total_devolucoes", 0) + 1
+            u_questoes[codigo_questao] = item_alvo
+            resp_usuarios[email_u]["questoes"] = u_questoes
 
-    item["status_validacao"] = "devolvido"
-    item["mensagem_devolucao"] = "o ponto focal do PAR solicitou uma nova analise"
-    item["observacao_devolucao"] = observacao or ""
-    item["devolvido_em"] = datetime.now(timezone.utc).isoformat()
-    item["devolvido_por"] = solicitante_email
-    item["total_devolucoes"] = item.get("total_devolucoes", 0) + 1
+    if codigo_questao in q_map:
+        qm_item = q_map[codigo_questao]
+        qm_email = (qm_item.get("respondido_por", {}).get("email") or "").strip().lower()
+        if not autor_email:
+            autor_email = qm_email
+        if not item_alvo or qm_email == autor_email:
+            qm_item["status_validacao"] = "devolvido"
+            qm_item["mensagem_devolucao"] = "o ponto focal do PAR solicitou uma nova analise"
+            qm_item["observacao_devolucao"] = observacao or ""
+            qm_item["devolvido_em"] = now_iso
+            qm_item["devolvido_por"] = solicitante_email
+            qm_item["total_devolucoes"] = item_alvo.get("total_devolucoes", qm_item.get("total_devolucoes", 0) + 1) if item_alvo else (qm_item.get("total_devolucoes", 0) + 1)
+            # Remove do formulário aprovado enquanto estiver devolvida
+            del q_map[codigo_questao]
+            if not item_alvo:
+                item_alvo = qm_item
+                if autor_email:
+                    if autor_email not in resp_usuarios:
+                        resp_usuarios[autor_email] = {
+                            "usuario": qm_item.get("respondido_por", {"email": autor_email, "subsecretaria": sub_upper}),
+                            "ultima_submissao": now_iso,
+                            "questoes": {}
+                        }
+                    resp_usuarios[autor_email]["questoes"][codigo_questao] = item_alvo
 
-    q_map[codigo_questao] = item
+    if not item_alvo:
+        return {"sucesso": False, "mensagem": "Esta questão não foi encontrada para devolução."}
+
     quadro["questoes_respondidas"] = q_map
+    quadro["respostas_usuarios"] = resp_usuarios
 
     if db:
         try:
-            db.collection("quadro_subsecretarias").document(sub_upper).set(quadro, merge=True)
+            db.collection("quadro_subsecretarias").document(sub_upper).set(quadro)
             if autor_email:
                 db.collection("usuarios_perfis").document(autor_email).set({
                     "tem_devolucao_pendente": True
@@ -535,8 +818,240 @@ def devolver_questao_para_usuario(subsecretaria: str, codigo_questao: str, obser
 
     return {
         "sucesso": True,
-        "mensagem": f"Questão {codigo_questao} devolvida com sucesso para {item.get('respondido_por', {}).get('nome', autor_email)}."
+        "mensagem": f"Questão {codigo_questao} devolvida com sucesso para {item_alvo.get('respondido_por', {}).get('nome', autor_email)}."
     }
+
+def nao_utilizar_resposta_usuario(subsecretaria: str, codigo_questao: str, solicitante_email: str, email_usuario: str) -> dict:
+    """
+    Marca a resposta de um usuário específico como 'nao_utilizada' (ex: quando dois usuários responderam a mesma questão).
+    """
+    sub_upper = subsecretaria.strip().upper()
+    email_u = (email_usuario or "").strip().lower()
+    quadro = obter_quadro_subsecretaria(sub_upper)
+    q_map = quadro.get("questoes_respondidas", {})
+    resp_usuarios = quadro.get("respostas_usuarios", {})
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    if not email_u or email_u not in resp_usuarios:
+        return {"sucesso": False, "mensagem": "Usuário não encontrado no monitoramento desta subsecretaria."}
+
+    u_questoes = resp_usuarios[email_u].get("questoes", {})
+    if codigo_questao not in u_questoes:
+        return {"sucesso": False, "mensagem": "Questão não encontrada nas respostas deste usuário."}
+
+    item = u_questoes[codigo_questao]
+    item["status_validacao"] = "nao_utilizada"
+    item["descartado_em"] = now_iso
+    item["descartado_por"] = solicitante_email
+    u_questoes[codigo_questao] = item
+    resp_usuarios[email_u]["questoes"] = u_questoes
+
+    # Se esta resposta estava no formulário ativo e pertencia a este mesmo usuário, retira do formulário
+    if codigo_questao in q_map:
+        qm_email = (q_map[codigo_questao].get("respondido_por", {}).get("email") or "").strip().lower()
+        if qm_email == email_u:
+            del q_map[codigo_questao]
+
+    quadro["questoes_respondidas"] = q_map
+    quadro["respostas_usuarios"] = resp_usuarios
+
+    if db:
+        try:
+            db.collection("quadro_subsecretarias").document(sub_upper).set(quadro)
+        except Exception as e:
+            return {"sucesso": False, "mensagem": str(e)}
+
+    return {
+        "sucesso": True,
+        "mensagem": f"Resposta da questão {codigo_questao} ({item.get('respondido_por', {}).get('nome', email_u)}) marcada como 'Não Utilizar'."
+    }
+
+def solicitar_reabertura_consolidacao(subsecretaria: str, motivo: str, solicitante_email: str) -> dict:
+    """
+    Permite ao Master 2 solicitar ao Master 1 (Admin Geral) a devolução/reabertura da Consolidação Oficial para edição.
+    """
+    sub_upper = subsecretaria.strip().upper()
+    quadro = obter_quadro_subsecretaria(sub_upper)
+    if quadro.get("status_consolidacao") != "consolidado_oficial":
+        return {"sucesso": False, "mensagem": "Esta subsecretaria ainda não está com consolidação finalizada."}
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    quadro["solicitou_reabertura"] = True
+    quadro["motivo_reabertura"] = motivo or "Solicitação de ajuste pelo Ponto Focal."
+    quadro["data_solicitacao_reabertura"] = now_iso
+    quadro["solicitante_reabertura"] = solicitante_email
+
+    proto = quadro.get("protocolo_consolidacao")
+    if db:
+        try:
+            db.collection("quadro_subsecretarias").document(sub_upper).set(quadro)
+            if proto:
+                db.collection("submissoes_par").document(proto).set({
+                    "solicitou_reabertura": True,
+                    "motivo_reabertura": quadro["motivo_reabertura"],
+                    "data_solicitacao_reabertura": now_iso
+                }, merge=True)
+        except Exception as e:
+            return {"sucesso": False, "mensagem": str(e)}
+
+    return {
+        "sucesso": True,
+        "mensagem": "Solicitação enviada ao Administrador Geral (Master 1)! Assim que autorizada, o formulário será reaberto para edição."
+    }
+
+def reabrir_consolidacao_oficial(subsecretaria: str, solicitante_email: str) -> dict:
+    """
+    Permite ao Master 1 (Admin Geral) cancelar/devolver a Consolidação Oficial para o Ponto Focal (Master 2)
+    fazer alterações, restaurando integralmente as respostas no formulário do Ponto Focal.
+    """
+    sub_upper = subsecretaria.strip().upper()
+    quadro = obter_quadro_subsecretaria(sub_upper)
+    consolidacao_doc = check_consolidacao_subsecretaria(sub_upper)
+
+    if not consolidacao_doc and quadro.get("status_consolidacao") != "consolidado_oficial":
+        return {"sucesso": False, "mensagem": f"Nenhuma consolidação oficial ativa encontrada para {sub_upper}."}
+
+    proto_id = (consolidacao_doc.get("protocolo_id") or consolidacao_doc.get("id") or quadro.get("protocolo_consolidacao")) if consolidacao_doc else quadro.get("protocolo_consolidacao")
+
+    # Restaura as questões da consolidação oficial de volta para questoes_respondidas e respostas_usuarios
+    q_restauradas = {}
+    resp_usuarios_restaurados = {}
+    if consolidacao_doc:
+        for r in consolidacao_doc.get("respostas", []):
+            cod = r.get("codigo_questao")
+            if cod:
+                r_copy = dict(r)
+                r_copy["status_validacao"] = "validado"
+                q_restauradas[cod] = r_copy
+        if isinstance(consolidacao_doc.get("respostas_usuarios_backup"), dict):
+            resp_usuarios_restaurados = consolidacao_doc.get("respostas_usuarios_backup")
+
+    if not resp_usuarios_restaurados and q_restauradas:
+        # Reconstrói respostas_usuarios a partir das questões restauradas caso seja consolidação anterior
+        for cod, r_item in q_restauradas.items():
+            resp_por = r_item.get("respondido_por", {})
+            u_email = (resp_por.get("email") or "").strip().lower() or "ponto_focal@seedf"
+            if u_email not in resp_usuarios_restaurados:
+                resp_usuarios_restaurados[u_email] = {
+                    "usuario": {
+                        "nome": resp_por.get("nome", "Ponto Focal"),
+                        "email": u_email,
+                        "setor": resp_por.get("setor", sub_upper),
+                        "subsecretaria": sub_upper
+                    },
+                    "protocolo_id": proto_id or "",
+                    "ultima_submissao": r_item.get("data_resposta", datetime.now(timezone.utc).isoformat()),
+                    "questoes": {}
+                }
+            resp_usuarios_restaurados[u_email]["questoes"][cod] = dict(r_item)
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    quadro["status_consolidacao"] = "em_andamento"
+    quadro["solicitou_reabertura"] = False
+    quadro["motivo_reabertura"] = ""
+    quadro["reaberto_em"] = now_iso
+    quadro["reaberto_por"] = solicitante_email
+    quadro["protocolo_consolidacao"] = None
+    if q_restauradas:
+        quadro["questoes_respondidas"] = q_restauradas
+    if resp_usuarios_restaurados:
+        quadro["respostas_usuarios"] = resp_usuarios_restaurados
+
+    if db:
+        try:
+            db.collection("quadro_subsecretarias").document(sub_upper).set(quadro)
+            # Atualiza quaisquer documentos consolidacao_oficial dessa subsecretaria em submissoes_par
+            docs = db.collection("submissoes_par").where("responsavel.subsecretaria", "==", sub_upper).stream()
+            for d in docs:
+                sdata = d.to_dict()
+                if sdata.get("tipo_envio") == "consolidacao_oficial":
+                    db.collection("submissoes_par").document(d.id).set({
+                        "tipo_envio": "consolidacao_reaberta_historico",
+                        "reaberto_em": now_iso,
+                        "reaberto_por": solicitante_email
+                    }, merge=True)
+        except Exception as e:
+            return {"sucesso": False, "mensagem": str(e)}
+
+    return {
+        "sucesso": True,
+        "mensagem": f"Consolidação da {sub_upper} devolvida com sucesso! Todas as {len(q_restauradas)} questões foram restauradas no painel do Ponto Focal para edição."
+    }
+
+def reatribuir_questao_reporte(reporte_id: str, nova_subsecretaria: str, resposta_master1: str = "") -> dict:
+    """
+    Redireciona uma questão reportada da Subsecretaria de origem para a Subsecretaria correta escolhida pelo Master 1.
+    """
+    if not db:
+        return {"sucesso": False, "mensagem": "Banco de dados indisponível."}
+    try:
+        rep_ref = db.collection("reportes_competencia").document(reporte_id)
+        rep_doc = rep_ref.get()
+        if not rep_doc.exists:
+            return {"sucesso": False, "mensagem": "Reporte não encontrado."}
+
+        rep = rep_doc.to_dict()
+        cod = rep.get("codigo_questao", "")
+        sub_origem = (rep.get("subsecretaria") or "").strip().upper()
+        sub_destino = (nova_subsecretaria or "").strip().upper()
+
+        if not cod or not sub_destino:
+            return {"sucesso": False, "mensagem": "Código da questão e Subsecretaria de destino são obrigatórios."}
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        reatrib_ref = db.collection("reatribuicoes_questoes").document(cod)
+        reatrib_doc = reatrib_ref.get()
+        reatrib_data = reatrib_doc.to_dict() if reatrib_doc.exists else {
+            "codigo_questao": cod,
+            "remover_de": [],
+            "adicionar_em": []
+        }
+
+        remover_de = set(s.upper() for s in reatrib_data.get("remover_de", []))
+        adicionar_em = set(s.upper() for s in reatrib_data.get("adicionar_em", []))
+
+        if sub_origem and sub_origem != sub_destino:
+            remover_de.add(sub_origem)
+            adicionar_em.discard(sub_origem)
+
+        adicionar_em.add(sub_destino)
+        remover_de.discard(sub_destino)
+
+        reatrib_data["codigo_questao"] = cod
+        reatrib_data["remover_de"] = list(remover_de)
+        reatrib_data["adicionar_em"] = list(adicionar_em)
+        reatrib_data["atualizado_em"] = now_iso
+        reatrib_ref.set(reatrib_data)
+
+        # Remove a questão do quadro ativo da subsecretaria de origem caso alguém já a tivesse rascunhado lá
+        if sub_origem and sub_origem != sub_destino:
+            quadro_orig = obter_quadro_subsecretaria(sub_origem)
+            alterou_q = False
+            if cod in quadro_orig.get("questoes_respondidas", {}):
+                del quadro_orig["questoes_respondidas"][cod]
+                alterou_q = True
+            for u_em, u_obj in quadro_orig.get("respostas_usuarios", {}).items():
+                if cod in u_obj.get("questoes", {}):
+                    del u_obj["questoes"][cod]
+                    alterou_q = True
+            if alterou_q:
+                db.collection("quadro_subsecretarias").document(sub_origem).set(quadro_orig)
+
+        msg_padrao = resposta_master1 or f"Questão redirecionada da {sub_origem} para a {sub_destino} pelo Administrador Geral."
+        rep_ref.set({
+            "status": "reatribuido",
+            "nova_subsecretaria": sub_destino,
+            "resposta_master1": msg_padrao,
+            "atualizado_em": now_iso
+        }, merge=True)
+
+        return {
+            "sucesso": True,
+            "mensagem": f"Questão {cod} retirada da {sub_origem} e encaminhada para o caderno da {sub_destino} com sucesso!"
+        }
+    except Exception as e:
+        print(f"Erro reatribuir_questao_reporte: {e}")
+        return {"sucesso": False, "mensagem": str(e)}
 
 def criar_reporte_competencia(subsecretaria: str, codigo_questao: str, enunciado: str, justificativa: str, reportado_por: dict) -> dict:
     """
