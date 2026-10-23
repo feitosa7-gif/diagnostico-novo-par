@@ -745,6 +745,20 @@ def aprovar_questao_ponto_focal(subsecretaria: str, codigo_questao: str, solicit
 
     # Envia para o formulário consolidado (questoes_respondidas)
     q_map[codigo_questao] = dict(item_alvo)
+
+    # Se uma resposta específica foi escolhida e aprovada para o formulário,
+    # as respostas concorrentes de outros servidores para esta mesma questão são marcadas como 'nao_utilizada'
+    if email_u:
+        for outro_email, u_data in resp_usuarios.items():
+            if outro_email != email_u:
+                outro_item = u_data.get("questoes", {}).get(codigo_questao)
+                if outro_item and outro_item.get("status_validacao") in ["enviado", "retorno_para_ajuste"]:
+                    outro_item["status_validacao"] = "nao_utilizada"
+                    outro_item["descartado_em"] = now_iso
+                    outro_item["descartado_por"] = solicitante_email
+                    outro_item["motivo_descarte"] = f"Aprovada resposta concorrente de {item_alvo.get('respondido_por', {}).get('nome', email_u)}"
+                    u_data["questoes"][codigo_questao] = outro_item
+
     quadro["questoes_respondidas"] = q_map
     quadro["respostas_usuarios"] = resp_usuarios
 

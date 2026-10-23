@@ -2153,26 +2153,27 @@
 
       const aprovadasCount = Object.values(qMap).filter(r => codigosCaderno.has(r.codigo_questao) && r.status_validacao !== "devolvido").length;
 
+      // Métricas calculadas POR QUESTÃO DO CADERNO (ligando todos os painéis entre si):
       let aguardandoAprovacaoCount = 0;
       let devolvidasCount = 0;
-      Object.values(respUsuarios).forEach(uObj => {
-        Object.values(uObj.questoes || {}).forEach(qItem => {
-          if (!codigosCaderno.has(qItem.codigo_questao)) return;
-          if (qItem.status_validacao === "devolvido") {
-            devolvidasCount++;
-          } else if (qItem.status_validacao === "enviado" || qItem.status_validacao === "retorno_para_ajuste") {
+      let duplicatasCount = 0;
+
+      questoesCarregadas.forEach(q => {
+        const resp = qMap[q.codigo];
+        const jaAprovada = resp && resp.status_validacao !== "devolvido";
+        const envios = enviosPorCodigo[q.codigo] || [];
+        const enviosAtivos = envios.filter(e => e.status_validacao !== "nao_utilizada");
+
+        const temAguardando = enviosAtivos.some(e => e.status_validacao === "enviado" || e.status_validacao === "retorno_para_ajuste");
+        const temDevolvida = enviosAtivos.some(e => e.status_validacao === "devolvido") || (resp && resp.status_validacao === "devolvido");
+
+        if (temDevolvida) {
+          devolvidasCount++;
+        } else if (!jaAprovada) {
+          if (temAguardando) {
             aguardandoAprovacaoCount++;
           }
-        });
-      });
-
-      // Contagem de duplicatas ativas (questões com 2+ respostas válidas)
-      const respondentesMap = obterRespondentesPorQuestaoM2();
-      let duplicatasCount = 0;
-      Object.keys(respondentesMap).forEach(cod => {
-        if (codigosCaderno.has(cod)) {
-          const enviosValidos = (respondentesMap[cod] || []).filter(e => e.status !== "nao_utilizada");
-          if (enviosValidos.length > 1) {
+          if (enviosAtivos.length > 1) {
             duplicatasCount++;
           }
         }
@@ -2266,16 +2267,40 @@
         return;
       }
 
+      const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
+
       listaUsuarios.forEach(uObj => {
         const uInfo = uObj.usuario || {};
         const uEmail = (uInfo.email || "").trim().toLowerCase();
         const listaQ = Object.values(uObj.questoes || {});
         const totalEnviadas = listaQ.length;
 
-        const qtdAprovadas = listaQ.filter(q => q.status_validacao === "validado").length;
-        const qtdPendentesAnalise = listaQ.filter(q => q.status_validacao === "enviado" || q.status_validacao === "retorno_para_ajuste").length;
-        const qtdDevolvidas = listaQ.filter(q => q.status_validacao === "devolvido").length;
-        const qtdNaoUtilizadas = listaQ.filter(q => q.status_validacao === "nao_utilizada").length;
+        let qtdAprovadas = 0;
+        let qtdPendentesAnalise = 0;
+        let qtdDevolvidas = 0;
+        let qtdNaoUtilizadas = 0;
+
+        listaQ.forEach(qItem => {
+          const cod = qItem.codigo_questao;
+          const aprovadaQuadro = qMap[cod];
+          const jaAprovadaQuadro = aprovadaQuadro && aprovadaQuadro.status_validacao !== "devolvido";
+
+          if (qItem.status_validacao === "devolvido") {
+            qtdDevolvidas++;
+          } else if (jaAprovadaQuadro) {
+            const emailAprovado = (aprovadaQuadro.respondido_por?.email || "").toLowerCase();
+            const envolvidos = (aprovadaQuadro.servidores_envolvidos || []).map(e => e.toLowerCase());
+            if (emailAprovado.includes(uEmail) || envolvidos.includes(uEmail)) {
+              qtdAprovadas++;
+            } else {
+              qtdNaoUtilizadas++;
+            }
+          } else if (qItem.status_validacao === "nao_utilizada") {
+            qtdNaoUtilizadas++;
+          } else {
+            qtdPendentesAnalise++;
+          }
+        });
 
         const row = document.createElement("div");
         row.className = "px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:bg-slate-50/80 transition-colors";
@@ -2411,15 +2436,24 @@
           `;
         }
 
+        const aprovadaQuadro = qMap[cod];
+        const jaAprovadaQuadro = aprovadaQuadro && aprovadaQuadro.status_validacao !== "devolvido";
+        const emailAprovado = (aprovadaQuadro?.respondido_por?.email || "").toLowerCase();
+        const envolvidos = (aprovadaQuadro?.servidores_envolvidos || []).map(e => e.toLowerCase());
+        const foiAprovadaDesteServidor = jaAprovadaQuadro && (emailAprovado.includes(emailClean) || envolvidos.includes(emailClean));
+        const foiAprovadaDeOutroServidor = jaAprovadaQuadro && !foiAprovadaDesteServidor;
+
         let badgeSt = "";
-        if (st === "validado") {
+        if (foiAprovadaDesteServidor) {
           badgeSt = `<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-check"></i> Aprovada no Formulário</span>`;
+        } else if (foiAprovadaDeOutroServidor) {
+          badgeSt = `<span class="bg-slate-100 text-slate-600 border border-slate-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-user-check"></i> Aprovada (Outro Servidor Escolhido)</span>`;
         } else if (st === "devolvido") {
           badgeSt = `<span class="bg-red-100 text-red-700 border border-red-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-rotate-left"></i> Devolvida</span>`;
         } else if (st === "nao_utilizada") {
           badgeSt = `<span class="bg-slate-200 text-slate-700 border border-slate-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-ban"></i> Não Utilizada</span>`;
         } else {
-          badgeSt = `<span class="bg-purple-100 text-purple-800 border border-purple-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-clock"></i> Aguardando Aprovação</span>`;
+          badgeSt = `<span class="bg-purple-100 text-purple-800 border border-purple-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-clock"></i> Aguardando Decisão</span>`;
         }
 
         const btn2025 = qCatalogo.tem_2025 ? `
@@ -2450,33 +2484,38 @@
 
           ${htmlAlertaDuplicidade}
 
-          <!-- BOTÕES DIRETOS E SIMPLES: APROVAR, NÃO UTILIZAR OU DEVOLVER (SEM 3 PAINÉIS) -->
+          <!-- BOTÕES DIRETOS E CONECTADOS AO FLUXO GERAL -->
           <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2 flex-wrap">
-            ${st !== 'validado' ? `
-              <button type="button" onclick="aprovarQuestaoPontoFocal('${cod}', '${emailClean}')"
-                      class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-xs flex items-center gap-1.5 transition-all">
-                <i class="fa-solid fa-circle-check"></i> Aprovar Resposta
-              </button>
-            ` : `
+            ${foiAprovadaDesteServidor ? `
               <span class="text-xs font-bold text-emerald-700 mr-auto flex items-center gap-1">
-                <i class="fa-solid fa-circle-check"></i> Resposta já aprovada no formulário
+                <i class="fa-solid fa-circle-check"></i> Esta resposta foi a aprovada para o formulário oficial
               </span>
-            `}
-
-            ${st !== 'nao_utilizada' ? `
-              <button type="button" onclick="naoUtilizarRespostaUsuario('${cod}', '${emailClean}')"
-                      class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all"
-                      title="Descarta esta resposta sem exigir retrabalho do servidor">
-                <i class="fa-solid fa-ban text-slate-500"></i> Não Utilizar
-              </button>
-            ` : ''}
-
-            ${st !== 'devolvido' ? `
+            ` : (foiAprovadaDeOutroServidor ? `
+              <span class="text-xs font-semibold text-slate-500 mr-auto flex items-center gap-1">
+                <i class="fa-solid fa-check text-slate-400"></i> Questão já finalizada no formulário com resposta de outro servidor
+              </span>
+            ` : `
+              ${outrosAtivos.length > 0 ? `
+                <button type="button" onclick="fecharModalQuestoesUsuarioM2(); drillDownMaster2('DUPLICATAS');"
+                        class="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl font-bold text-xs shadow-xs flex items-center gap-1.5 transition-all cursor-pointer">
+                  <i class="fa-solid fa-clone"></i> Decidir em Duplicatas (+${outrosAtivos.length})
+                </button>
+                <button type="button" onclick="naoUtilizarRespostaUsuario('${cod}', '${emailClean}')"
+                        class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all"
+                        title="Descarta esta resposta">
+                  <i class="fa-solid fa-ban text-slate-500"></i> Não Utilizar
+                </button>
+              ` : `
+                <button type="button" onclick="aprovarQuestaoPontoFocal('${cod}', '${emailClean}')"
+                        class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-xs flex items-center gap-1.5 transition-all">
+                  <i class="fa-solid fa-circle-check"></i> Aprovar Resposta
+                </button>
+              `}
               <button type="button" onclick="abrirModalDevolver('${cod}', '${emailClean}')"
                       class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all">
                 <i class="fa-solid fa-rotate-left"></i> Devolver
               </button>
-            ` : ''}
+            `)}
 
             <button type="button" onclick="abrirModalReporte('${cod}')"
                     class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl font-semibold text-xs flex items-center gap-1 transition-all">
@@ -2642,17 +2681,18 @@
 
       const filtradas = questoesCarregadas.filter(q => {
         const aprovada = qMap[q.codigo];
+        const jaAprovada = aprovada && aprovada.status_validacao !== "devolvido";
         const envios = enviosPorCodigo[q.codigo] || [];
         const enviosAtivos = envios.filter(e => e.status_validacao !== "nao_utilizada");
         const temAguardando = enviosAtivos.some(e => e.status_validacao === "enviado" || e.status_validacao === "retorno_para_ajuste");
         const temDevolvida = enviosAtivos.some(e => e.status_validacao === "devolvido") || (aprovada && aprovada.status_validacao === "devolvido");
 
         let passaFiltro = true;
-        if (filtro === "RESPONDIDAS") passaFiltro = aprovada && aprovada.status_validacao !== "devolvido";
-        else if (filtro === "RETORNO") passaFiltro = temAguardando;
-        else if (filtro === "DUPLICATAS") passaFiltro = enviosAtivos.length > 1;
+        if (filtro === "RESPONDIDAS") passaFiltro = jaAprovada;
+        else if (filtro === "RETORNO") passaFiltro = !jaAprovada && temAguardando;
+        else if (filtro === "DUPLICATAS") passaFiltro = !jaAprovada && enviosAtivos.length > 1;
         else if (filtro === "DEVOLVIDAS") passaFiltro = temDevolvida;
-        else if (filtro === "PENDENTES") passaFiltro = !aprovada;
+        else if (filtro === "PENDENTES") passaFiltro = !jaAprovada;
 
         if (!passaFiltro) return false;
 
@@ -2706,12 +2746,14 @@
                   <span class="text-[11px] text-slate-400">(${q.tema})</span>
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
-                  <button type="button" onclick="aprovarMesclarRespostasM2('${q.codigo}')"
-                          class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl font-extrabold text-xs shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
-                          title="Aprova e consolida as respostas dos servidores somando as opções em uma só">
-                    <i class="fa-solid fa-code-merge"></i>
-                    <span>Aprovar as Duas e Consolidar em Uma Só</span>
-                  </button>
+                  ${(q.tipo_input === "checkbox") ? `
+                    <button type="button" onclick="aprovarMesclarRespostasM2('${q.codigo}')"
+                            class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl font-extrabold text-xs shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                            title="Aprova e consolida as respostas dos servidores somando as opções em uma só">
+                      <i class="fa-solid fa-code-merge"></i>
+                      <span>Aprovar as Duas e Consolidar em Uma Só</span>
+                    </button>
+                  ` : ''}
                   <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1.5 shadow-2xs">
                     <i class="fa-solid fa-clone text-amber-600"></i> ${enviosAtivos.length} respostas para decidir
                   </span>
@@ -2819,24 +2861,29 @@
             htmlStatus = `<span class="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded text-[10px] font-bold">Devolvida</span>`;
           } else {
             htmlStatus = `<span class="bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded text-[10px] font-bold">Para Aprovar</span>`;
-            htmlAcoes = `
-              <div class="flex items-center justify-center gap-1.5 flex-wrap">
-                <button onclick="aprovarQuestaoPontoFocal('${q.codigo}', '${emailPrimeiro}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1">
-                  <i class="fa-solid fa-check"></i> Aprovar
-                </button>
-                ${temDuplicidade ? `
-                  <button type="button" onclick="aprovarMesclarRespostasM2('${q.codigo}')" class="px-2 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-2xs" title="Mesclar e aprovar respostas de todos os servidores em uma só">
-                    <i class="fa-solid fa-code-merge"></i> Mesclar Ambas
+            if (temDuplicidade) {
+              htmlAcoes = `
+                <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                  <button type="button" onclick="drillDownMaster2('DUPLICATAS')" class="px-3 py-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Abrir painel comparativo de duplicatas">
+                    <i class="fa-solid fa-clone"></i> Decidir em Duplicatas (${enviosAtivos.length})
                   </button>
-                ` : ''}
-                <button onclick="naoUtilizarRespostaUsuario('${q.codigo}', '${emailPrimeiro}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg font-bold text-[11px] flex items-center gap-1">
-                  <i class="fa-solid fa-ban text-slate-500"></i> Não Usar
-                </button>
-                <button onclick="abrirModalDevolver('${q.codigo}', '${emailPrimeiro}')" class="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center gap-1">
-                  <i class="fa-solid fa-rotate-left"></i> Devolver
-                </button>
-              </div>
-            `;
+                  <button onclick="abrirModalDevolver('${q.codigo}', '${emailPrimeiro}')" class="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center gap-1">
+                    <i class="fa-solid fa-rotate-left"></i> Devolver
+                  </button>
+                </div>
+              `;
+            } else {
+              htmlAcoes = `
+                <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                  <button onclick="aprovarQuestaoPontoFocal('${q.codigo}', '${emailPrimeiro}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1">
+                    <i class="fa-solid fa-check"></i> Aprovar
+                  </button>
+                  <button onclick="abrirModalDevolver('${q.codigo}', '${emailPrimeiro}')" class="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center gap-1">
+                    <i class="fa-solid fa-rotate-left"></i> Devolver
+                  </button>
+                </div>
+              `;
+            }
           }
         }
 
