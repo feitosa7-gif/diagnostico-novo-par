@@ -750,7 +750,7 @@
       <!-- Resumo de Progresso do Quadro da Subsecretaria (Com Drill-Down) -->
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
         <div onclick="drillDownMaster2('TODAS')" id="card-m2-todas"
-             class="cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-brand-700 hover:shadow-md transition-all group">
+             class="cursor-pointer bg-white p-4 rounded-2xl border-2 border-brand-700 shadow-sm transition-all group">
           <div class="flex items-center justify-between">
             <span class="text-[11px] font-bold text-slate-500 uppercase">Total Geral</span>
             <span class="w-6 h-6 flex items-center justify-center bg-slate-100 text-slate-600 rounded-full group-hover:bg-brand-700 group-hover:text-white transition-colors">
@@ -762,7 +762,7 @@
         </div>
 
         <div onclick="drillDownMaster2('RESPONDIDAS')" id="card-m2-respondidas"
-             class="cursor-pointer bg-white p-4 rounded-2xl border-2 border-emerald-600 shadow-sm hover:shadow-md transition-all group">
+             class="cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-emerald-600 hover:shadow-md transition-all group">
           <div class="flex items-center justify-between">
             <span class="text-[11px] font-bold text-emerald-700 uppercase">Aprovadas</span>
             <span class="w-6 h-6 flex items-center justify-center bg-emerald-50 text-emerald-700 rounded-full group-hover:bg-emerald-600 group-hover:text-white transition-colors">
@@ -822,8 +822,8 @@
         </div>
       </div>
 
-      <!-- SEÇÃO PRINCIPAL: MONITORAMENTO DE QUESTÕES POR PESSOA / SERVIDOR (COM OLHINHO 👁️) -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <!-- SEÇÃO PRINCIPAL: MONITORAMENTO DE QUESTÕES POR PESSOA / SERVIDOR (COM OLHINHO 👁️) - EXCLUSIVO DA ABA "P/ APROVAÇÃO" -->
+      <div id="secao-m2-usuarios-monitoramento" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="px-5 py-3.5 border-b border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
@@ -853,15 +853,15 @@
           <div class="flex items-center gap-2 flex-wrap">
             <div class="relative">
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-              <input type="text" id="m2-busca-questoes-caderno" oninput="renderizarMonitoramentoQuestoesM2()"
+              <input type="text" id="m2-busca-questoes-caderno" oninput="onBuscaQuestoesCaderno()"
                      placeholder="Buscar questão por código ou palavra..."
                      class="pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-700 w-52 sm:w-64">
             </div>
             <select id="m2-filtro-status-questao" onchange="drillDownMaster2(this.value)" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-semibold text-slate-700">
-              <option value="RESPONDIDAS" selected>Aprovadas no Formulário</option>
-              <option value="RETORNO">Aguardando Aprovação / Retorno Ajuste</option>
+              <option value="TODAS" selected>Total Geral (Todas do Caderno)</option>
+              <option value="RESPONDIDAS">Aprovadas no Formulário</option>
+              <option value="RETORNO">P/ Aprovação (Aguardando Decisão)</option>
               <option value="DUPLICATAS">⚠️ Duplicatas (2+ Respostas)</option>
-              <option value="TODAS">Todas as Questões do Caderno</option>
               <option value="DEVOLVIDAS">Devolvidas p/ Nova Análise</option>
               <option value="PENDENTES">Ainda Pendentes no Formulário</option>
             </select>
@@ -2030,6 +2030,7 @@
       document.getElementById("tela-master2-dashboard").classList.remove("hidden");
       document.getElementById("m2-badge-sub").textContent = `PONTO FOCAL • ${usuarioAtual.subsecretaria}`;
       await carregarDadosMaster2();
+      drillDownMaster2("TODAS");
     }
 
     async function carregarDadosMaster2() {
@@ -2064,6 +2065,21 @@
         const totalQ = questoesCarregadas.length;
         const codigosCaderno = new Set(questoesCarregadas.map(q => q.codigo));
 
+        // Pre-calcula mapa de envios por código para renderização ultra-rápida sem recálculos
+        const enviosPorCodigo = {};
+        Object.values(respUsuarios).forEach(uObj => {
+          const uInfo = uObj.usuario || {};
+          Object.values(uObj.questoes || {}).forEach(qItem => {
+            const cod = qItem.codigo_questao;
+            if (!enviosPorCodigo[cod]) enviosPorCodigo[cod] = [];
+            enviosPorCodigo[cod].push({
+              ...qItem,
+              usuario_info: uInfo
+            });
+          });
+        });
+        window.enviosPorCodigoM2 = enviosPorCodigo;
+
         const aprovadasCount = Object.values(qMap).filter(r => codigosCaderno.has(r.codigo_questao) && r.status_validacao !== "devolvido").length;
 
         let aguardandoAprovacaoCount = 0;
@@ -2093,15 +2109,17 @@
 
         const pendentesCount = Math.max(0, totalQ - aprovadasCount);
 
-        document.getElementById("m2-stat-total-q").textContent = totalQ;
-        document.getElementById("m2-stat-respondidas").textContent = aprovadasCount;
-        document.getElementById("m2-stat-retorno").textContent = aguardandoAprovacaoCount;
-        document.getElementById("m2-stat-duplicatas").textContent = duplicatasCount;
-        document.getElementById("m2-stat-devolvidas").textContent = devolvidasCount;
-        document.getElementById("m2-stat-pendentes").textContent = pendentesCount;
+        const elTot = document.getElementById("m2-stat-total-q"); if (elTot) elTot.textContent = totalQ;
+        const elApr = document.getElementById("m2-stat-respondidas"); if (elApr) elApr.textContent = aprovadasCount;
+        const elRet = document.getElementById("m2-stat-retorno"); if (elRet) elRet.textContent = aguardandoAprovacaoCount;
+        const elDup = document.getElementById("m2-stat-duplicatas"); if (elDup) elDup.textContent = duplicatasCount;
+        const elDev = document.getElementById("m2-stat-devolvidas"); if (elDev) elDev.textContent = devolvidasCount;
+        const elPen = document.getElementById("m2-stat-pendentes"); if (elPen) elPen.textContent = pendentesCount;
 
         renderizarMonitoramentoPorUsuarioM2();
-        renderizarMonitoramentoQuestoesM2();
+        
+        const filtroAtual = document.getElementById("m2-filtro-status-questao")?.value || "TODAS";
+        drillDownMaster2(filtroAtual);
         renderizarHistoricoSubmissoesM2();
 
         // Se o modal de questões do servidor (Olhinho) estiver aberto, atualiza seu conteúdo sem fechar
@@ -2460,30 +2478,35 @@
         }
       });
 
+      // O Monitoramento por Pessoas/Servidores aparece SOMENTE na aba "P/ Aprovação" (RETORNO)
+      const secaoUsuarios = document.getElementById("secao-m2-usuarios-monitoramento");
+      if (secaoUsuarios) {
+        if (filtroAlvo === "RETORNO") {
+          secaoUsuarios.classList.remove("hidden");
+        } else {
+          secaoUsuarios.classList.add("hidden");
+        }
+      }
+
       renderizarMonitoramentoQuestoesM2();
     }
 
+    let buscaQuestoesM2Timer = null;
+    function onBuscaQuestoesCaderno() {
+      clearTimeout(buscaQuestoesM2Timer);
+      buscaQuestoesM2Timer = setTimeout(() => {
+        renderizarMonitoramentoQuestoesM2();
+      }, 120);
+    }
+
     function renderizarMonitoramentoQuestoesM2() {
-      const filtro = document.getElementById("m2-filtro-status-questao")?.value || "RESPONDIDAS";
+      const filtro = document.getElementById("m2-filtro-status-questao")?.value || "TODAS";
       const buscaTermo = (document.getElementById("m2-busca-questoes-caderno")?.value || "").trim().toLowerCase();
       const corpo = document.getElementById("m2-tabela-monitoramento-questoes");
-      corpo.innerHTML = "";
+      if (!corpo) return;
 
       const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
-      const respUsuarios = quadroAtualSubsecretaria?.respostas_usuarios || {};
-
-      const enviosPorCodigo = {};
-      Object.values(respUsuarios).forEach(uObj => {
-        const uInfo = uObj.usuario || {};
-        Object.values(uObj.questoes || {}).forEach(qItem => {
-          const cod = qItem.codigo_questao;
-          if (!enviosPorCodigo[cod]) enviosPorCodigo[cod] = [];
-          enviosPorCodigo[cod].push({
-            ...qItem,
-            usuario_info: uInfo
-          });
-        });
-      });
+      const enviosPorCodigo = window.enviosPorCodigoM2 || {};
 
       const filtradas = questoesCarregadas.filter(q => {
         const aprovada = qMap[q.codigo];
@@ -2523,6 +2546,8 @@
         return;
       }
 
+      const rowsHtml = [];
+
       filtradas.forEach(q => {
         const resp = qMap[q.codigo];
         const envios = enviosPorCodigo[q.codigo] || [];
@@ -2536,9 +2561,8 @@
 
         // ==================== VISÃO EXCLUSIVA DO DRILL-DOWN "DUPLICATAS" (PAINEL ORGANIZADO) ====================
         if (filtro === "DUPLICATAS") {
-          const tr = document.createElement("tr");
-          tr.className = "hover:bg-amber-50/20 transition-colors border-b border-amber-200/80";
-          tr.innerHTML = `
+          rowsHtml.push(`
+          <tr class="hover:bg-amber-50/20 transition-colors border-b border-amber-200/80">
             <td colspan="5" class="p-4 space-y-3">
               <div class="flex items-center justify-between gap-3 flex-wrap">
                 <div class="flex items-center gap-2 flex-wrap">
@@ -2601,15 +2625,11 @@
               </div>
             </td>
           </tr>
-          `;
-          corpo.appendChild(tr);
+          `);
           return;
         }
 
         // ==================== VISÃO PADRÃO DOS DEMAIS FILTROS ====================
-        const tr = document.createElement("tr");
-        tr.className = "hover:bg-slate-50/80 transition-colors align-middle";
-
         let htmlResposta = `<span class="text-slate-400 italic text-[11px]">Aguardando envio dos setores</span>`;
         let htmlAutor = `<span class="text-slate-400">—</span>`;
         let htmlStatus = `<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-semibold">Pendente</span>`;
@@ -2673,32 +2693,35 @@
           }
         }
 
-        tr.innerHTML = `
-          <td class="py-3 px-4">
-            <span class="font-mono font-bold text-brand-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">${q.codigo}</span>
-            <span class="block text-[10px] text-slate-400 mt-0.5 truncate max-w-[90px]" title="${q.tema}">${q.tema}</span>
-          </td>
-          <td class="py-3 px-4">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="font-semibold text-slate-800 leading-snug text-xs">${q.enunciado}</span>
-              ${btn2025}
-              ${tagDuplicidade}
-            </div>
-            ${htmlResposta}
-          </td>
-          <td class="py-3 px-4">${htmlAutor}</td>
-          <td class="py-3 px-4">${htmlStatus}</td>
-          <td class="py-3 px-4 text-center">
-            <div class="flex items-center justify-center gap-1.5 flex-wrap">
-              ${htmlAcoes}
-              <button onclick="abrirModalReporte('${q.codigo}')" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-lg font-semibold text-[11px] flex items-center gap-1">
-                <i class="fa-solid fa-flag text-amber-600"></i> Reportar
-              </button>
-            </div>
-          </td>
-        `;
-        corpo.appendChild(tr);
+        rowsHtml.push(`
+          <tr class="hover:bg-slate-50/80 transition-colors align-middle">
+            <td class="py-3 px-4">
+              <span class="font-mono font-bold text-brand-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">${q.codigo}</span>
+              <span class="block text-[10px] text-slate-400 mt-0.5 truncate max-w-[90px]" title="${q.tema}">${q.tema}</span>
+            </td>
+            <td class="py-3 px-4">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-semibold text-slate-800 leading-snug text-xs">${q.enunciado}</span>
+                ${btn2025}
+                ${tagDuplicidade}
+              </div>
+              ${htmlResposta}
+            </td>
+            <td class="py-3 px-4">${htmlAutor}</td>
+            <td class="py-3 px-4">${htmlStatus}</td>
+            <td class="py-3 px-4 text-center">
+              <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                ${htmlAcoes}
+                <button onclick="abrirModalReporte('${q.codigo}')" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-lg font-semibold text-[11px] flex items-center gap-1">
+                  <i class="fa-solid fa-flag text-amber-600"></i> Reportar
+                </button>
+              </div>
+            </td>
+          </tr>
+        `);
       });
+
+      corpo.innerHTML = rowsHtml.join("");
     }
 
     function renderizarHistoricoSubmissoesM2() {

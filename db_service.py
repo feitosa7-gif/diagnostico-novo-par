@@ -55,9 +55,11 @@ if os.path.exists("questions_data.json"):
     except Exception as e:
         print(f"Erro ao carregar questions_data.json em db_service: {e}")
 
+_REATRIBUICOES_CACHE = {"data": None, "timestamp": 0}
+
 def obter_reatribuicoes_questoes() -> dict:
     """
-    Retorna mapa de reatribuições de competência feitas pelo Master 1:
+    Retorna mapa de reatribuições de competência feitas pelo Master 1 (com cache de 60s):
     {
       "I.1.1": {
          "codigo_questao": "I.1.1",
@@ -66,6 +68,12 @@ def obter_reatribuicoes_questoes() -> dict:
       }
     }
     """
+    global _REATRIBUICOES_CACHE
+    import time
+    agora = time.time()
+    if _REATRIBUICOES_CACHE["data"] is not None and (agora - _REATRIBUICOES_CACHE["timestamp"] < 60):
+        return _REATRIBUICOES_CACHE["data"]
+
     if not db:
         return {}
     try:
@@ -75,10 +83,12 @@ def obter_reatribuicoes_questoes() -> dict:
             item = d.to_dict()
             cod = item.get("codigo_questao") or d.id
             mapa[cod] = item
+        _REATRIBUICOES_CACHE["data"] = mapa
+        _REATRIBUICOES_CACHE["timestamp"] = agora
         return mapa
     except Exception as e:
         print(f"Erro obter_reatribuicoes_questoes: {e}")
-        return {}
+        return _REATRIBUICOES_CACHE["data"] or {}
 
 def questao_pertence_subsecretaria(q: dict, sub_upper: str, reatrib_map: dict = None) -> bool:
     if sub_upper == "TODAS":
@@ -985,6 +995,8 @@ def reatribuir_questao_reporte(reporte_id: str, nova_subsecretaria: str, respost
     if not db:
         return {"sucesso": False, "mensagem": "Banco de dados indisponível."}
     try:
+        global _REATRIBUICOES_CACHE
+        _REATRIBUICOES_CACHE["data"] = None
         rep_ref = db.collection("reportes_competencia").document(reporte_id)
         rep_doc = rep_ref.get()
         if not rep_doc.exists:
