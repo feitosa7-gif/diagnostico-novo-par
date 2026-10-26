@@ -298,6 +298,17 @@ def aprovar_mesclar_questoes(payload: AprovarMesclarPayload):
         raise HTTPException(status_code=400, detail=res.get("mensagem"))
     return res
 
+@app.post("/api/master2/cancelar_aprovacao_questao")
+def cancelar_aprovacao_questao(payload: AprovarMesclarPayload):
+    res = db_service.cancelar_aprovacao_questao_ponto_focal(
+        subsecretaria=payload.subsecretaria,
+        codigo_questao=payload.codigo_questao,
+        solicitante_email=payload.solicitante_email
+    )
+    if not res.get("sucesso"):
+        raise HTTPException(status_code=400, detail=res.get("mensagem"))
+    return res
+
 @app.post("/api/master2/solicitar_reabertura")
 def solicitar_reabertura(payload: SolicitarReaberturaPayload):
     res = db_service.solicitar_reabertura_consolidacao(

@@ -782,19 +782,19 @@
             </span>
           </div>
           <p id="m2-stat-retorno" class="text-xl font-extrabold text-purple-700 mt-1">0</p>
-          <span class="text-[10px] text-purple-600 font-medium block mt-0.5">Aguardando decisão</span>
+          <span class="text-[10px] text-purple-600 font-medium block mt-0.5">Envio de 1 servidor</span>
         </div>
 
         <div onclick="drillDownMaster2('DUPLICATAS')" id="card-m2-duplicatas"
              class="cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-amber-500 hover:shadow-md transition-all group">
           <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold text-amber-700 uppercase">Duplicatas</span>
+            <span class="text-[11px] font-bold text-amber-700 uppercase">Múltiplas Respostas</span>
             <span class="w-6 h-6 flex items-center justify-center bg-amber-50 text-amber-700 rounded-full group-hover:bg-amber-600 group-hover:text-white transition-colors">
-              <i class="fa-solid fa-clone text-[10px]"></i>
+              <i class="fa-solid fa-users-rays text-[10px]"></i>
             </span>
           </div>
           <p id="m2-stat-duplicatas" class="text-xl font-extrabold text-amber-600 mt-1">0</p>
-          <span class="text-[10px] text-amber-700 font-medium block mt-0.5">2+ respostas enviadas</span>
+          <span class="text-[10px] text-amber-700 font-medium block mt-0.5">2+ servidores enviaram</span>
         </div>
 
         <div onclick="drillDownMaster2('DEVOLVIDAS')" id="card-m2-devolvidas"
@@ -822,21 +822,21 @@
         </div>
       </div>
 
-      <!-- SEÇÃO PRINCIPAL: MONITORAMENTO DE QUESTÕES POR PESSOA / SERVIDOR (COM OLHINHO 👁️) - EXCLUSIVO DA ABA "P/ APROVAÇÃO" -->
-      <div id="secao-m2-usuarios-monitoramento" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <!-- SEÇÃO PRINCIPAL: MONITORAMENTO DE QUESTÕES POR PESSOA / SERVIDOR (COM OLHINHO 👁️ APENAS PARA OBSERVAÇÃO) - VISÍVEL EM "TOTAL GERAL" -->
+      <div id="secao-m2-usuarios-monitoramento" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="px-5 py-3.5 border-b border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
               <i class="fa-solid fa-users-viewfinder text-brand-700"></i>
               Monitoramento de Questões — Pessoas que Enviaram Respostas
             </h3>
-            <p class="text-[11px] text-slate-500">Clique no <strong>olhinho (<i class="fa-regular fa-eye text-brand-700"></i>)</strong> ao lado do nome para abrir o painel flutuante com as questões enviadas.</p>
+            <p class="text-[11px] text-slate-500">Clique no <strong>olhinho (<i class="fa-regular fa-eye text-brand-700"></i>)</strong> ao lado do nome para <strong>consultar / observar</strong> as questões enviadas pelo servidor.</p>
           </div>
           <span id="m2-contagem-usuarios-monitoramento" class="text-xs font-bold text-brand-900 bg-blue-50 border border-blue-200 px-3 py-1 rounded-full">0 pessoa(s)</span>
         </div>
 
         <div id="m2-lista-usuarios-monitoramento" class="divide-y divide-slate-100">
-          <!-- Injetado via JS: Lista limpa de pessoas com Olhinho que abre modal flutuante -->
+          <!-- Injetado via JS: Lista limpa de pessoas com Olhinho que abre modal de consulta -->
         </div>
       </div>
 
@@ -848,7 +848,7 @@
               <i class="fa-solid fa-list-check text-brand-700"></i>
               Visão Geral do Caderno de Questões da Subsecretaria
             </h3>
-            <p class="text-[11px] text-slate-500">Acompanhe o status e aprove, descarte ou devolva com apenas 1 clique.</p>
+            <p class="text-[11px] text-slate-500">Acompanhe o status e aprove, devolva ou cancele uma aprovação com apenas 1 clique.</p>
           </div>
           <div class="flex items-center gap-2 flex-wrap">
             <div class="relative">
@@ -860,8 +860,8 @@
             <select id="m2-filtro-status-questao" onchange="drillDownMaster2(this.value)" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-semibold text-slate-700">
               <option value="TODAS" selected>Total Geral (Todas do Caderno)</option>
               <option value="RESPONDIDAS">Aprovadas no Formulário</option>
-              <option value="RETORNO">P/ Aprovação (Aguardando Decisão)</option>
-              <option value="DUPLICATAS">⚠️ Duplicatas (2+ Respostas)</option>
+              <option value="RETORNO">P/ Aprovação (1 Servidor)</option>
+              <option value="DUPLICATAS">⚠️ Múltiplas Respostas (2+ Servidores)</option>
               <option value="DEVOLVIDAS">Devolvidas p/ Nova Análise</option>
               <option value="PENDENTES">Ainda Pendentes no Formulário</option>
             </select>
@@ -2153,7 +2153,7 @@
 
       const aprovadasCount = Object.values(qMap).filter(r => codigosCaderno.has(r.codigo_questao) && r.status_validacao !== "devolvido").length;
 
-      // Métricas calculadas POR QUESTÃO DO CADERNO (ligando todos os painéis entre si):
+      // Métricas calculadas POR QUESTÃO DO CADERNO (separando estritamente 1 resposta vs 2+ respostas):
       let aguardandoAprovacaoCount = 0;
       let devolvidasCount = 0;
       let duplicatasCount = 0;
@@ -2162,18 +2162,15 @@
         const resp = qMap[q.codigo];
         const jaAprovada = resp && resp.status_validacao !== "devolvido";
         const envios = enviosPorCodigo[q.codigo] || [];
-        const enviosAtivos = envios.filter(e => e.status_validacao !== "nao_utilizada");
-
-        const temAguardando = enviosAtivos.some(e => e.status_validacao === "enviado" || e.status_validacao === "retorno_para_ajuste");
-        const temDevolvida = enviosAtivos.some(e => e.status_validacao === "devolvido") || (resp && resp.status_validacao === "devolvido");
+        const enviosAguardando = envios.filter(e => e.status_validacao === "enviado" || e.status_validacao === "retorno_para_ajuste");
+        const temDevolvida = envios.some(e => e.status_validacao === "devolvido") || (resp && resp.status_validacao === "devolvido");
 
         if (temDevolvida) {
           devolvidasCount++;
         } else if (!jaAprovada) {
-          if (temAguardando) {
+          if (enviosAguardando.length === 1) {
             aguardandoAprovacaoCount++;
-          }
-          if (enviosAtivos.length > 1) {
+          } else if (enviosAguardando.length > 1) {
             duplicatasCount++;
           }
         }
@@ -2357,21 +2354,17 @@
 
       const uInfo = uObj.usuario || {};
       const listaQ = Object.values(uObj.questoes || {});
-      const qtdPendentes = listaQ.filter(q => q.status_validacao === "enviado" || q.status_validacao === "retorno_para_ajuste").length;
 
       document.getElementById("m2-modal-user-titulo").textContent = `${uInfo.nome || "Servidor"} — ${listaQ.length} questão(ões) enviada(s)`;
       document.getElementById("m2-modal-user-subtitulo").textContent = `Setor: ${uInfo.setor || "Não informado"} • ${emailClean}`;
 
       const btnAprovarTodasDiv = document.getElementById("m2-modal-user-btn-aprovar-todas");
-      if (qtdPendentes > 0) {
+      if (btnAprovarTodasDiv) {
         btnAprovarTodasDiv.innerHTML = `
-          <button type="button" onclick="aprovarTodasDoUsuario('${emailClean}', '${(uInfo.nome || 'Servidor').replace(/'/g, "\\'")}')"
-                  class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-bold text-xs shadow-xs flex items-center gap-1.5 transition-all">
-            <i class="fa-solid fa-check-double"></i> Aprovar Todas (${qtdPendentes})
-          </button>
+          <span class="px-3 py-1 bg-white/15 border border-white/25 text-emerald-200 rounded-lg font-bold text-[11px] flex items-center gap-1.5">
+            <i class="fa-regular fa-eye"></i> Modo Somente Observação
+          </span>
         `;
-      } else {
-        btnAprovarTodasDiv.innerHTML = "";
       }
 
       renderizarConteudoModalQuestoesUsuarioM2();
@@ -2384,10 +2377,8 @@
       if (!uObj) return;
 
       const uInfo = uObj.usuario || {};
-      let listaQ = Object.values(uObj.questoes || {}).sort((a, b) => (a.codigo_questao || "").localeCompare(b.codigo_questao || ""));
-
-      // Respostas não utilizadas (descartadas) não são exibidas na lista ativa
-      listaQ = listaQ.filter(q => q.status_validacao !== "nao_utilizada");
+      const qMap = quadroAtualSubsecretaria?.questoes_respondidas || {};
+      let listaQ = Object.values(uObj.questoes || {}).sort((a, b) => compararCodigosQuestoes(a.codigo_questao, b.codigo_questao));
 
       if (termoBuscaModalUsuario) {
         listaQ = listaQ.filter(q => {
@@ -2408,7 +2399,7 @@
       listaEl.innerHTML = "";
 
       if (listaQ.length === 0) {
-        listaEl.innerHTML = `<div class="p-8 text-center text-slate-400">Nenhuma questão pendente ou aprovada para este servidor.</div>`;
+        listaEl.innerHTML = `<div class="p-8 text-center text-slate-400">Nenhuma questão encontrada para este servidor.</div>`;
         return;
       }
 
@@ -2418,24 +2409,7 @@
         const st = qUser.status_validacao || "enviado";
         const opcFmt = Array.isArray(qUser.opcao_marcada) ? qUser.opcao_marcada.join("; ") : (qUser.opcao_marcada || "-");
 
-        // Alerta de duplicidade limpo e direcionando para o painel Duplicatas
         const outrosAtivos = (respondentesPorQuestao[cod] || []).filter(x => x.email !== emailClean && x.status !== "nao_utilizada");
-        let htmlAlertaDuplicidade = "";
-        if (outrosAtivos.length > 0) {
-          htmlAlertaDuplicidade = `
-            <div class="px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-center justify-between gap-2 shadow-2xs">
-              <span class="font-bold flex items-center gap-1.5 text-amber-800">
-                <i class="fa-solid fa-clone text-amber-600"></i>
-                Esta pergunta também foi respondida por +${outrosAtivos.length} servidor(es).
-              </span>
-              <button type="button" onclick="fecharModalQuestoesUsuarioM2(); drillDownMaster2('DUPLICATAS');"
-                      class="px-2.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg font-bold text-[11px] transition-colors shrink-0">
-                Resolver no painel Duplicatas →
-              </button>
-            </div>
-          `;
-        }
-
         const aprovadaQuadro = qMap[cod];
         const jaAprovadaQuadro = aprovadaQuadro && aprovadaQuadro.status_validacao !== "devolvido";
         const emailAprovado = (aprovadaQuadro?.respondido_por?.email || "").toLowerCase();
@@ -2444,16 +2418,25 @@
         const foiAprovadaDeOutroServidor = jaAprovadaQuadro && !foiAprovadaDesteServidor;
 
         let badgeSt = "";
+        let infoRodape = "";
         if (foiAprovadaDesteServidor) {
           badgeSt = `<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-check"></i> Aprovada no Formulário</span>`;
+          infoRodape = `<span class="text-[11px] font-bold text-emerald-700 flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Resposta aprovada no Formulário Oficial (gerencie na aba "Aprovadas")</span>`;
         } else if (foiAprovadaDeOutroServidor) {
           badgeSt = `<span class="bg-slate-100 text-slate-600 border border-slate-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-user-check"></i> Aprovada (Outro Servidor Escolhido)</span>`;
+          infoRodape = `<span class="text-[11px] font-medium text-slate-500 flex items-center gap-1"><i class="fa-solid fa-check text-slate-400"></i> Questão aprovada com a resposta de outro servidor</span>`;
         } else if (st === "devolvido") {
           badgeSt = `<span class="bg-red-100 text-red-700 border border-red-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-rotate-left"></i> Devolvida</span>`;
+          infoRodape = `<span class="text-[11px] font-semibold text-red-700 flex items-center gap-1"><i class="fa-solid fa-rotate-left"></i> Devolvida para nova análise do servidor</span>`;
         } else if (st === "nao_utilizada") {
           badgeSt = `<span class="bg-slate-200 text-slate-700 border border-slate-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-ban"></i> Não Utilizada</span>`;
+          infoRodape = `<span class="text-[11px] font-medium text-slate-500 flex items-center gap-1"><i class="fa-solid fa-ban"></i> Marcada como não utilizada</span>`;
+        } else if (outrosAtivos.length > 0) {
+          badgeSt = `<span class="bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-users-rays"></i> Em Múltiplas Respostas (+${outrosAtivos.length})</span>`;
+          infoRodape = `<span class="text-[11px] font-semibold text-amber-800 flex items-center gap-1"><i class="fa-solid fa-circle-info"></i> Respondida por mais de um servidor — aprove ou consolide na aba <strong>"Múltiplas Respostas"</strong></span>`;
         } else {
-          badgeSt = `<span class="bg-purple-100 text-purple-800 border border-purple-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-clock"></i> Aguardando Decisão</span>`;
+          badgeSt = `<span class="bg-purple-100 text-purple-800 border border-purple-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-clock"></i> Em P/ Aprovação</span>`;
+          infoRodape = `<span class="text-[11px] font-semibold text-purple-800 flex items-center gap-1"><i class="fa-solid fa-circle-info"></i> Respondida apenas por este servidor — aprove ou devolva na aba <strong>"P/ Aprovação"</strong></span>`;
         }
 
         const btn2025 = qCatalogo.tem_2025 ? `
@@ -2463,7 +2446,7 @@
         ` : "";
 
         const item = document.createElement("div");
-        item.className = "p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-3 hover:border-slate-300 transition-colors";
+        item.className = "p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-2.5";
         item.innerHTML = `
           <div class="flex items-center justify-between gap-2 flex-wrap">
             <div class="flex items-center gap-2 flex-wrap">
@@ -2482,45 +2465,8 @@
             ${qUser.evidencia_normativa ? `<p class="text-[11px] text-brand-800 font-medium mt-1"><i class="fa-solid fa-file-shield mr-1"></i>Evidência: ${qUser.evidencia_normativa}</p>` : ''}
           </div>
 
-          ${htmlAlertaDuplicidade}
-
-          <!-- BOTÕES DIRETOS E CONECTADOS AO FLUXO GERAL -->
-          <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2 flex-wrap">
-            ${foiAprovadaDesteServidor ? `
-              <span class="text-xs font-bold text-emerald-700 mr-auto flex items-center gap-1">
-                <i class="fa-solid fa-circle-check"></i> Esta resposta foi a aprovada para o formulário oficial
-              </span>
-            ` : (foiAprovadaDeOutroServidor ? `
-              <span class="text-xs font-semibold text-slate-500 mr-auto flex items-center gap-1">
-                <i class="fa-solid fa-check text-slate-400"></i> Questão já finalizada no formulário com resposta de outro servidor
-              </span>
-            ` : `
-              ${outrosAtivos.length > 0 ? `
-                <button type="button" onclick="fecharModalQuestoesUsuarioM2(); drillDownMaster2('DUPLICATAS');"
-                        class="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl font-bold text-xs shadow-xs flex items-center gap-1.5 transition-all cursor-pointer">
-                  <i class="fa-solid fa-clone"></i> Decidir em Duplicatas (+${outrosAtivos.length})
-                </button>
-                <button type="button" onclick="naoUtilizarRespostaUsuario('${cod}', '${emailClean}')"
-                        class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all"
-                        title="Descarta esta resposta">
-                  <i class="fa-solid fa-ban text-slate-500"></i> Não Utilizar
-                </button>
-              ` : `
-                <button type="button" onclick="aprovarQuestaoPontoFocal('${cod}', '${emailClean}')"
-                        class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-xs flex items-center gap-1.5 transition-all">
-                  <i class="fa-solid fa-circle-check"></i> Aprovar Resposta
-                </button>
-              `}
-              <button type="button" onclick="abrirModalDevolver('${cod}', '${emailClean}')"
-                      class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all">
-                <i class="fa-solid fa-rotate-left"></i> Devolver
-              </button>
-            `)}
-
-            <button type="button" onclick="abrirModalReporte('${cod}')"
-                    class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl font-semibold text-xs flex items-center gap-1 transition-all">
-              <i class="fa-solid fa-flag text-amber-600"></i> Reportar
-            </button>
+          <div class="pt-1.5 border-t border-slate-100 flex items-center justify-between">
+            ${infoRodape}
           </div>
         `;
         listaEl.appendChild(item);
@@ -2563,7 +2509,7 @@
     }
 
     async function naoUtilizarRespostaUsuario(codigoQuestao, emailUsuario) {
-      if (!confirm(`Deseja marcar esta resposta da questão ${codigoQuestao} como "Não Utilizar Resposta"?\n\nEla ficará registrada como descartada (sem exigir retrabalho do servidor) e não irá para o formulário final.`)) return;
+      if (!confirm(`Deseja marcar esta resposta da questão ${codigoQuestao} como "Não Utilizar Resposta"?\n\nEla ficará registrada como descartada (sem exigir retrabalho do servidor) e sairá da fila de aprovação.`)) return;
 
       try {
         const res = await fetch("/api/master2/nao_utilizar_questao", {
@@ -2584,9 +2530,40 @@
           } else {
             await carregarDadosMaster2();
           }
-          mostrarToastNotificacao("aviso", "Concluído!", `A resposta da questão ${codigoQuestao} foi marcada como Não Utilizada e descartada.`);
+          mostrarToastNotificacao("aviso", "Concluído!", `A resposta da questão ${codigoQuestao} foi marcada como Não Utilizada e saiu da fila.`);
         } else {
           alert(data.detail || "Erro ao marcar resposta como não utilizada.");
+        }
+      } catch (e) {
+        alert("Erro de conexão: " + e.message);
+      }
+    }
+
+    async function cancelarAprovacaoQuestaoM2(codigoQuestao) {
+      if (!usuarioAtual || !usuarioAtual.subsecretaria) return;
+      if (!confirm(`Deseja desfazer a decisão da questão ${codigoQuestao} e devolvê-la para a fila de aprovação?`)) return;
+
+      try {
+        const res = await fetch("/api/master2/cancelar_aprovacao_questao", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subsecretaria: usuarioAtual.subsecretaria,
+            codigo_questao: codigoQuestao,
+            solicitante_email: usuarioAtual.email
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          if (data.quadro) {
+            quadroAtualSubsecretaria = data.quadro;
+            atualizarVisualizacaoMaster2();
+          } else {
+            await carregarDadosMaster2();
+          }
+          mostrarToastNotificacao("aviso", "Decisão Desfeita!", `A questão ${codigoQuestao} retornou para a fila de análise.`);
+        } else {
+          alert(data.detail || "Erro ao cancelar aprovação da questão.");
         }
       } catch (e) {
         alert("Erro de conexão: " + e.message);
@@ -2596,7 +2573,7 @@
     async function aprovarMesclarRespostasM2(codigoQuestao) {
       if (!usuarioAtual || !usuarioAtual.subsecretaria) return;
 
-      const confirmar = confirm(`Deseja aprovar e consolidar as respostas enviadas para a questão ${codigoQuestao}?\n\nTodas as opções assinaladas pelos servidores serão somadas e mescladas em uma única resposta oficial no formulário.`);
+      const confirmar = confirm(`Deseja aprovar e consolidar as respostas enviadas para a questão ${codigoQuestao} em uma única resposta oficial no formulário?`);
       if (!confirmar) return;
 
       try {
@@ -2617,7 +2594,7 @@
           } else {
             await carregarDadosMaster2();
           }
-          mostrarToastNotificacao("sucesso", "Concluído com Sucesso!", `Respostas da questão ${codigoQuestao} consolidadas em uma só e enviadas para o Formulário Oficial!`);
+          mostrarToastNotificacao("sucesso", "Concluído com Sucesso!", `Respostas da questão ${codigoQuestao} consolidadas em uma só e enviadas para Aprovadas!`);
         } else {
           alert(data.detail || "Erro ao consolidar respostas.");
         }
@@ -2649,10 +2626,10 @@
         }
       });
 
-      // O Monitoramento por Pessoas/Servidores aparece SOMENTE na aba "P/ Aprovação" (RETORNO)
+      // O Monitoramento por Pessoas/Servidores (Olhinho de observação) aparece SOMENTE na aba "Total Geral" (TODAS)
       const secaoUsuarios = document.getElementById("secao-m2-usuarios-monitoramento");
       if (secaoUsuarios) {
-        if (filtroAlvo === "RETORNO") {
+        if (filtroAlvo === "TODAS") {
           secaoUsuarios.classList.remove("hidden");
         } else {
           secaoUsuarios.classList.add("hidden");
@@ -2683,14 +2660,13 @@
         const aprovada = qMap[q.codigo];
         const jaAprovada = aprovada && aprovada.status_validacao !== "devolvido";
         const envios = enviosPorCodigo[q.codigo] || [];
-        const enviosAtivos = envios.filter(e => e.status_validacao !== "nao_utilizada");
-        const temAguardando = enviosAtivos.some(e => e.status_validacao === "enviado" || e.status_validacao === "retorno_para_ajuste");
-        const temDevolvida = enviosAtivos.some(e => e.status_validacao === "devolvido") || (aprovada && aprovada.status_validacao === "devolvido");
+        const enviosAguardando = envios.filter(e => e.status_validacao === "enviado" || e.status_validacao === "retorno_para_ajuste");
+        const temDevolvida = envios.some(e => e.status_validacao === "devolvido") || (aprovada && aprovada.status_validacao === "devolvido");
 
         let passaFiltro = true;
         if (filtro === "RESPONDIDAS") passaFiltro = jaAprovada;
-        else if (filtro === "RETORNO") passaFiltro = !jaAprovada && temAguardando;
-        else if (filtro === "DUPLICATAS") passaFiltro = !jaAprovada && enviosAtivos.length > 1;
+        else if (filtro === "RETORNO") passaFiltro = !jaAprovada && !temDevolvida && enviosAguardando.length === 1;
+        else if (filtro === "DUPLICATAS") passaFiltro = !jaAprovada && !temDevolvida && enviosAguardando.length > 1;
         else if (filtro === "DEVOLVIDAS") passaFiltro = temDevolvida;
         else if (filtro === "PENDENTES") passaFiltro = !jaAprovada;
 
@@ -2709,8 +2685,10 @@
         let msgVazio = `Nenhuma questão encontrada para este filtro.`;
         if (buscaTermo) {
           msgVazio = `Nenhuma questão encontrada para a pesquisa "${buscaTermo}".`;
+        } else if (filtro === "RETORNO") {
+          msgVazio = `<div class="p-8 text-center"><span class="text-emerald-700 font-bold text-sm"><i class="fa-solid fa-circle-check text-base mr-1"></i> Nenhuma questão individual pendente de aprovação no momento.</span></div>`;
         } else if (filtro === "DUPLICATAS") {
-          msgVazio = `<div class="p-8 text-center"><span class="text-emerald-700 font-bold text-sm"><i class="fa-solid fa-circle-check text-base mr-1"></i> Excelente! Não há respostas duplicadas ou conflitantes pendentes de decisão.</span></div>`;
+          msgVazio = `<div class="p-8 text-center"><span class="text-emerald-700 font-bold text-sm"><i class="fa-solid fa-circle-check text-base mr-1"></i> Excelente! Não há questões com múltiplas respostas pendentes de decisão.</span></div>`;
         } else if (filtro === "RESPONDIDAS") {
           msgVazio = `Nenhuma questão aprovada no formulário ainda.`;
         }
@@ -2724,8 +2702,10 @@
 
       filtradas.forEach(q => {
         const resp = qMap[q.codigo];
+        const jaAprovada = resp && resp.status_validacao !== "devolvido";
         const envios = enviosPorCodigo[q.codigo] || [];
-        const enviosAtivos = envios.filter(e => e.status_validacao !== "nao_utilizada");
+        const enviosAguardando = envios.filter(e => e.status_validacao === "enviado" || e.status_validacao === "retorno_para_ajuste");
+        const temDevolvida = envios.some(e => e.status_validacao === "devolvido") || (resp && resp.status_validacao === "devolvido");
 
         const btn2025 = q.tem_2025 ? `
           <button type="button" onclick="abrirModal2025('${q.codigo}')" class="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-md font-bold text-[10px] inline-flex items-center gap-1 ml-1">
@@ -2733,8 +2713,16 @@
           </button>
         ` : "";
 
-        // ==================== VISÃO EXCLUSIVA DO DRILL-DOWN "DUPLICATAS" (PAINEL ORGANIZADO) ====================
+        // ==================== VISÃO EXCLUSIVA DO DRILL-DOWN "MÚLTIPLAS RESPOSTAS" (2+ SERVIDORES) ====================
         if (filtro === "DUPLICATAS") {
+          const normalizarResp = (val) => {
+            if (Array.isArray(val)) return val.map(x => String(x).trim()).sort().join("||");
+            return String(val || "").trim();
+          };
+          const primeiraRespNorm = enviosAguardando.length > 0 ? normalizarResp(enviosAguardando[0].opcao_marcada) : "";
+          const todasRespostasIguais = enviosAguardando.length > 1 && primeiraRespNorm !== "" && enviosAguardando.every(e => normalizarResp(e.opcao_marcada) === primeiraRespNorm);
+          const podeConsolidarEmUmaSo = (q.tipo_input === "checkbox") || todasRespostasIguais;
+
           rowsHtml.push(`
           <tr class="hover:bg-amber-50/20 transition-colors border-b border-amber-200/80">
             <td colspan="5" class="p-4 space-y-3">
@@ -2744,36 +2732,34 @@
                   <span class="text-xs font-bold text-slate-800 leading-snug">${q.enunciado}</span>
                   ${btn2025}
                   <span class="text-[11px] text-slate-400">(${q.tema})</span>
+                  ${todasRespostasIguais ? `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px]"><i class="fa-solid fa-equals mr-1"></i>Respostas Iguais</span>` : ''}
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
-                  ${(q.tipo_input === "checkbox") ? `
+                  ${podeConsolidarEmUmaSo ? `
                     <button type="button" onclick="aprovarMesclarRespostasM2('${q.codigo}')"
                             class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl font-extrabold text-xs shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
-                            title="Aprova e consolida as respostas dos servidores somando as opções em uma só">
+                            title="Aprova e consolida as respostas em uma única resposta oficial no formulário">
                       <i class="fa-solid fa-code-merge"></i>
                       <span>Aprovar as Duas e Consolidar em Uma Só</span>
                     </button>
                   ` : ''}
                   <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1.5 shadow-2xs">
-                    <i class="fa-solid fa-clone text-amber-600"></i> ${enviosAtivos.length} respostas para decidir
+                    <i class="fa-solid fa-users-rays text-amber-600"></i> ${enviosAguardando.length} respostas para decidir
                   </span>
                 </div>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                ${enviosAtivos.map(e => {
+                ${enviosAguardando.map(e => {
                   const emailE = (e.usuario_info?.email || "").toLowerCase();
-                  const isAprovada = resp && resp.status_validacao !== "devolvido" && (resp.respondido_por?.email || "").toLowerCase() === emailE;
                   const opc = Array.isArray(e.opcao_marcada) ? e.opcao_marcada.join("; ") : (e.opcao_marcada || "-");
 
                   return `
-                    <div class="p-3.5 rounded-2xl border ${isAprovada ? 'border-emerald-400 bg-emerald-50/20 shadow-xs' : 'border-slate-200 bg-white shadow-2xs'} flex flex-col justify-between space-y-3">
+                    <div class="p-3.5 rounded-2xl border border-slate-200 bg-white shadow-2xs flex flex-col justify-between space-y-3">
                       <div class="space-y-1.5">
                         <div class="flex items-center justify-between gap-2">
                           <span class="font-extrabold text-xs text-slate-900">${e.usuario_info?.nome || 'Servidor'}</span>
-                          ${isAprovada 
-                            ? `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px]"><i class="fa-solid fa-check mr-1"></i>Aprovada${resp?.consolidacao_conjunta ? ' (Consolidada)' : ''}</span>`
-                            : `<span class="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 font-bold text-[10px]">Aguardando</span>`}
+                          <span class="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 font-bold text-[10px]">Aguardando</span>
                         </div>
                         <div class="text-[11px] text-slate-500 font-medium">Setor: <strong class="text-slate-700">${e.usuario_info?.setor || 'Não informado'}</strong></div>
 
@@ -2785,19 +2771,10 @@
                       </div>
 
                       <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-1.5 flex-wrap">
-                        ${!isAprovada ? `
-                          <button type="button" onclick="aprovarQuestaoPontoFocal('${q.codigo}', '${emailE}')"
-                                  class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] shadow-2xs flex items-center gap-1 transition-all">
-                            <i class="fa-solid fa-check"></i> Aprovar Esta
-                          </button>
-                          <button type="button" onclick="naoUtilizarRespostaUsuario('${q.codigo}', '${emailE}')"
-                                  class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all"
-                                  title="Descarta esta resposta e faz com que ela suma deste painel">
-                            <i class="fa-solid fa-ban text-slate-500"></i> Não Utilizar
-                          </button>
-                        ` : `
-                          <span class="text-[11px] font-bold text-emerald-700 mr-auto"><i class="fa-solid fa-check-double mr-1"></i>Atualmente Aprovada</span>
-                        `}
+                        <button type="button" onclick="aprovarQuestaoPontoFocal('${q.codigo}', '${emailE}')"
+                                class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] shadow-2xs flex items-center gap-1 transition-all">
+                          <i class="fa-solid fa-check"></i> Aprovar Esta
+                        </button>
                         <button type="button" onclick="abrirModalDevolver('${q.codigo}', '${emailE}')"
                                 class="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all">
                           <i class="fa-solid fa-rotate-left"></i> Devolver
@@ -2819,12 +2796,12 @@
         let htmlStatus = `<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-semibold">Pendente</span>`;
         let htmlAcoes = "";
 
-        const temDuplicidade = enviosAtivos.length > 1;
-        const tagDuplicidade = temDuplicidade
-          ? `<button type="button" onclick="drillDownMaster2('DUPLICATAS')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-[10px] font-bold transition-colors cursor-pointer" title="Clique para abrir o painel de resolução de duplicatas"><i class="fa-solid fa-clone text-amber-600"></i> ${enviosAtivos.length} duplicatas</button>`
+        const temMultiplasAguardando = !jaAprovada && !temDevolvida && enviosAguardando.length > 1;
+        const tagMultiplas = temMultiplasAguardando
+          ? `<button type="button" onclick="drillDownMaster2('DUPLICATAS')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-[10px] font-bold transition-colors cursor-pointer" title="Clique para abrir o painel de Múltiplas Respostas"><i class="fa-solid fa-users-rays text-amber-600"></i> ${enviosAguardando.length} respostas</button>`
           : "";
 
-        if (resp && resp.status_validacao !== "devolvido") {
+        if (jaAprovada) {
           const opc = Array.isArray(resp.opcao_marcada) ? resp.opcao_marcada.join("; ") : (resp.opcao_marcada || "-");
           htmlResposta = `<p class="text-slate-700 font-medium text-xs mt-1"><span class="text-emerald-700 font-bold">Resp:</span> ${opc}</p>`;
           const autor = resp.respondido_por || {};
@@ -2835,56 +2812,91 @@
               <span class="text-[10px] text-slate-500">${autor.setor || "Setor"}</span>
             </div>
           `;
-          htmlStatus = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded text-[10px] font-bold">Aprovada</span>`;
+          htmlStatus = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded text-[10px] font-bold">Aprovada${resp.consolidacao_conjunta ? ' (Consolidada)' : ''}</span>`;
           htmlAcoes = `
-            <button onclick="abrirModalDevolver('${q.codigo}', '${emailAutor}')" class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1">
+            <button type="button" onclick="cancelarAprovacaoQuestaoM2('${q.codigo}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1" title="Cancela a aprovação e devolve a questão para a fila de aprovação">
+              <i class="fa-solid fa-arrow-rotate-left"></i> Cancelar Aprovação
+            </button>
+            <button type="button" onclick="abrirModalDevolver('${q.codigo}', '${emailAutor}')" class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1" title="Solicita nova análise ao servidor">
               <i class="fa-solid fa-rotate-left"></i> Devolver
             </button>
           `;
-        } else if (envios.length > 0) {
-          const primeiro = envios[0];
-          const emailPrimeiro = primeiro.usuario_info?.email || "";
-          const opc = Array.isArray(primeiro.opcao_marcada) ? primeiro.opcao_marcada.join("; ") : (primeiro.opcao_marcada || "-");
-          htmlResposta = `
-            <p class="text-slate-700 font-medium text-xs mt-1">
-              <span class="text-brand-700 font-bold">Resp:</span> ${opc}
-            </p>
-          `;
+        } else if (temDevolvida) {
+          const envioDev = envios.find(e => e.status_validacao === "devolvido") || envios[0] || {};
+          const opc = Array.isArray(envioDev.opcao_marcada) ? envioDev.opcao_marcada.join("; ") : (envioDev.opcao_marcada || "-");
+          htmlResposta = `<p class="text-slate-700 font-medium text-xs mt-1"><span class="text-red-700 font-bold">Resp:</span> ${opc}</p>`;
           htmlAutor = envios.map(e => `
             <div class="text-xs leading-tight mb-0.5">
               <span class="font-bold text-slate-800">${e.usuario_info?.nome || 'Servidor'}</span>
               <span class="text-[10px] text-slate-500">(${e.usuario_info?.setor || 'Setor'})</span>
             </div>
           `).join("");
-
-          if (primeiro.status_validacao === "devolvido") {
-            htmlStatus = `<span class="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded text-[10px] font-bold">Devolvida</span>`;
-          } else {
-            htmlStatus = `<span class="bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded text-[10px] font-bold">Para Aprovar</span>`;
-            if (temDuplicidade) {
-              htmlAcoes = `
-                <div class="flex items-center justify-center gap-1.5 flex-wrap">
-                  <button type="button" onclick="drillDownMaster2('DUPLICATAS')" class="px-3 py-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Abrir painel comparativo de duplicatas">
-                    <i class="fa-solid fa-clone"></i> Decidir em Duplicatas (${enviosAtivos.length})
-                  </button>
-                  <button onclick="abrirModalDevolver('${q.codigo}', '${emailPrimeiro}')" class="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center gap-1">
-                    <i class="fa-solid fa-rotate-left"></i> Devolver
-                  </button>
-                </div>
-              `;
-            } else {
-              htmlAcoes = `
-                <div class="flex items-center justify-center gap-1.5 flex-wrap">
-                  <button onclick="aprovarQuestaoPontoFocal('${q.codigo}', '${emailPrimeiro}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1">
-                    <i class="fa-solid fa-check"></i> Aprovar
-                  </button>
-                  <button onclick="abrirModalDevolver('${q.codigo}', '${emailPrimeiro}')" class="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center gap-1">
-                    <i class="fa-solid fa-rotate-left"></i> Devolver
-                  </button>
-                </div>
-              `;
-            }
-          }
+          htmlStatus = `<span class="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded text-[10px] font-bold">Devolvida</span>`;
+          htmlAcoes = `
+            <button type="button" onclick="cancelarAprovacaoQuestaoM2('${q.codigo}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1" title="Desfaz a devolução e retorna a questão para a fila de aprovação">
+              <i class="fa-solid fa-arrow-rotate-left"></i> Voltar p/ Aprovação
+            </button>
+          `;
+        } else if (enviosAguardando.length === 1) {
+          const unico = enviosAguardando[0];
+          const emailUnico = (unico.usuario_info?.email || "").toLowerCase();
+          const opc = Array.isArray(unico.opcao_marcada) ? unico.opcao_marcada.join("; ") : (unico.opcao_marcada || "-");
+          htmlResposta = `
+            <p class="text-slate-700 font-medium text-xs mt-1">
+              <span class="text-brand-700 font-bold">Resp:</span> ${opc}
+            </p>
+            ${unico.evidencia_normativa ? `<p class="text-[11px] text-brand-800 mt-0.5"><i class="fa-solid fa-file-shield mr-1"></i>${unico.evidencia_normativa}</p>` : ''}
+          `;
+          htmlAutor = `
+            <div class="text-xs leading-tight">
+              <span class="font-bold text-slate-800 block">${unico.usuario_info?.nome || 'Servidor'}</span>
+              <span class="text-[10px] text-slate-500">${unico.usuario_info?.setor || 'Setor'}</span>
+            </div>
+          `;
+          htmlStatus = `<span class="bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded text-[10px] font-bold">Para Aprovar</span>`;
+          htmlAcoes = `
+            <button type="button" onclick="aprovarQuestaoPontoFocal('${q.codigo}', '${emailUnico}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1">
+              <i class="fa-solid fa-check"></i> Aprovar
+            </button>
+            <button type="button" onclick="abrirModalDevolver('${q.codigo}', '${emailUnico}')" class="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center gap-1">
+              <i class="fa-solid fa-rotate-left"></i> Devolver
+            </button>
+            <button type="button" onclick="naoUtilizarRespostaUsuario('${q.codigo}', '${emailUnico}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg font-bold text-[11px] flex items-center gap-1" title="Descarta esta resposta e tira da fila de aprovação">
+              <i class="fa-solid fa-ban text-slate-500"></i> Não Utilizar
+            </button>
+          `;
+        } else if (enviosAguardando.length > 1) {
+          htmlResposta = `
+            <p class="text-amber-800 font-semibold text-xs mt-1">
+              <i class="fa-solid fa-users-rays mr-1"></i> ${enviosAguardando.length} servidores enviaram respostas para esta questão.
+            </p>
+          `;
+          htmlAutor = enviosAguardando.map(e => `
+            <div class="text-xs leading-tight mb-0.5">
+              <span class="font-bold text-slate-800">${e.usuario_info?.nome || 'Servidor'}</span>
+              <span class="text-[10px] text-slate-500">(${e.usuario_info?.setor || 'Setor'})</span>
+            </div>
+          `).join("");
+          htmlStatus = `<span class="bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded text-[10px] font-bold">Múltiplas Respostas</span>`;
+          htmlAcoes = `
+            <button type="button" onclick="drillDownMaster2('DUPLICATAS')" class="px-3 py-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1.5 shadow-2xs cursor-pointer">
+              <i class="fa-solid fa-users-rays"></i> Resolver em Múltiplas Respostas (${enviosAguardando.length})
+            </button>
+          `;
+        } else if (envios.length > 0) {
+          // Todas foram marcadas como "nao_utilizada"
+          htmlResposta = `<span class="text-slate-400 italic text-[11px]">Resposta(s) marcada(s) como não utilizada(s)</span>`;
+          htmlAutor = envios.map(e => `
+            <div class="text-xs leading-tight mb-0.5 text-slate-400">
+              <span class="font-semibold">${e.usuario_info?.nome || 'Servidor'}</span>
+            </div>
+          `).join("");
+          htmlStatus = `<span class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">Não Utilizada</span>`;
+          htmlAcoes = `
+            <button type="button" onclick="cancelarAprovacaoQuestaoM2('${q.codigo}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg font-bold text-[11px] flex items-center gap-1" title="Restaurar para a fila de aprovação">
+              <i class="fa-solid fa-arrow-rotate-left"></i> Restaurar p/ Aprovação
+            </button>
+          `;
         }
 
         rowsHtml.push(`
@@ -2897,7 +2909,7 @@
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="font-semibold text-slate-800 leading-snug text-xs">${q.enunciado}</span>
                 ${btn2025}
-                ${tagDuplicidade}
+                ${tagMultiplas}
               </div>
               ${htmlResposta}
             </td>
@@ -3039,6 +3051,7 @@
 
     async function confirmarDevolucaoQuestao() {
       if (!questaoAlvoDevolucao) return;
+      const codDev = questaoAlvoDevolucao;
       const obs = document.getElementById("input-obs-devolucao").value.trim();
       const btn = document.getElementById("btn-confirmar-devolucao");
       btn.disabled = true;
@@ -3050,7 +3063,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             subsecretaria: usuarioAtual.subsecretaria,
-            codigo_questao: questaoAlvoDevolucao,
+            codigo_questao: codDev,
             observacao: obs,
             solicitante_email: usuarioAtual.email,
             email_usuario: emailAlvoDevolucao || ""
@@ -3073,7 +3086,7 @@
               await carregarQuestionario(true);
             }
           }
-          mostrarToastNotificacao("aviso", "Devolvida com Sucesso!", `Questão ${questaoAlvoDevolucao || ''} devolvida para nova análise do servidor.`);
+          mostrarToastNotificacao("aviso", "Devolvida com Sucesso!", `Questão ${codDev} devolvida para nova análise do servidor.`);
         } else {
           alert(data.detail || "Erro ao devolver questão.");
         }

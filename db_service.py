@@ -785,28 +785,36 @@ def devolver_questao_para_usuario(subsecretaria: str, codigo_questao: str, obser
     resp_usuarios = quadro.get("respostas_usuarios", {})
     now_iso = datetime.now(timezone.utc).isoformat()
 
+    emails_alvo = [e.strip().lower() for e in email_u.split(",") if e.strip()] if email_u else []
     item_alvo = None
-    autor_email = email_u
 
-    if email_u and email_u in resp_usuarios:
-        u_questoes = resp_usuarios[email_u].get("questoes", {})
-        if codigo_questao in u_questoes:
-            item_alvo = u_questoes[codigo_questao]
-            item_alvo["status_validacao"] = "devolvido"
-            item_alvo["mensagem_devolucao"] = "o ponto focal do PAR solicitou uma nova analise"
-            item_alvo["observacao_devolucao"] = observacao or ""
-            item_alvo["devolvido_em"] = now_iso
-            item_alvo["devolvido_por"] = solicitante_email
-            item_alvo["total_devolucoes"] = item_alvo.get("total_devolucoes", 0) + 1
-            u_questoes[codigo_questao] = item_alvo
-            resp_usuarios[email_u]["questoes"] = u_questoes
+    for em in emails_alvo:
+        if em in resp_usuarios:
+            u_questoes = resp_usuarios[em].get("questoes", {})
+            if codigo_questao in u_questoes:
+                it = u_questoes[codigo_questao]
+                it["status_validacao"] = "devolvido"
+                it["mensagem_devolucao"] = "o ponto focal do PAR solicitou uma nova analise"
+                it["observacao_devolucao"] = observacao or ""
+                it["devolvido_em"] = now_iso
+                it["devolvido_por"] = solicitante_email
+                it["total_devolucoes"] = it.get("total_devolucoes", 0) + 1
+                u_questoes[codigo_questao] = it
+                resp_usuarios[em]["questoes"] = u_questoes
+                if not item_alvo:
+                    item_alvo = it
 
     if codigo_questao in q_map:
         qm_item = q_map[codigo_questao]
-        qm_email = (qm_item.get("respondido_por", {}).get("email") or "").strip().lower()
-        if not autor_email:
-            autor_email = qm_email
-        if not item_alvo or qm_email == autor_email:
+        qm_email_raw = (qm_item.get("respondido_por", {}).get("email") or "").strip().lower()
+        qm_emails = [e.strip().lower() for e in qm_email_raw.split(",") if e.strip()]
+        envolvidos = [e.strip().lower() for e in (qm_item.get("servidores_envolvidos") or []) if e.strip()]
+        todos_qm_emails = list(dict.fromkeys(qm_emails + envolvidos))
+
+        if not emails_alvo:
+            emails_alvo = todos_qm_emails
+
+        if not item_alvo or any(em in todos_qm_emails for em in emails_alvo):
             qm_item["status_validacao"] = "devolvido"
             qm_item["mensagem_devolucao"] = "o ponto focal do PAR solicitou uma nova analise"
             qm_item["observacao_devolucao"] = observacao or ""
@@ -815,16 +823,27 @@ def devolver_questao_para_usuario(subsecretaria: str, codigo_questao: str, obser
             qm_item["total_devolucoes"] = item_alvo.get("total_devolucoes", qm_item.get("total_devolucoes", 0) + 1) if item_alvo else (qm_item.get("total_devolucoes", 0) + 1)
             # Remove do formulário aprovado enquanto estiver devolvida
             del q_map[codigo_questao]
+            for em in emails_alvo:
+                if em in resp_usuarios and codigo_questao in resp_usuarios[em].get("questoes", {}):
+                    it_u = resp_usuarios[em]["questoes"][codigo_questao]
+                    it_u["status_validacao"] = "devolvido"
+                    it_u["mensagem_devolucao"] = "o ponto focal do PAR solicitou uma nova analise"
+                    it_u["observacao_devolucao"] = observacao or ""
+                    it_u["devolvido_em"] = now_iso
+                    it_u["devolvido_por"] = solicitante_email
+                    resp_usuarios[em]["questoes"][codigo_questao] = it_u
+                    if not item_alvo:
+                        item_alvo = it_u
             if not item_alvo:
                 item_alvo = qm_item
-                if autor_email:
-                    if autor_email not in resp_usuarios:
-                        resp_usuarios[autor_email] = {
-                            "usuario": qm_item.get("respondido_por", {"email": autor_email, "subsecretaria": sub_upper}),
+                for em in emails_alvo:
+                    if em not in resp_usuarios:
+                        resp_usuarios[em] = {
+                            "usuario": qm_item.get("respondido_por", {"email": em, "subsecretaria": sub_upper}),
                             "ultima_submissao": now_iso,
                             "questoes": {}
                         }
-                    resp_usuarios[autor_email]["questoes"][codigo_questao] = item_alvo
+                    resp_usuarios[em]["questoes"][codigo_questao] = dict(item_alvo)
 
     if not item_alvo:
         return {"sucesso": False, "mensagem": "Esta questão não foi encontrada para devolução."}
@@ -835,16 +854,17 @@ def devolver_questao_para_usuario(subsecretaria: str, codigo_questao: str, obser
     if db:
         try:
             db.collection("quadro_subsecretarias").document(sub_upper).set(quadro)
-            if autor_email:
-                db.collection("usuarios_perfis").document(autor_email).set({
-                    "tem_devolucao_pendente": True
-                }, merge=True)
+            for em in emails_alvo:
+                if em:
+                    db.collection("usuarios_perfis").document(em).set({
+                        "tem_devolucao_pendente": True
+                    }, merge=True)
         except Exception as e:
             return {"sucesso": False, "mensagem": str(e)}
 
     return {
         "sucesso": True,
-        "mensagem": f"Questão {codigo_questao} devolvida com sucesso para {item_alvo.get('respondido_por', {}).get('nome', autor_email)}.",
+        "mensagem": f"Questão {codigo_questao} devolvida com sucesso para revisão.",
         "quadro": quadro
     }
 
@@ -924,6 +944,7 @@ def aprovar_mesclar_questoes_ponto_focal(subsecretaria: str, codigo_questao: str
     nomes_autores = []
     setores_autores = []
     emails_autores = []
+    era_lista = False
 
     for env in envios_ativos:
         u_info = env["usuario"]
@@ -941,12 +962,14 @@ def aprovar_mesclar_questoes_ponto_focal(subsecretaria: str, codigo_questao: str
 
         opc = item.get("opcao_marcada")
         if isinstance(opc, list):
+            era_lista = True
             for o in opc:
                 if o and o not in opcoes_consolidadas:
                     opcoes_consolidadas.append(o)
         elif isinstance(opc, str) and opc.strip():
             partes = [p.strip() for p in opc.split(";") if p.strip()]
             if len(partes) > 1:
+                era_lista = True
                 for p in partes:
                     if p not in opcoes_consolidadas:
                         opcoes_consolidadas.append(p)
@@ -966,7 +989,7 @@ def aprovar_mesclar_questoes_ponto_focal(subsecretaria: str, codigo_questao: str
         item["consolidada_conjuntamente"] = True
         resp_usuarios[email_u]["questoes"][codigo_questao] = item
 
-    resposta_final = opcoes_consolidadas if len(opcoes_consolidadas) > 1 else (opcoes_consolidadas[0] if opcoes_consolidadas else "")
+    resposta_final = opcoes_consolidadas if (era_lista or len(opcoes_consolidadas) > 1) else (opcoes_consolidadas[0] if opcoes_consolidadas else "")
     evidencia_final = " | ".join(evidencias_combinadas)
 
     respondido_por_coletivo = {
@@ -1002,6 +1025,54 @@ def aprovar_mesclar_questoes_ponto_focal(subsecretaria: str, codigo_questao: str
         "sucesso": True,
         "mensagem": f"Respostas de {len(envios_ativos)} servidores consolidadas com sucesso na questão {codigo_questao} e enviadas para o formulário!",
         "item_consolidado": item_consolidado,
+        "quadro": quadro
+    }
+
+def cancelar_aprovacao_questao_ponto_focal(subsecretaria: str, codigo_questao: str, solicitante_email: str) -> dict:
+    """
+    Desfaz a aprovação, descarte ou devolução de uma questão, retirando-a do formulário oficial
+    (questoes_respondidas) e retornando os envios dos servidores para o status 'enviado' (fila de análise).
+    """
+    sub_upper = subsecretaria.strip().upper()
+    quadro = obter_quadro_subsecretaria(sub_upper, pular_hidratacao=True)
+    q_map = quadro.get("questoes_respondidas", {})
+    resp_usuarios = quadro.get("respostas_usuarios", {})
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    estava_no_quadro = codigo_questao in q_map
+    if estava_no_quadro:
+        del q_map[codigo_questao]
+
+    encontrou_envio = False
+    for email_u, u_data in resp_usuarios.items():
+        u_questoes = u_data.get("questoes", {})
+        if codigo_questao in u_questoes:
+            encontrou_envio = True
+            q_item = u_questoes[codigo_questao]
+            q_item["status_validacao"] = "enviado"
+            q_item["consolidada_conjuntamente"] = False
+            q_item["mensagem_devolucao"] = ""
+            q_item["observacao_devolucao"] = ""
+            q_item["reaberto_analise_em"] = now_iso
+            q_item["reaberto_analise_por"] = solicitante_email
+            u_questoes[codigo_questao] = q_item
+            resp_usuarios[email_u]["questoes"] = u_questoes
+
+    if not estava_no_quadro and not encontrou_envio:
+        return {"sucesso": False, "mensagem": f"Questão {codigo_questao} não encontrada para desfazer decisão."}
+
+    quadro["questoes_respondidas"] = q_map
+    quadro["respostas_usuarios"] = resp_usuarios
+
+    if db:
+        try:
+            db.collection("quadro_subsecretarias").document(sub_upper).set(quadro)
+        except Exception as e:
+            return {"sucesso": False, "mensagem": str(e)}
+
+    return {
+        "sucesso": True,
+        "mensagem": f"Decisão da questão {codigo_questao} cancelada! Ela retornou para a fila de aprovação.",
         "quadro": quadro
     }
 
