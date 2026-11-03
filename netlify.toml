@@ -1,0 +1,14 @@
+[build]
+  publish = "static"
+
+# Redireciona chamadas para arquivos estáticos com prefixo /static/
+[[redirects]]
+  from = "/static/*"
+  to = "/:splat"
+  status = 200
+
+# Redireciona SPA se necessário
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

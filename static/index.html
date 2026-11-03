@@ -64,7 +64,7 @@
   <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-4">
-        <img src="/static/logo_par.jpg" alt="Logo PAR SEEDF" class="h-12 w-auto object-contain rounded shadow-xs border border-slate-200">
+        <img src="logo_par.jpg" onerror="this.onerror=null; this.src='https://diagnostico-novo-par-1.onrender.com/static/logo_par.jpg';" alt="Logo PAR SEEDF" class="h-12 w-auto object-contain rounded shadow-xs border border-slate-200">
         <div>
           <h1 class="text-base md:text-lg font-bold text-brand-900 tracking-tight leading-tight">
             Diagnóstico do Novo PAR
@@ -1217,6 +1217,18 @@
 
   <!-- JAVASCRIPT DA APLICAÇÃO -->
   <script>
+    // Configuração de API (Suporta Front-end no Netlify conectando ao Back-end no Render)
+    const API_BASE_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname.endsWith(".onrender.com"))
+      ? ""
+      : "https://diagnostico-novo-par-1.onrender.com";
+
+    // Acorda o backend no Render silenciosamente assim que o Netlify carrega
+    (function despertarBackendRender() {
+      if (API_BASE_URL) {
+        fetch(`${API_BASE_URL}/health`, { method: "GET", cache: "no-store" })
+          .catch(() => {}); // Desperta em segundo plano sem travar
+      }
+    })();
     let usuarioAtual = null;
     let questoesCarregadas = [];
     let quadroAtualSubsecretaria = null;
@@ -1285,7 +1297,7 @@
         try {
           const parsed = JSON.parse(savedUser);
           // Sincroniza estado fresco com o servidor
-          const res = await fetch("/api/auth/entrar", {
+          const res = await fetch(`${API_BASE_URL}/api/auth/entrar`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -1320,7 +1332,7 @@
       clearTimeout(lookupTimer);
       lookupTimer = setTimeout(async () => {
         try {
-          const res = await fetch(`/api/auth/lookup?email=${encodeURIComponent(emailTrim)}`);
+          const res = await fetch(`${API_BASE_URL}/api/auth/lookup?email=${encodeURIComponent(emailTrim)}`);
           if (res.ok) {
             const data = await res.json();
             if (data.encontrado) {
@@ -1384,14 +1396,22 @@
 
       const btn = document.getElementById("btn-entrar");
       btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Entrando...`;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Conectando ao servidor...`;
+
+      // Se demorar mais de 3 segundos (servidor Render acordando do repouso), avisa o usuário elegantemente
+      const avisoTimer = setTimeout(() => {
+        if (btn && btn.disabled) {
+          btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Inicializando conexão segura com a SEEDF... (aguarde)`;
+        }
+      }, 3000);
 
       try {
-        const res = await fetch("/api/auth/entrar", {
+        const res = await fetch(`${API_BASE_URL}/api/auth/entrar`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ nome, email, subsecretaria, setor })
         });
+        clearTimeout(avisoTimer);
         const data = await res.json();
 
         usuarioAtual = data.usuario;
@@ -1482,7 +1502,7 @@
 
     async function carregarDadosMaster1() {
       try {
-        const res = await fetch(`/api/master1/overview?solicitante_email=${encodeURIComponent(usuarioAtual.email)}`);
+        const res = await fetch(`${API_BASE_URL}/api/master1/overview?solicitante_email=${encodeURIComponent(usuarioAtual.email)}`);
         const data = await res.json();
         submissoesCarregadas = data.submissoes || [];
         quadrosTodasSubsecretarias = data.quadros || [];
@@ -1636,7 +1656,7 @@
       const btnPdf = document.getElementById("modal-btn-pdf");
       if (quadro?.protocolo_consolidacao) {
         btnPdf.classList.remove("hidden");
-        btnPdf.onclick = () => window.open(`/api/submissoes/pdf/${quadro.protocolo_consolidacao}`, "_blank");
+        btnPdf.onclick = () => window.open(`${API_BASE_URL}/api/submissoes/pdf/${quadro.protocolo_consolidacao}`, "_blank");
       } else {
         btnPdf.classList.add("hidden");
       }
@@ -1674,7 +1694,7 @@
               ${valorFmt}
             </div>
             ${r.evidencia_normativa ? `<div class="text-[11px] text-brand-900"><i class="fa-solid fa-file-shield mr-1"></i><strong>Evidência:</strong> ${r.evidencia_normativa}</div>` : ''}
-            ${isDevolvido ? `<div class="p-2 bg-red-100 text-red-800 rounded-lg text-[11px] font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ${r.mensagem_devolucao} ${r.observacao_devolucao ? `— "${r.observacao_devolucao}"` : ''}</div>` : ''}
+            ${isDevolvido ? `<div class="p-2 bg-red-100 text-red-800 rounded-lg text-[11px] font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ${r.mensagem_devolucao} ${r.observacao_devolucao ? `— "${r.observacao_devolucao}` : ''}</div>` : ''}
           `;
           container.appendChild(item);
         });
@@ -1713,7 +1733,7 @@
               <button onclick="verDetalhesSubmissao('${sub.protocolo_id || sub.id}')" class="px-2.5 py-1 bg-brand-50 text-brand-700 hover:bg-brand-100 rounded font-semibold text-[11px]">
                 <i class="fa-regular fa-eye mr-1"></i> Ver
               </button>
-              <a href="/api/submissoes/pdf/${sub.protocolo_id || sub.id}" target="_blank" class="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded font-semibold text-[11px] inline-block">
+              <a href="${API_BASE_URL}/api/submissoes/pdf/${sub.protocolo_id || sub.id}" target="_blank" class="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded font-semibold text-[11px] inline-block">
                 <i class="fa-solid fa-file-pdf mr-1"></i> PDF
               </a>
             </td>
@@ -1760,7 +1780,7 @@
                 <button onclick="verDetalhesSubmissao('${sub.protocolo_id || sub.id}')" class="px-2.5 py-1 bg-emerald-600 text-white hover:bg-emerald-700 rounded font-bold text-[11px]">
                   <i class="fa-regular fa-eye mr-1"></i> Inspecionar
                 </button>
-                <a href="/api/submissoes/pdf/${sub.protocolo_id || sub.id}" target="_blank" class="px-2.5 py-1 bg-red-600 text-white hover:bg-red-700 rounded font-bold text-[11px] inline-block">
+                <a href="${API_BASE_URL}/api/submissoes/pdf/${sub.protocolo_id || sub.id}" target="_blank" class="px-2.5 py-1 bg-red-600 text-white hover:bg-red-700 rounded font-bold text-[11px] inline-block">
                   <i class="fa-solid fa-file-pdf mr-1"></i> PDF Oficial
                 </a>
                 <button onclick="devolverConsolidacaoParaPontoFocal('${siglaSub}')" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded font-bold text-[11px] shadow-xs">
@@ -1781,7 +1801,7 @@
       }
 
       try {
-        const res = await fetch("/api/master1/reabrir_consolidacao", {
+        const res = await fetch(`${API_BASE_URL}/api/master1/reabrir_consolidacao`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -1876,7 +1896,7 @@
       }
 
       try {
-        const res = await fetch("/api/master1/reatribuir_reporte", {
+        const res = await fetch(`${API_BASE_URL}/api/master1/reatribuir_reporte`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -1898,7 +1918,7 @@
     }
 
     async function marcarReporteResolvido(reporteId) {
-      const res = await fetch("/api/master1/resolver_reporte", {
+      const res = await fetch(`${API_BASE_URL}/api/master1/resolver_reporte`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1981,7 +2001,7 @@
     async function alterarPerfil(emailAlvo, novoPerfil, statusSolic) {
       if (!confirm(`Confirma a alteração de perfil para ${emailAlvo}?`)) return;
 
-      const res = await fetch(`/api/master1/alterar_perfil?solicitante_email=${encodeURIComponent(usuarioAtual.email)}`, {
+      const res = await fetch(`${API_BASE_URL}/api/master1/alterar_perfil?solicitante_email=${encodeURIComponent(usuarioAtual.email)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email_alvo: emailAlvo, novo_perfil: novoPerfil, status_solicitacao: statusSolic })
@@ -2032,7 +2052,7 @@
       if (motivo === null) return;
 
       try {
-        const res = await fetch("/api/master2/solicitar_reabertura", {
+        const res = await fetch(`${API_BASE_URL}/api/master2/solicitar_reabertura`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -2201,8 +2221,8 @@
     async function carregarDadosMaster2() {
       try {
         const [resSub, resQuestoes] = await Promise.all([
-          fetch(`/api/master/submissoes?solicitante_email=${encodeURIComponent(usuarioAtual.email)}`),
-          fetch(`/api/questoes/${usuarioAtual.subsecretaria}`)
+          fetch(`${API_BASE_URL}/api/master/submissoes?solicitante_email=${encodeURIComponent(usuarioAtual.email)}`),
+          fetch(`${API_BASE_URL}/api/questoes/${usuarioAtual.subsecretaria}`)
         ]);
         const dataSub = await resSub.json();
         const dataQ = await resQuestoes.json();
@@ -2481,7 +2501,7 @@
     async function aprovarTodasDoUsuario(emailUsuario, nomeUsuario) {
       if (!confirm(`Deseja aprovar todas as respostas pendentes enviadas por ${nomeUsuario} e enviá-las para o Painel do Formulário?`)) return;
       try {
-        const res = await fetch("/api/master2/aprovar_questao", {
+        const res = await fetch(`${API_BASE_URL}/api/master2/aprovar_questao`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -2512,7 +2532,7 @@
       if (!confirm(`Deseja marcar esta resposta da questão ${codigoQuestao} como "Não Utilizar Resposta"?\n\nEla ficará registrada como descartada (sem exigir retrabalho do servidor) e sairá da fila de aprovação.`)) return;
 
       try {
-        const res = await fetch("/api/master2/nao_utilizar_questao", {
+        const res = await fetch(`${API_BASE_URL}/api/master2/nao_utilizar_questao`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -2544,7 +2564,7 @@
       if (!confirm(`Deseja desfazer a decisão da questão ${codigoQuestao} e devolvê-la para a fila de aprovação?`)) return;
 
       try {
-        const res = await fetch("/api/master2/cancelar_aprovacao_questao", {
+        const res = await fetch(`${API_BASE_URL}/api/master2/cancelar_aprovacao_questao`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -2577,7 +2597,7 @@
       if (!confirmar) return;
 
       try {
-        const res = await fetch("/api/master2/aprovar_mesclar_questoes", {
+        const res = await fetch(`${API_BASE_URL}/api/master2/aprovar_mesclar_questoes`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -2963,7 +2983,7 @@
             <button onclick="verDetalhesSubmissao('${sub.protocolo_id || sub.id}')" class="px-2.5 py-1 bg-brand-50 text-brand-700 hover:bg-brand-100 rounded font-semibold text-[11px]">
               <i class="fa-regular fa-eye mr-1"></i> Ver
             </button>
-            <a href="/api/submissoes/pdf/${sub.protocolo_id || sub.id}" target="_blank" class="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded font-semibold text-[11px] inline-block">
+            <a href="${API_BASE_URL}/api/submissoes/pdf/${sub.protocolo_id || sub.id}" target="_blank" class="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded font-semibold text-[11px] inline-block">
               <i class="fa-solid fa-file-pdf mr-1"></i> PDF
             </a>
           </td>
@@ -2995,7 +3015,7 @@
 
     async function aprovarQuestaoPontoFocal(codigoQuestao, emailUsuario = "") {
       try {
-        const res = await fetch("/api/master2/aprovar_questao", {
+        const res = await fetch(`${API_BASE_URL}/api/master2/aprovar_questao`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -3058,7 +3078,7 @@
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Devolvendo...`;
 
       try {
-        const res = await fetch("/api/master2/devolver_questao", {
+        const res = await fetch(`${API_BASE_URL}/api/master2/devolver_questao`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -3125,7 +3145,7 @@
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Enviando...`;
 
       try {
-        const res = await fetch("/api/master2/reportar_competencia", {
+        const res = await fetch(`${API_BASE_URL}/api/master2/reportar_competencia`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -3532,7 +3552,7 @@
       };
 
       try {
-        const res = await fetch("/api/submissoes/enviar", {
+        const res = await fetch(`${API_BASE_URL}/api/submissoes/enviar`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
@@ -3584,7 +3604,7 @@
           respostas: respostas
         };
 
-        const res = await fetch("/api/espelho/pdf", {
+        const res = await fetch(`${API_BASE_URL}/api/espelho/pdf`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
@@ -3667,7 +3687,7 @@
       };
 
       try {
-        const res = await fetch("/api/submissoes/enviar", {
+        const res = await fetch(`${API_BASE_URL}/api/submissoes/enviar`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
@@ -3743,7 +3763,7 @@
       }
 
       try {
-        const res = await fetch(`/api/questoes/${usuarioAtual.subsecretaria}`);
+        const res = await fetch(`${API_BASE_URL}/api/questoes/${usuarioAtual.subsecretaria}`);
         const data = await res.json();
         questoesCarregadas = (data.questoes || []).sort((a, b) => compararCodigosQuestoes(a.codigo, b.codigo));
         quadroAtualSubsecretaria = data.quadro || { questoes_respondidas: {}, respostas_usuarios: {} };
@@ -4163,7 +4183,7 @@
       };
 
       try {
-        const res = await fetch("/api/submissoes/enviar", {
+        const res = await fetch(`${API_BASE_URL}/api/submissoes/enviar`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
@@ -4209,13 +4229,13 @@
 
     function baixarPdfSucesso() {
       if (!protocoloSucessoAtual) return;
-      window.open(`/api/submissoes/pdf/${protocoloSucessoAtual}`, "_blank");
+      window.open(`${API_BASE_URL}/api/submissoes/pdf/${protocoloSucessoAtual}`, "_blank");
     }
 
     function baixarPdfComprovante() {
       const proto = usuarioAtual?.submissao_protocolo || document.getElementById("ja-enviou-proto").textContent;
       if (!proto) return;
-      window.open(`/api/submissoes/pdf/${proto}`, "_blank");
+      window.open(`${API_BASE_URL}/api/submissoes/pdf/${proto}`, "_blank");
     }
 
     function exibirTelaJaEnviou(submissao, ehMaster2Consolidado = false) {
@@ -4298,7 +4318,7 @@
 
       const btnPdf = document.getElementById("modal-btn-pdf");
       btnPdf.classList.remove("hidden");
-      btnPdf.onclick = () => window.open(`/api/submissoes/pdf/${sub.protocolo_id || sub.id}`, "_blank");
+      btnPdf.onclick = () => window.open(`${API_BASE_URL}/api/submissoes/pdf/${sub.protocolo_id || sub.id}`, "_blank");
 
       const container = document.getElementById("modal-sub-respostas-lista");
       container.innerHTML = "";
@@ -4356,7 +4376,7 @@
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Enviando...`;
 
       try {
-        const res = await fetch("/api/usuarios/solicitar_master2", {
+        const res = await fetch(`${API_BASE_URL}/api/usuarios/solicitar_master2`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
