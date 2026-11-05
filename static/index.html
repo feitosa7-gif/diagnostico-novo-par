@@ -82,8 +82,9 @@
             <span id="header-user-role" class="text-[10px] px-1.5 py-0.5 rounded font-bold"></span>
           </div>
         </div>
-        <button onclick="fazerLogout()" title="Sair do sistema" class="text-xs text-slate-400 hover:text-red-600 transition-colors p-2 rounded hover:bg-slate-100">
-          <i class="fa-solid fa-arrow-right-from-bracket text-sm"></i>
+        <button type="button" onclick="fazerLogout()" title="Sair do sistema" class="cursor-pointer text-xs font-bold text-red-700 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 shadow-2xs">
+          <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
+          <span>Sair</span>
         </button>
       </div>
     </div>
@@ -416,8 +417,11 @@
         </div>
 
         <div class="flex items-center gap-3">
-          <button onclick="carregarDadosMaster1()" class="px-3.5 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg flex items-center gap-1.5 transition-all">
+          <button onclick="carregarDadosMaster1()" class="cursor-pointer px-3.5 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg flex items-center gap-1.5 transition-all">
             <i class="fa-solid fa-rotate"></i> Atualizar Painel
+          </button>
+          <button type="button" onclick="fazerLogout()" class="cursor-pointer px-3.5 py-2 text-xs font-bold text-red-200 hover:text-white bg-red-500/20 hover:bg-red-600 border border-red-400/30 rounded-lg flex items-center gap-1.5 transition-all">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair
           </button>
         </div>
       </div>
@@ -716,16 +720,20 @@
         </div>
 
         <div class="flex items-center gap-2 flex-wrap">
-          <button onclick="abrirModalPainelEspelhamento()" id="btn-m2-abrir-espelhamento" class="px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow flex items-center gap-2 transition-all">
+          <button onclick="abrirModalPainelEspelhamento()" id="btn-m2-abrir-espelhamento" class="cursor-pointer px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow flex items-center gap-2 transition-all">
             <i class="fa-solid fa-table-cells-large"></i>
             <span>Painel do Formulário & Edição Espelhada</span>
           </button>
-          <button onclick="alternarHistoricoM2()" id="btn-toggle-historico-m2" class="px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl flex items-center gap-1.5 transition-all">
+          <button onclick="alternarHistoricoM2()" id="btn-toggle-historico-m2" class="cursor-pointer px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl flex items-center gap-1.5 transition-all">
             <i class="fa-solid fa-clock-rotate-left text-brand-700"></i>
             <span id="label-toggle-historico-m2">Ver Histórico</span>
           </button>
-          <button onclick="carregarDadosMaster2()" title="Atualizar painel" class="px-3.5 py-2.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">
+          <button onclick="carregarDadosMaster2()" title="Atualizar painel" class="cursor-pointer px-3.5 py-2.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">
             <i class="fa-solid fa-rotate"></i>
+          </button>
+          <button type="button" onclick="fazerLogout()" title="Sair do painel e voltar ao login" class="cursor-pointer px-4 py-2.5 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-600 hover:text-white border border-red-200 rounded-xl flex items-center gap-1.5 transition-all shadow-2xs">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span>Sair do Painel</span>
           </button>
         </div>
       </div>
@@ -4403,9 +4411,42 @@
     }
 
     function fazerLogout() {
-      localStorage.removeItem("par_user");
+      try {
+        localStorage.removeItem("par_user");
+        sessionStorage.clear();
+      } catch (e) {
+        console.error("Erro logout:", e);
+      }
       usuarioAtual = null;
-      window.location.reload();
+
+      // Oculta todas as telas do sistema
+      const secoes = ["tela-master2-dashboard", "tela-master1-dashboard", "tela-questionario", "tela-ja-enviou", "tela-sucesso"];
+      secoes.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add("hidden");
+      });
+
+      // Oculta dados do cabeçalho
+      const headerInfo = document.getElementById("user-header-info");
+      if (headerInfo) headerInfo.classList.add("hidden");
+
+      // Exibe a tela de login limpa
+      const telaLogin = document.getElementById("tela-login");
+      if (telaLogin) telaLogin.classList.remove("hidden");
+
+      // Limpa os campos de login para nova entrada
+      const inpEmail = document.getElementById("login-email");
+      if (inpEmail) inpEmail.value = "";
+      const inpNome = document.getElementById("login-nome");
+      if (inpNome) inpNome.value = "";
+      const inpSetor = document.getElementById("login-setor");
+      if (inpSetor) inpSetor.value = "";
+
+      // Rola a página para o topo
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
+      // Recarrega na URL limpa da aplicação
+      window.location.href = window.location.origin + window.location.pathname;
     }
 
     function formatarData(isoStr) {
