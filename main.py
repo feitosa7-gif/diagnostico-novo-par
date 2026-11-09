@@ -103,6 +103,18 @@ class ReatribuirReportePayload(BaseModel):
 def index():
     return FileResponse("static/index.html")
 
+@app.get("/manifest.json")
+def get_manifest():
+    return FileResponse("static/manifest.json")
+
+@app.get("/logo_par.jpg")
+def get_logo():
+    return FileResponse("static/logo_par.jpg")
+
+@app.get("/favicon.ico")
+def get_favicon():
+    return FileResponse("static/logo_par.jpg")
+
 @app.get("/api/auth/lookup")
 def lookup_usuario(email: str):
     email_clean = email.strip().lower()

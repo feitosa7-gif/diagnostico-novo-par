@@ -3,7 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Diagnóstico do Novo PAR — SEEDF</title>
+  <title>Diagnóstico do Novo PAR — Questionário PAR SEEDF (diagnostico-novo-par)</title>
+  <meta name="description" content="Sistema de Diagnóstico do Novo PAR (Ciclo 2026) — Questionário PAR por Subsecretaria da SEEDF (diagnostico-novo-par)">
+  <meta name="keywords" content="diagnostico, novo, par, questionario, seedf, suplav, dpapp, diagnostico-novo-par, onrender">
+  <meta name="application-name" content="Diagnóstico do Novo PAR — SEEDF">
+  <meta name="apple-mobile-web-app-title" content="Diagnóstico PAR SEEDF">
+  <meta name="theme-color" content="#1b3b6f">
+  <link rel="icon" type="image/jpeg" href="logo_par.jpg">
+  <link rel="apple-touch-icon" href="logo_par.jpg">
+  <link rel="manifest" href="manifest.json">
+  <script>
+    // Garante que o navegador registre a visita com título indexável no histórico/autocompletar da barra de endereços
+    try {
+      const tituloIndexavel = "Diagnóstico do Novo PAR — Questionário PAR SEEDF (diagnostico-novo-par)";
+      document.title = tituloIndexavel;
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({ app: "diagnostico-novo-par", ts: Date.now() }, tituloIndexavel, window.location.href);
+      }
+    } catch (e) {}
+  </script>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -2567,6 +2585,38 @@
       }
     }
 
+    async function rejeitarTodasRespostasQuestaoM2(codigoQuestao) {
+      if (!usuarioAtual || !usuarioAtual.subsecretaria) return;
+      if (!confirm(`Deseja REJEITAR (Não Utilizar) TODAS as respostas enviadas para a questão ${codigoQuestao}?\n\nTodas as respostas desta questão serão marcadas como descartadas e sairão da fila de Múltiplas Respostas.`)) return;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/master2/nao_utilizar_questao`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subsecretaria: usuarioAtual.subsecretaria,
+            codigo_questao: codigoQuestao,
+            solicitante_email: usuarioAtual.email,
+            email_usuario: "TODOS"
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          if (data.quadro) {
+            quadroAtualSubsecretaria = data.quadro;
+            atualizarVisualizacaoMaster2();
+          } else {
+            await carregarDadosMaster2();
+          }
+          mostrarToastNotificacao("aviso", "Respostas Rejeitadas!", `Todas as respostas da questão ${codigoQuestao} foram rejeitadas e saíram da fila.`);
+        } else {
+          alert(data.detail || "Erro ao rejeitar respostas.");
+        }
+      } catch (e) {
+        alert("Erro de conexão: " + e.message);
+      }
+    }
+
     async function cancelarAprovacaoQuestaoM2(codigoQuestao) {
       if (!usuarioAtual || !usuarioAtual.subsecretaria) return;
       if (!confirm(`Deseja desfazer a decisão da questão ${codigoQuestao} e devolvê-la para a fila de aprovação?`)) return;
@@ -2771,6 +2821,12 @@
                       <span>Aprovar as Duas e Consolidar em Uma Só</span>
                     </button>
                   ` : ''}
+                  <button type="button" onclick="rejeitarTodasRespostasQuestaoM2('${q.codigo}')"
+                          class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-extrabold text-xs shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                          title="Rejeita/descarta todas as respostas enviadas para esta questão">
+                    <i class="fa-solid fa-ban"></i>
+                    <span>Rejeitar Todas as Respostas</span>
+                  </button>
                   <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1.5 shadow-2xs">
                     <i class="fa-solid fa-users-rays text-amber-600"></i> ${enviosAguardando.length} respostas para decidir
                   </span>
@@ -2800,12 +2856,17 @@
 
                       <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-1.5 flex-wrap">
                         <button type="button" onclick="aprovarQuestaoPontoFocal('${q.codigo}', '${emailE}')"
-                                class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] shadow-2xs flex items-center gap-1 transition-all">
+                                class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] shadow-2xs flex items-center gap-1 transition-all cursor-pointer">
                           <i class="fa-solid fa-check"></i> Aprovar Esta
                         </button>
                         <button type="button" onclick="abrirModalDevolver('${q.codigo}', '${emailE}')"
-                                class="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all">
+                                class="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer">
                           <i class="fa-solid fa-rotate-left"></i> Devolver
+                        </button>
+                        <button type="button" onclick="naoUtilizarRespostaUsuario('${q.codigo}', '${emailE}')"
+                                class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer"
+                                title="Rejeita/descarta apenas a resposta deste servidor">
+                          <i class="fa-solid fa-ban text-slate-500"></i> Não Utilizar
                         </button>
                       </div>
                     </div>

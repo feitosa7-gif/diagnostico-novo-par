@@ -1,0 +1,16 @@
+{
+  "name": "Diagnóstico do Novo PAR — Questionário SEEDF",
+  "short_name": "Diagnóstico PAR SEEDF",
+  "description": "Sistema de Diagnóstico do Novo PAR (Ciclo 2026) — Questionário por Subsecretaria SEEDF",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1b3b6f",
+  "icons": [
+    {
+      "src": "logo_par.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    }
+  ]
+}

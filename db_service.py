@@ -957,7 +957,8 @@ def devolver_questao_para_usuario(subsecretaria: str, codigo_questao: str, obser
 
 def nao_utilizar_resposta_usuario(subsecretaria: str, codigo_questao: str, solicitante_email: str, email_usuario: str) -> dict:
     """
-    Marca a resposta de um usuário específico como 'nao_utilizada' (ex: quando dois usuários responderam a mesma questão).
+    Marca a resposta de um usuário específico como 'nao_utilizada' (ex: quando dois usuários responderam a mesma questão),
+    ou rejeita/descarta TODAS as respostas daquela questão quando email_usuario == 'TODOS'.
     """
     sub_upper = subsecretaria.strip().upper()
     email_u = (email_usuario or "").strip().lower()
@@ -965,6 +966,37 @@ def nao_utilizar_resposta_usuario(subsecretaria: str, codigo_questao: str, solic
     q_map = quadro.get("questoes_respondidas", {})
     resp_usuarios = quadro.get("respostas_usuarios", {})
     now_iso = datetime.now(timezone.utc).isoformat()
+
+    if email_u in ["todos", "todas"]:
+        count_descartadas = 0
+        for u_em, u_data in resp_usuarios.items():
+            u_questoes = u_data.get("questoes", {})
+            if codigo_questao in u_questoes:
+                item = u_questoes[codigo_questao]
+                if item.get("status_validacao") != "nao_utilizada":
+                    item["status_validacao"] = "nao_utilizada"
+                    item["descartado_em"] = now_iso
+                    item["descartado_por"] = solicitante_email
+                    item["motivo_descarte"] = "Todas as respostas da questão foram rejeitadas pelo Ponto Focal"
+                    u_questoes[codigo_questao] = item
+                    u_data["questoes"] = ordenar_mapa_questoes(u_questoes)
+                    count_descartadas += 1
+        if codigo_questao in q_map:
+            del q_map[codigo_questao]
+        if count_descartadas == 0:
+            return {"sucesso": False, "mensagem": f"Nenhuma resposta ativa encontrada para rejeitar na questão {codigo_questao}."}
+        quadro["questoes_respondidas"] = ordenar_mapa_questoes(q_map)
+        quadro["respostas_usuarios"] = resp_usuarios
+        if db:
+            try:
+                db.collection("quadro_subsecretarias").document(sub_upper).set(quadro)
+            except Exception as e:
+                return {"sucesso": False, "mensagem": str(e)}
+        return {
+            "sucesso": True,
+            "mensagem": f"Todas as {count_descartadas} resposta(s) da questão {codigo_questao} foram rejeitadas com sucesso!",
+            "quadro": quadro
+        }
 
     if not email_u or email_u not in resp_usuarios:
         return {"sucesso": False, "mensagem": "Usuário não encontrado no monitoramento desta subsecretaria."}
