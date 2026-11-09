@@ -63,17 +63,37 @@ def gerar_pdf_submissao(dados_submissao: dict) -> bytes:
     proto = limpar_unicode_latin1(dados_submissao.get("protocolo_id", "N/A"))
     nome_geral = limpar_unicode_latin1(resp.get("nome", "Servidor"))
     email_geral = limpar_unicode_latin1(resp.get("email", "N/A"))
-    sub = limpar_unicode_latin1(resp.get("subsecretaria", "N/A"))
+    sub_raw = (resp.get("subsecretaria") or "N/A").strip().upper()
+    sub = limpar_unicode_latin1(sub_raw)
     setor_geral = limpar_unicode_latin1(resp.get("setor", "Nao informado"))
     tipo_envio = limpar_unicode_latin1(dados_submissao.get("tipo_envio", "resposta_individual"))
     data_envio = limpar_unicode_latin1(dados_submissao.get("data_envio", ""))
+
+    respostas_raw = dados_submissao.get("respostas", [])
+    respostas = db_service.ordenar_lista_respostas(respostas_raw)
+    codigos_respondidos = {str(r.get("codigo_questao", "")).strip() for r in respostas if r.get("codigo_questao")}
+
+    # Identifica todas as questões do caderno da subsecretaria e separa as que não tiveram resposta
+    questoes_caderno = db_service.filtrar_questoes_subsecretaria(sub_raw) if sub_raw and sub_raw != "N/A" else []
+    questoes_sem_resposta = []
+    for q_cat in questoes_caderno:
+        cod_c = str(q_cat.get("codigo", "")).strip()
+        if cod_c and cod_c not in codigos_respondidos:
+            questoes_sem_resposta.append({
+                "codigo_questao": cod_c,
+                "eixo": q_cat.get("eixo", ""),
+                "tema": q_cat.get("tema", ""),
+                "enunciado": q_cat.get("enunciado", "")
+            })
+    questoes_sem_resposta = db_service.ordenar_lista_respostas(questoes_sem_resposta)
+    total_caderno = len(questoes_caderno) if questoes_caderno else len(respostas)
 
     largura_util = 186
 
     # Caixa de identificação no topo
     pdf.set_fill_color(240, 245, 250)
     pdf.set_draw_color(180, 205, 235)
-    pdf.rect(12, 30, largura_util, 28, style="DF")
+    pdf.rect(12, 30, largura_util, 33, style="DF")
 
     pdf.set_xy(16, 32)
     pdf.set_font("helvetica", "B", 10)
@@ -101,24 +121,39 @@ def gerar_pdf_submissao(dados_submissao: dict) -> bytes:
     pdf.cell(90, 4.5, f"Tipo: {tipo_label}", ln=False)
     pdf.cell(90, 4.5, f"Data do Registro: {data_envio[:19]}", ln=True)
 
-    pdf.set_y(62)
+    pdf.set_x(16)
+    pdf.set_font("helvetica", "B", 8.5)
+    if len(questoes_sem_resposta) > 0:
+        pdf.set_text_color(160, 60, 0)
+        pdf.cell(
+            largura_util - 8,
+            4.5,
+            f"Resumo do Caderno ({sub}): {len(respostas)} respondida(s) de {total_caderno} | Sem resposta: {len(questoes_sem_resposta)} questao(oes)",
+            ln=True
+        )
+    else:
+        pdf.set_text_color(0, 100, 50)
+        pdf.cell(
+            largura_util - 8,
+            4.5,
+            f"Resumo do Caderno ({sub}): {len(respostas)} de {total_caderno} questoes respondidas (100% completo)",
+            ln=True
+        )
+
+    pdf.set_y(67)
 
     # Titulo da secao de questoes
     pdf.set_font("helvetica", "B", 10)
     pdf.set_text_color(19, 41, 75)
-    pdf.cell(largura_util, 5, "DETALHAMENTO DAS RESPOSTAS E EVIDENCIAS", ln=True)
+    pdf.cell(largura_util, 5, f"DETALHAMENTO DAS QUESTOES RESPONDIDAS ({len(respostas)})", ln=True)
     pdf.set_draw_color(19, 41, 75)
     pdf.line(12, pdf.get_y(), 12 + largura_util, pdf.get_y())
     pdf.ln(3)
 
-    respostas_raw = dados_submissao.get("respostas", [])
-    if not respostas_raw:
+    if not respostas:
         pdf.set_font("helvetica", "I", 9)
         pdf.cell(largura_util, 8, "Nenhuma resposta registrada para esta submissao.", ln=True)
         return bytes(pdf.output())
-
-    # Ordena estritamente na ordem do questionário original (I.1.1 -> IV.8.2) e enriquece metadados
-    respostas = db_service.ordenar_lista_respostas(respostas_raw)
 
     # Coleta os respondentes únicos mantendo a ordem em que aparecem
     respondentes_unicos = OrderedDict()
@@ -212,6 +247,57 @@ def gerar_pdf_submissao(dados_submissao: dict) -> bytes:
         pdf.set_draw_color(230, 230, 230)
         pdf.line(12, pdf.get_y() + 1.5, 12 + largura_util, pdf.get_y() + 1.5)
         pdf.ln(2.5)
+
+    # Se houver questões do caderno da subsecretaria que não tiveram resposta, lista todas claramente no PDF
+    if len(questoes_sem_resposta) > 0:
+        if pdf.get_y() > 220:
+            pdf.add_page()
+        else:
+            pdf.ln(4)
+
+        pdf.set_fill_color(254, 242, 242)
+        pdf.set_draw_color(239, 68, 68)
+        y_hdr_nr = pdf.get_y()
+        pdf.rect(12, y_hdr_nr, largura_util, 8, style="DF")
+        pdf.set_xy(15, y_hdr_nr + 1.8)
+        pdf.set_font("helvetica", "B", 9)
+        pdf.set_text_color(153, 27, 27)
+        pdf.cell(
+            largura_util - 6,
+            4.5,
+            f"QUESTOES SEM RESPOSTA REGISTRADA ({len(questoes_sem_resposta)} DE {total_caderno} QUESTOES DA {sub})",
+            ln=True
+        )
+        pdf.set_y(y_hdr_nr + 10)
+
+        codigos_nr_str = limpar_unicode_latin1(", ".join([q.get("codigo_questao", "") for q in questoes_sem_resposta]))
+        pdf.set_x(12)
+        pdf.set_font("helvetica", "B", 8)
+        pdf.set_text_color(120, 40, 40)
+        pdf.multi_cell(largura_util, 4, f"Codigos das questoes nao respondidas: {codigos_nr_str}")
+        pdf.ln(2)
+
+        for idx_nr, q_nr in enumerate(questoes_sem_resposta, start=1):
+            cod_nr = limpar_unicode_latin1(q_nr.get("codigo_questao", ""))
+            tema_nr = limpar_unicode_latin1(q_nr.get("tema", ""))
+            enunc_nr = limpar_unicode_latin1(q_nr.get("enunciado", ""))
+
+            if pdf.get_y() > 248:
+                pdf.add_page()
+
+            pdf.set_x(12)
+            pdf.set_font("helvetica", "B", 8)
+            pdf.set_text_color(153, 27, 27)
+            pdf.cell(largura_util, 4.5, f"{idx_nr}. [{cod_nr}] {tema_nr} - (SEM RESPOSTA)", ln=True)
+
+            pdf.set_x(12)
+            pdf.set_font("helvetica", "", 7.8)
+            pdf.set_text_color(80, 80, 80)
+            pdf.multi_cell(largura_util, 3.8, enunc_nr)
+
+            pdf.set_draw_color(240, 220, 220)
+            pdf.line(12, pdf.get_y() + 1, 12 + largura_util, pdf.get_y() + 1)
+            pdf.ln(2)
 
     # Quadro final de responsáveis pelo preenchimento
     if pdf.get_y() > 235:

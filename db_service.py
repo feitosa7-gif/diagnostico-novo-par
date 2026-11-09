@@ -558,25 +558,8 @@ def salvar_submissao(dados: dict) -> dict:
                 "sucesso": False,
                 "mensagem": f"questionario ja enviado (Consolidação oficial da subsecretaria {subsecretaria} já foi homologada sob o protocolo {ja_consolidado.get('protocolo_id')})."
             }
-        
-        # REGRA OBRIGATÓRIA: O Master 2 só pode consolidar e enviar oficialmente se todas as questões estiverem aprovadas/respondidas no formulário
-        total_esperado = obter_total_questoes_subsecretaria(subsecretaria)
+
         quadro_temp = obter_quadro_subsecretaria(subsecretaria)
-        q_map_temp = dict(quadro_temp.get("questoes_respondidas", {}))
-        for r in respostas_preenchidas:
-            q_map_temp[r["codigo_questao"]] = r
-
-        # Filtra apenas questões pertencentes atualmente à subsecretaria
-        questoes_atuais_cods = {q.get("codigo") for q in filtrar_questoes_subsecretaria(subsecretaria)}
-        respondidas_validas = [cod for cod in q_map_temp.keys() if cod in questoes_atuais_cods]
-        total_respondidas_efetivas = len(respondidas_validas)
-
-        if total_esperado > 0 and total_respondidas_efetivas < total_esperado:
-            faltantes = total_esperado - total_respondidas_efetivas
-            return {
-                "sucesso": False,
-                "mensagem": f"A Consolidação Oficial só pode ser enviada quando TODAS as questões da subsecretaria estiverem aprovadas/preenchidas no formulário. Total exigido: {total_esperado} questões. No formulário até o momento: {total_respondidas_efetivas}. Faltam {faltantes} questão(ões) para completar 100%."
-            }
 
         # Verifica se há questões devolvidas aguardando retorno nos usuários
         devolvidas = []
@@ -736,7 +719,23 @@ def salvar_submissao(dados: dict) -> dict:
         # Na consolidação oficial, o documento da submissão leva TODAS as questões consolidadas do quadro na ordem original + backup de respostas_usuarios
         dados["respostas"] = ordenar_lista_respostas(list(q_map.values()))
         dados["respostas_usuarios_backup"] = dict(resp_usuarios)
+        questoes_area = filtrar_questoes_subsecretaria(subsecretaria)
+        codigos_respondidos = {r.get("codigo_questao") for r in dados["respostas"]}
+        sem_resposta = []
+        for q_cat in questoes_area:
+            cod_c = q_cat.get("codigo", "")
+            if cod_c and cod_c not in codigos_respondidos:
+                sem_resposta.append({
+                    "codigo_questao": cod_c,
+                    "eixo": q_cat.get("eixo", ""),
+                    "tema": q_cat.get("tema", ""),
+                    "tipo_atribuicao": q_cat.get("tipo_atribuicao") or ("Comum – todas as áreas" if q_cat.get("is_comum") else "Específica da área"),
+                    "enunciado": q_cat.get("enunciado", "")
+                })
+        dados["questoes_sem_resposta"] = ordenar_lista_respostas(sem_resposta)
+        dados["metricas"]["total_atribuido"] = len(questoes_area)
         dados["metricas"]["total_respondido"] = len(dados["respostas"])
+        dados["metricas"]["total_sem_resposta"] = len(dados["questoes_sem_resposta"])
 
         # Após enviar para homologação oficial, limpa os dados provisórios do quadro vivo
         quadro["questoes_respondidas"] = {}

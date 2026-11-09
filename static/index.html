@@ -3266,8 +3266,9 @@
       
       const totalRespondidas = questoesRespondidasApenas.length;
       const totalQ = questoesCarregadas.length;
+      const totalSemResposta = Math.max(0, totalQ - totalRespondidas);
       if (totalRespondidas < totalQ) {
-        document.getElementById("espelho-contagem-info").innerHTML = `<span class="text-amber-800 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ${totalRespondidas} de ${totalQ} questões aprovadas no formulário</span> <span class="text-slate-500 font-medium">(A consolidação oficial exige 100% das questões aprovadas no formulário)</span>`;
+        document.getElementById("espelho-contagem-info").innerHTML = `<span class="text-amber-800 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ${totalRespondidas} de ${totalQ} questões aprovadas no formulário</span> <span class="text-slate-500 font-medium">(${totalSemResposta} sem resposta — serão indicadas no PDF caso homologue agora)</span>`;
       } else {
         document.getElementById("espelho-contagem-info").innerHTML = `<span class="text-emerald-700 font-bold"><i class="fa-solid fa-circle-check mr-1"></i> 100% das questões aprovadas no formulário (${totalRespondidas} de ${totalQ})</span> <span class="text-slate-500 font-medium">— Pronto para consolidação oficial</span>`;
       }
@@ -3651,14 +3652,8 @@
         return;
       }
 
-      // REGRA: O Master 2 só pode consolidar e enviar oficialmente se TODAS as questões estiverem aprovadas no formulário
       const codigosRespondidos = new Set(respostas.map(r => r.codigo_questao));
       const faltantes = questoesCarregadas.filter(q => !codigosRespondidos.has(q.codigo));
-
-      if (faltantes.length > 0) {
-        alert(`A Consolidação Oficial só pode ser homologada quando TODAS as questões da subsecretaria estiverem aprovadas no formulário.\n\nTotal exigido: ${totalQ} questões\nAprovadas no formulário: ${respostas.length} questões\nFaltam aprovar/responder: ${faltantes.length} questão(ões) (${faltantes.slice(0, 5).map(f => f.codigo).join(", ")}${faltantes.length > 5 ? '...' : ''}).`);
-        return;
-      }
 
       const respUsuarios = quadroAtualSubsecretaria?.respostas_usuarios || {};
       let devolvidasPendentes = 0;
@@ -3673,7 +3668,11 @@
         return;
       }
 
-      if (!confirm(`Confirma a HOMOLOGAÇÃO E ENVIO FINAL da Consolidação Oficial da subsecretaria ${usuarioAtual.subsecretaria} com ${respostas.length} de ${totalQ} questões respondidas (100% completo)?`)) {
+      const msgConfirmConsolidacao = faltantes.length > 0
+        ? `Confirma a HOMOLOGAÇÃO E ENVIO FINAL da Consolidação Oficial da subsecretaria ${usuarioAtual.subsecretaria}?\n\n• Questões respondidas: ${respostas.length} de ${totalQ}\n• Questões sem resposta: ${faltantes.length} (${faltantes.slice(0, 8).map(f => f.codigo).join(", ")}${faltantes.length > 8 ? '...' : ''})\n\nAs questões sem resposta ficarão registradas e indicadas no PDF de comprovação.`
+        : `Confirma a HOMOLOGAÇÃO E ENVIO FINAL da Consolidação Oficial da subsecretaria ${usuarioAtual.subsecretaria} com ${respostas.length} de ${totalQ} questões respondidas (100% completo)?`;
+
+      if (!confirm(msgConfirmConsolidacao)) {
         return;
       }
 
