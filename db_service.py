@@ -55,6 +55,78 @@ if os.path.exists("questions_data.json"):
     except Exception as e:
         print(f"Erro ao carregar questions_data.json em db_service: {e}")
 
+_CATALOGO_POR_CODIGO = {
+    str(q.get("codigo", "")).strip(): q
+    for q in ALL_QUESTIONS_DATA
+    if q.get("codigo")
+}
+_ORDEM_CODIGO = {
+    str(q.get("codigo", "")).strip(): idx
+    for idx, q in enumerate(ALL_QUESTIONS_DATA)
+    if q.get("codigo")
+}
+_ROMANOS = {"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6, "VII": 7, "VIII": 8, "IX": 9, "X": 10}
+
+def chave_ordem_questao(codigo: str) -> tuple:
+    """Retorna tupla de ordenação estrita de acordo com o questionário original (I.1.1 -> IV.8.2)."""
+    cod_str = str(codigo or "").strip()
+    if cod_str in _ORDEM_CODIGO:
+        return (0, _ORDEM_CODIGO[cod_str], ())
+    partes = cod_str.split(".")
+    parsed = []
+    for idx, p in enumerate(partes):
+        p_up = p.strip().upper()
+        if idx == 0 and p_up in _ROMANOS:
+            parsed.append(_ROMANOS[p_up])
+        else:
+            try:
+                parsed.append(int(p_up))
+            except ValueError:
+                parsed.append(9999)
+    return (1, 999999, tuple(parsed), cod_str)
+
+def enriquecer_item_questao(item: dict, codigo_fallback: str = "") -> dict:
+    """Garante que o item de resposta possua eixo, tema, tipo_atribuicao e enunciado do catálogo original."""
+    if not isinstance(item, dict):
+        return item
+    cod = str(item.get("codigo_questao") or codigo_fallback or "").strip()
+    if not cod:
+        return item
+    item_novo = dict(item)
+    item_novo["codigo_questao"] = cod
+    cat = _CATALOGO_POR_CODIGO.get(cod)
+    if cat:
+        if not item_novo.get("eixo"):
+            item_novo["eixo"] = cat.get("eixo", "")
+        if not item_novo.get("tema"):
+            item_novo["tema"] = cat.get("tema", "")
+        if not item_novo.get("tipo_atribuicao"):
+            item_novo["tipo_atribuicao"] = cat.get("tipo_atribuicao", "")
+        if not item_novo.get("enunciado"):
+            item_novo["enunciado"] = cat.get("enunciado", "")
+    return item_novo
+
+def ordenar_lista_respostas(respostas: list) -> list:
+    """Ordena uma lista de objetos de resposta na ordem exata do questionário original e enriquece metadados."""
+    if not isinstance(respostas, list):
+        return []
+    enriquecidas = [enriquecer_item_questao(r) for r in respostas if isinstance(r, dict)]
+    enriquecidas.sort(key=lambda r: chave_ordem_questao(r.get("codigo_questao", "")))
+    return enriquecidas
+
+def ordenar_mapa_questoes(q_map: dict) -> dict:
+    """Ordena um dicionário {codigo_questao: item} na ordem exata do questionário original e enriquece metadados."""
+    if not isinstance(q_map, dict):
+        return {}
+    itens_ordenados = sorted(
+        q_map.items(),
+        key=lambda kv: chave_ordem_questao(kv[0] or (kv[1].get("codigo_questao", "") if isinstance(kv[1], dict) else ""))
+    )
+    novo_mapa = {}
+    for cod, val in itens_ordenados:
+        novo_mapa[cod] = enriquecer_item_questao(val, cod) if isinstance(val, dict) else val
+    return novo_mapa
+
 _REATRIBUICOES_CACHE = {"data": None, "timestamp": 0}
 
 def obter_reatribuicoes_questoes() -> dict:
@@ -306,10 +378,18 @@ def obter_quadro_subsecretaria(subsecretaria: str, pular_hidratacao: bool = Fals
 
             if precisa_salvar:
                 try:
+                    d["questoes_respondidas"] = ordenar_mapa_questoes(d.get("questoes_respondidas", {}))
+                    for u_em, u_obj in d.get("respostas_usuarios", {}).items():
+                        if isinstance(u_obj, dict) and isinstance(u_obj.get("questoes"), dict):
+                            u_obj["questoes"] = ordenar_mapa_questoes(u_obj["questoes"])
                     db.collection("quadro_subsecretarias").document(sub_upper).set(d)
                 except Exception:
                     pass
 
+        d["questoes_respondidas"] = ordenar_mapa_questoes(d.get("questoes_respondidas", {}))
+        for u_em, u_obj in d.get("respostas_usuarios", {}).items():
+            if isinstance(u_obj, dict) and isinstance(u_obj.get("questoes"), dict):
+                u_obj["questoes"] = ordenar_mapa_questoes(u_obj["questoes"])
         return d
     except Exception as e:
         print(f"Erro obter_quadro_subsecretaria: {e}")
@@ -387,7 +467,7 @@ def obter_pendencias_devolucao_usuario(email: str, subsecretaria: str) -> list:
         if resp_email == email_clean and info.get("status_validacao") == "devolvido":
             devolvidas_map[cod] = info
 
-    return list(devolvidas_map.values())
+    return ordenar_lista_respostas(list(devolvidas_map.values()))
 
 def check_consolidacao_subsecretaria(subsecretaria: str):
     if not db or not subsecretaria:
@@ -592,10 +672,10 @@ def salvar_submissao(dados: dict) -> dict:
                 if qm_email == email_clean and q_map[cod].get("status_validacao") == "devolvido":
                     q_map[cod] = dict(item_q)
 
-        user_entry["questoes"] = u_questoes
+        user_entry["questoes"] = ordenar_mapa_questoes(u_questoes)
         resp_usuarios[email_clean] = user_entry
-        # Salva na submissão a lista consolidada de todas as questões enviadas por este usuário
-        dados["respostas"] = list(u_questoes.values())
+        # Salva na submissão a lista consolidada de todas as questões enviadas por este usuário na ordem original
+        dados["respostas"] = ordenar_lista_respostas(list(user_entry["questoes"].values()))
         dados["metricas"]["total_respondido"] = len(dados["respostas"])
 
     else:
@@ -614,7 +694,7 @@ def salvar_submissao(dados: dict) -> dict:
                     "setor": setor_resp,
                     "subsecretaria": subsecretaria
                 }
-            q_map[cod] = {
+            q_map[cod] = enriquecer_item_questao({
                 "codigo_questao": cod,
                 "eixo": r.get("eixo", ""),
                 "tema": r.get("tema", ""),
@@ -628,7 +708,14 @@ def salvar_submissao(dados: dict) -> dict:
                 "mensagem_devolucao": "",
                 "observacao_devolucao": "",
                 "total_devolucoes": devolucoes_count
-            }
+            }, cod)
+        dados["respostas"] = ordenar_lista_respostas(respostas_preenchidas)
+        dados["metricas"]["total_respondido"] = len(dados["respostas"])
+
+    q_map = ordenar_mapa_questoes(q_map)
+    for u_em, u_obj in resp_usuarios.items():
+        if isinstance(u_obj, dict) and isinstance(u_obj.get("questoes"), dict):
+            u_obj["questoes"] = ordenar_mapa_questoes(u_obj["questoes"])
 
     quadro["questoes_respondidas"] = q_map
     quadro["respostas_usuarios"] = resp_usuarios
@@ -646,8 +733,8 @@ def salvar_submissao(dados: dict) -> dict:
             "setor": setor_resp,
             "subsecretaria": subsecretaria
         }
-        # Na consolidação oficial, o documento da submissão leva TODAS as questões consolidadas do quadro + backup de respostas_usuarios
-        dados["respostas"] = list(q_map.values())
+        # Na consolidação oficial, o documento da submissão leva TODAS as questões consolidadas do quadro na ordem original + backup de respostas_usuarios
+        dados["respostas"] = ordenar_lista_respostas(list(q_map.values()))
         dados["respostas_usuarios_backup"] = dict(resp_usuarios)
         dados["metricas"]["total_respondido"] = len(dados["respostas"])
 
@@ -708,8 +795,8 @@ def aprovar_questao_ponto_focal(subsecretaria: str, codigo_questao: str, solicit
                 u_questoes[cod] = item
                 q_map[cod] = dict(item)
                 count += 1
-        resp_usuarios[email_u]["questoes"] = u_questoes
-        quadro["questoes_respondidas"] = q_map
+        resp_usuarios[email_u]["questoes"] = ordenar_mapa_questoes(u_questoes)
+        quadro["questoes_respondidas"] = ordenar_mapa_questoes(q_map)
         quadro["respostas_usuarios"] = resp_usuarios
         if db:
             db.collection("quadro_subsecretarias").document(sub_upper).set(quadro)
@@ -723,17 +810,17 @@ def aprovar_questao_ponto_focal(subsecretaria: str, codigo_questao: str, solicit
     if email_u and email_u in resp_usuarios:
         u_questoes = resp_usuarios[email_u].get("questoes", {})
         if codigo_questao in u_questoes:
-            item_alvo = u_questoes[codigo_questao]
+            item_alvo = enriquecer_item_questao(u_questoes[codigo_questao], codigo_questao)
             item_alvo["status_validacao"] = "validado"
             item_alvo["aprovado_em"] = now_iso
             item_alvo["aprovado_por"] = solicitante_email
             item_alvo["mensagem_devolucao"] = ""
             item_alvo["observacao_devolucao"] = ""
             u_questoes[codigo_questao] = item_alvo
-            resp_usuarios[email_u]["questoes"] = u_questoes
+            resp_usuarios[email_u]["questoes"] = ordenar_mapa_questoes(u_questoes)
 
     if not item_alvo and codigo_questao in q_map:
-        item_alvo = q_map[codigo_questao]
+        item_alvo = enriquecer_item_questao(q_map[codigo_questao], codigo_questao)
         item_alvo["status_validacao"] = "validado"
         item_alvo["aprovado_em"] = now_iso
         item_alvo["aprovado_por"] = solicitante_email
@@ -743,8 +830,8 @@ def aprovar_questao_ponto_focal(subsecretaria: str, codigo_questao: str, solicit
     if not item_alvo:
         return {"sucesso": False, "mensagem": "Questão não encontrada para aprovação."}
 
-    # Envia para o formulário consolidado (questoes_respondidas)
-    q_map[codigo_questao] = dict(item_alvo)
+    # Envia para o formulário consolidado (questoes_respondidas) mantendo ordem do questionário
+    q_map[codigo_questao] = enriquecer_item_questao(dict(item_alvo), codigo_questao)
 
     # Se uma resposta específica foi escolhida e aprovada para o formulário,
     # as respostas concorrentes de outros servidores para esta mesma questão são marcadas como 'nao_utilizada'
@@ -758,8 +845,9 @@ def aprovar_questao_ponto_focal(subsecretaria: str, codigo_questao: str, solicit
                     outro_item["descartado_por"] = solicitante_email
                     outro_item["motivo_descarte"] = f"Aprovada resposta concorrente de {item_alvo.get('respondido_por', {}).get('nome', email_u)}"
                     u_data["questoes"][codigo_questao] = outro_item
+                    u_data["questoes"] = ordenar_mapa_questoes(u_data["questoes"])
 
-    quadro["questoes_respondidas"] = q_map
+    quadro["questoes_respondidas"] = ordenar_mapa_questoes(q_map)
     quadro["respostas_usuarios"] = resp_usuarios
 
     if db:
@@ -999,7 +1087,7 @@ def aprovar_mesclar_questoes_ponto_focal(subsecretaria: str, codigo_questao: str
         "subsecretaria": sub_upper
     }
 
-    item_consolidado = {
+    item_consolidado = enriquecer_item_questao({
         "codigo_questao": codigo_questao,
         "opcao_marcada": resposta_final,
         "evidencia_normativa": evidencia_final,
@@ -1009,10 +1097,13 @@ def aprovar_mesclar_questoes_ponto_focal(subsecretaria: str, codigo_questao: str
         "respondido_por": respondido_por_coletivo,
         "consolidacao_conjunta": True,
         "servidores_envolvidos": emails_autores
-    }
+    }, codigo_questao)
 
     q_map[codigo_questao] = item_consolidado
-    quadro["questoes_respondidas"] = q_map
+    quadro["questoes_respondidas"] = ordenar_mapa_questoes(q_map)
+    for u_em, u_obj in resp_usuarios.items():
+        if isinstance(u_obj, dict) and isinstance(u_obj.get("questoes"), dict):
+            u_obj["questoes"] = ordenar_mapa_questoes(u_obj["questoes"])
     quadro["respostas_usuarios"] = resp_usuarios
 
     if db:
@@ -1325,6 +1416,8 @@ def get_submissao_by_id(protocolo_id: str):
             if doc.exists:
                 d = doc.to_dict()
                 d["id"] = doc.id
+                if isinstance(d.get("respostas"), list):
+                    d["respostas"] = ordenar_lista_respostas(d["respostas"])
                 return d
         except Exception as e:
             print(f"Erro get_submissao_by_id Firestore: {e}")
@@ -1332,7 +1425,10 @@ def get_submissao_by_id(protocolo_id: str):
     local_path = f"backup_respostas/{protocolo_id}.json"
     if os.path.exists(local_path):
         with open(local_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            d = json.load(f)
+            if isinstance(d.get("respostas"), list):
+                d["respostas"] = ordenar_lista_respostas(d["respostas"])
+            return d
     return None
 
 def solicitar_acesso_master2(email: str, nome: str, subsecretaria: str, setor: str = ""):

@@ -398,6 +398,8 @@ def listar_submissoes(solicitante_email: str, subsecretaria: Optional[str] = Non
     for d in docs:
         item = d.to_dict()
         item["id"] = d.id
+        if isinstance(item.get("respostas"), list):
+            item["respostas"] = db_service.ordenar_lista_respostas(item["respostas"])
         lista.append(item)
         
     lista.sort(key=lambda x: x.get("data_envio", ""), reverse=True)
@@ -424,6 +426,8 @@ def master1_overview(solicitante_email: str):
         for d in db.collection("submissoes_par").stream():
             item = d.to_dict()
             item["id"] = d.id
+            if isinstance(item.get("respostas"), list):
+                item["respostas"] = db_service.ordenar_lista_respostas(item["respostas"])
             submissoes.append(item)
     submissoes.sort(key=lambda x: x.get("data_envio", ""), reverse=True)
     

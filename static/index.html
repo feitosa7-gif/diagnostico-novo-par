@@ -4264,7 +4264,8 @@
 
       if (pendenciasDevolucaoUsuario && pendenciasDevolucaoUsuario.length > 0 && usuarioAtual.perfil === "usuario_comum") {
         boxPendencia.classList.remove("hidden");
-        listaResumo.innerHTML = pendenciasDevolucaoUsuario.map(item => `
+        const pendenciasOrdenadas = [...pendenciasDevolucaoUsuario].sort((a, b) => compararCodigosQuestoes(a.codigo_questao, b.codigo_questao));
+        listaResumo.innerHTML = pendenciasOrdenadas.map(item => `
           <div class="p-3 bg-white rounded-xl border border-red-300 flex items-start justify-between gap-2">
             <div>
               <span class="font-mono font-black text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 text-xs">${item.codigo_questao}</span>
@@ -4331,7 +4332,8 @@
       const container = document.getElementById("modal-sub-respostas-lista");
       container.innerHTML = "";
 
-      (sub.respostas || []).forEach(r => {
+      const respostasOrdenadas = [...(sub.respostas || [])].sort((a, b) => compararCodigosQuestoes(a.codigo_questao, b.codigo_questao));
+      respostasOrdenadas.forEach(r => {
         const item = document.createElement("div");
         item.className = "p-3.5 rounded-xl border border-slate-200 bg-slate-50 space-y-1.5";
         
